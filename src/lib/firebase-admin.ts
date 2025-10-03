@@ -77,6 +77,7 @@ function getAdminApp() {
     
     adminApp = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+      projectId: serviceAccount.projectId,
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       databaseURL: databaseURL
     });
@@ -84,12 +85,15 @@ function getAdminApp() {
     console.log('Firebase Admin initialized successfully');
     console.log('Initialized app project ID:', adminApp.options.projectId);
     console.log('Initialized app database URL:', adminApp.options.databaseURL);
+    console.log('Initialized app storage bucket:', adminApp.options.storageBucket);
   } else {
     console.log('Using existing Firebase Admin app');
     const app = admin.apps[0];
     if (app) {
       adminApp = app;
       console.log('Existing app project ID:', adminApp.options.projectId);
+      console.log('Existing app database URL:', adminApp.options.databaseURL);
+      console.log('Existing app storage bucket:', adminApp.options.storageBucket);
     }
   }
 
