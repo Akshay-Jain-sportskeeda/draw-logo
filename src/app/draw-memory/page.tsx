@@ -4,14 +4,6 @@ import React, { useState, useEffect } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import Link from 'next/link';
 
-const getScoreMessage = (score: number) => {
-  if (score >= 80) return "Excellent! You're a logo master!";
-  if (score >= 60) return "Great job! Very recognizable!";
-  if (score >= 40) return "Good effort! Getting there!";
-  if (score >= 20) return "Nice try! Keep practicing!";
-  return "Keep going! Every artist starts somewhere!";
-};
-
 export default function DrawMemoryPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [showLogo, setShowLogo] = useState(false);
@@ -169,23 +161,43 @@ export default function DrawMemoryPage() {
     setOverlayLogoUrl(null);
   };
 
+  const getScoreMessage = (score: number) => {
+    if (score >= 80) return "Excellent! You're a logo master!";
+    if (score >= 60) return "Great job! Very recognizable!";
+    if (score >= 40) return "Good effort! Getting there!";
+    if (score >= 20) return "Nice try! Keep practicing!";
+    return "Keep going! Every artist starts somewhere!";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <div className="text-center mb-6">
-            <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
-              ← Back to Menu
-            </Link>
-          </div>
+        <div className="text-center mb-8 lg:block hidden">
+          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
+            ← Back to Menu
+          </Link>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Draw from Memory
+          </h1>
+          <p className="text-lg text-gray-600">
+            Draw the logo from memory and see how well you did!
+          </p>
+        </div>
 
+        <div className="text-center mb-8 lg:hidden block">
+          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
+            ← Back to Menu
+          </Link>
+          <p className="text-lg text-gray-600">
+            Draw the logo from memory and see how well you did!
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               Draw the {currentTeam} logo
             </h2>
-            <p className="text-lg text-gray-600 mb-4">
-              Draw the logo from memory and see how well you did!
-            </p>
             {isLoadingColors ? (
               <p className="text-gray-600">
                 Loading logo colors...
@@ -207,6 +219,10 @@ export default function DrawMemoryPage() {
                   </p>
                 </details>
               </div>
+            ) : (
+              <p className="text-gray-600">
+                Try to draw it from memory using the logo's actual colors, or reveal the logo if you need help!
+              </p>
             )}
           </div>
 
