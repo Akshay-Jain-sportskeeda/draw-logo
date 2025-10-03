@@ -19,38 +19,50 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
   const [validationError, setValidationError] = useState('');
 
   const validateSubmission = (): boolean => {
+    console.log('--- Validating Submission ---');
+    console.log('drawingData present:', !!drawingData && drawingData !== '');
+    console.log('User logged in:', !!user);
+
     if (!drawingData || drawingData === '') {
       setValidationError('Please create a drawing before submitting');
+      console.log('Validation failed: No drawing data.');
       return false;
     }
 
     if (!user) {
       setValidationError('Please log in to submit your drawing');
+      console.log('Validation failed: User not logged in.');
       return false;
     }
 
     setValidationError('');
+    console.log('Validation successful.');
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSubmit called.');
 
     if (!validateSubmission()) {
+      console.log('handleSubmit: Validation failed, returning early.');
       return;
     }
 
     setIsSubmitting(true);
     setValidationError('');
+    console.log('handleSubmit: Starting submission process.');
 
     try {
       // Get the user's display name or email as fallback
       const userName = user!.displayName || user!.email?.split('@')[0] || 'Anonymous';
+      console.log('User Name for submission:', userName);
 
       // Create a unique filename for the drawing
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
       const fileName = `creative-remix/${user!.uid}/${timestamp}-${randomString}.png`;
+      console.log('Attempting to upload with fileName:', fileName);
 
       // Upload the drawing to Firebase Storage
       const imageRef = storageRef(storage, fileName);
@@ -60,9 +72,11 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       
       // Upload the base64 string as a data URL
       await uploadString(imageRef, drawingData, 'data_url');
+      console.log('Upload successful for fileName:', fileName);
 
       // Get the public download URL
       const publicUrl = await getDownloadURL(imageRef);
+      console.log('Generated public URL:', publicUrl);
 
       // Save submission data to Firestore
       const submissionsRef = collection(firestore, 'nfl-draw-logo');
@@ -78,19 +92,23 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
         gameMode: 'creative-remix',
         adminNotes: ''
       };
+      console.log('Attempting to save submission data to Firestore:', submissionData);
 
       const docRef = await addDoc(submissionsRef, submissionData);
+      console.log('Firestore document added with ID:', docRef.id);
 
       // Get the generated document ID as submission ID
       const submissionId = docRef.id;
       
       if (submissionId) {
         onSubmitSuccess(submissionId);
+        console.log('Submission successful, calling onSubmitSuccess.');
       } else {
         throw new Error('Failed to generate submission ID');
       }
 
     } catch (error) {
+      console.error('Submission error caught:', error);
       console.error('Submission error:', error);
       let errorMessage = 'Failed to submit drawing. Please try again.';
       
@@ -109,8 +127,10 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       
       onSubmitError(errorMessage);
       setValidationError(errorMessage);
+      console.error('Final error message:', errorMessage);
     } finally {
       setIsSubmitting(false);
+      console.log('handleSubmit: Submission process finished (finally block).');
     }
   };
 
