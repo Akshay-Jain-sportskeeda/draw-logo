@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { database } from '@/lib/firebase';
-import { ref, onValue, off } from 'firebase/database';
+import { firestore } from '@/lib/firebase';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 
 interface Submission {
@@ -54,11 +54,6 @@ export default function GalleryPage() {
       }
       setIsLoading(false);
     });
-
-    return () => {
-      off(submissionsRef);
-    };
-  }, []);
 
   const filteredSubmissions = filterMode === 'all'
     ? submissions

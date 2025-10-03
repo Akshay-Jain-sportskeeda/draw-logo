@@ -1,6 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getStorage } from 'firebase/storage';
-import { getDatabase } from 'firebase/database';
+import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -24,7 +24,7 @@ console.log('=== END CLIENT-SIDE FIREBASE CONFIG DEBUG ===');
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const storage = getStorage(app);
-const database = getDatabase(app);
+const firestore = getFirestore(app);
 const auth = getAuth(app);
 
-export { app, storage, database, auth };
+export { app, storage, firestore, auth };

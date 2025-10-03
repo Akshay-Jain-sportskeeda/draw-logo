@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { storage, database } from '@/lib/firebase';
+import { storage, firestore } from '@/lib/firebase';
 import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
-import { ref as dbRef, push, set } from 'firebase/database';
+import { collection, addDoc } from 'firebase/firestore';
 
 interface SubmissionFormProps {
   drawingData: string;
@@ -64,9 +64,8 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       // Get the public download URL
       const publicUrl = await getDownloadURL(imageRef);
 
-      // Save submission data to Realtime Database
-      const submissionsRef = dbRef(database, 'nfl-draw-logo');
-      const newSubmissionRef = push(submissionsRef);
+      // Save submission data to Firestore
+      const submissionsRef = collection(firestore, 'nfl-draw-logo');
 
       const submissionData = {
         drawingUrl: publicUrl,
@@ -80,10 +79,10 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
         adminNotes: ''
       };
 
-      await set(newSubmissionRef, submissionData);
+      const docRef = await addDoc(submissionsRef, submissionData);
 
-      // Get the generated key as submission ID
-      const submissionId = newSubmissionRef.key;
+      // Get the generated document ID as submission ID
+      const submissionId = docRef.id;
       
       if (submissionId) {
         onSubmitSuccess(submissionId);

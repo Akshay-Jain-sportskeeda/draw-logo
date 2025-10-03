@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { database } from '@/lib/firebase';
-import { ref, onValue, update, off } from 'firebase/database';
+import { firestore } from '@/lib/firebase';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 interface Submission {
   id: string;
@@ -39,25 +39,52 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const submissionsRef = ref(database, 'nfl-draw-logo');
+    const submissionsRef = collection(firestore, 'nfl-draw-logo');
+    const q = query(submissionsRef, orderBy('timestamp', 'desc'));
 
-    const unsubscribe = onValue(submissionsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const submissionsArray: Submission[] = Object.entries(data).map(([id, value]: [string, any]) => ({
-          id,
-          drawingUrl: value.drawingUrl || '',
-          userName: value.userName || 'Anonymous',
-          userId: value.userId,
-          userEmail: value.userEmail,
-          timestamp: value.timestamp || Date.now(),
-          status: value.status || 'pending',
-          rating: value.rating,
-          gameMode: value.gameMode || 'creative-remix',
-          adminNotes: value.adminNotes || ''
-        }));
-        submissionsArray.sort((a, b) => b.timestamp - a.timestamp);
-        setSubmissions(submissionsArray);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const submissionsArray: Submission[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        submissionsArray.push({
+          id: doc.id,
+          drawingUrl: data.drawingUrl || '',
+          userName: data.userName || 'Anonymous',
+          userId: data.userId,
+          userEmail: data.userEmail,
+          timestamp: data.timestamp || Date.now(),
+          status: data.status || 'pending',
+          rating: data.rating,
+          gameMode: data.gameMode || 'creative-remix',
+          adminNotes: data.adminNotes || ''
+        });
+      });
+      setSubmissions(submissionsArray);
+    }, (error) => {
+      console.error('Error fetching submissions:', error);
+      setSubmissions([]);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isAuthenticated]);
+
+  const handleUpdateSubmission = async (id: string, updates: Partial<Submission>) => {
+    setIsUpdating(true);
+    try {
+      const submissionRef = doc(firestore, 'nfl-draw-logo', id);
+      await updateDoc(submissionRef, updates);
+      setSelectedSubmission(null);
+      setEditRating(null);
+      setEditNotes('');
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      alert('Failed to update submission');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
       } else {
         setSubmissions([]);
       }
@@ -84,22 +111,6 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin_authenticated');
     setPassword('');
-  };
-
-  const handleUpdateSubmission = async (id: string, updates: Partial<Submission>) => {
-    setIsUpdating(true);
-    try {
-      const submissionRef = ref(database, `nfl-draw-logo/${id}`);
-      await update(submissionRef, updates);
-      setSelectedSubmission(null);
-      setEditRating(null);
-      setEditNotes('');
-    } catch (error) {
-      console.error('Error updating submission:', error);
-      alert('Failed to update submission');
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   const openSubmissionDetail = (submission: Submission) => {
