@@ -108,15 +108,16 @@ export default function CreativeRemixPage() {
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="mb-6">
-            <Link href="/" className="inline-block text-green-600 hover:text-green-700 font-medium">
-              ← Back
-            </Link>
-          </div>
-          
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
-              {template.name}
-            </h2>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+              <Link href="/" className="inline-block text-green-600 hover:text-green-700 font-medium mb-4 md:mb-0">
+                ← Back
+              </Link>
+              <h2 className="text-2xl font-semibold text-gray-800 text-center md:text-left md:flex-1 md:text-center">
+                {template.name}
+              </h2>
+              {/* Spacer for desktop to keep h2 centered */}
+              <div className="hidden md:block md:w-16"></div>
+            </div>
           </div>
 
           <div className="flex flex-col items-center space-y-8">
