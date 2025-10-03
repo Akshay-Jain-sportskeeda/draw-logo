@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import GamesPageSidebar from '@/components/GamesPageSidebar'
