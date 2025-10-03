@@ -69,9 +69,17 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       
       // Remove the data URL prefix if present
       const base64Data = drawingData.replace(/^data:image\/[a-z]+;base64,/, '');
+      console.log('Base64 data length:', base64Data.length);
+      console.log('Original drawingData starts with:', drawingData.substring(0, 50));
       
-      // Upload the base64 string as a data URL
-      await uploadString(imageRef, drawingData, 'data_url');
+      // Upload the base64 string as a data URL with proper error handling
+      console.log('Starting Firebase Storage upload...');
+      try {
+        await uploadString(imageRef, drawingData, 'data_url');
+      } catch (uploadError) {
+        console.error('Firebase Storage upload error:', uploadError);
+        throw uploadError;
+      }
       console.log('Upload successful for fileName:', fileName);
 
       // Get the public download URL
