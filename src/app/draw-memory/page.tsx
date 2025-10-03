@@ -195,32 +195,6 @@ export default function DrawMemoryPage() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               Draw the {currentTeam} logo
             </h2>
-            {isLoadingColors ? (
-              <p className="text-gray-600">
-                Loading logo colors...
-              </p>
-            ) : colorExtractionError ? (
-              <div className="text-center">
-                <p className="text-red-600 mb-2">
-                  Color extraction failed
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  Using default colors instead
-                </p>
-                <details className="text-xs text-gray-500">
-                  <summary className="cursor-pointer hover:text-gray-700">
-                    Show error details
-                  </summary>
-                  <p className="mt-2 p-2 bg-gray-100 rounded text-left">
-                    {colorExtractionError}
-                  </p>
-                </details>
-              </div>
-            ) : (
-              <p className="text-gray-600">
-                Try to draw it from memory using the logo's actual colors, or reveal the logo if you need help!
-              </p>
-            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 items-start">
