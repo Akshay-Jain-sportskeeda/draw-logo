@@ -32,7 +32,7 @@ export default function RootLayout({
           <div className="flex-1 flex flex-col lg:ml-0">
             {/* Mobile Header */}
             <div className="lg:hidden">
-              <PFSNHeader currentGame="NFL Logo Drawing Game" />
+              <PFSNHeader currentGame="NFL Logo Drawing Games" />
             </div>
             
             {/* Page Content */}

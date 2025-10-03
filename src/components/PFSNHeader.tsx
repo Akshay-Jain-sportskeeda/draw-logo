@@ -7,7 +7,7 @@ interface HeaderProps {
   currentGame?: string;
 }
 
-const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Octobox' }) => {
+const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Logo Drawing Game' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Lock/unlock body scroll when mobile menu opens/closes
@@ -64,7 +64,7 @@ const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Octobox' }) => {
         <div className={styles.headerLogo}>
           <img src="https://statico.profootballnetwork.com/wp-content/uploads/2025/06/12093424/tools-navigation-06-12-25.jpg" alt="PFSN" className={styles.logoImage} />
         </div>
-        <span className={styles.gameTitle}>NFL Octobox</span>
+        <span className={styles.gameTitle}>{currentGame}</span>
       </div>
 
       {/* Slide-out menu and overlay */}

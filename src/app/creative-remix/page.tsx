@@ -88,13 +88,22 @@ export default function CreativeRemixPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 lg:block hidden">
           <Link href="/" className="inline-block mb-4 text-green-600 hover:text-green-700 font-medium">
             ← Back to Menu
           </Link>
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Creative Remix
           </h1>
+          <p className="text-lg text-gray-600">
+            Add your unique style to the template and submit your masterpiece!
+          </p>
+        </div>
+
+        <div className="text-center mb-8 lg:hidden block">
+          <Link href="/" className="inline-block mb-4 text-green-600 hover:text-green-700 font-medium">
+            ← Back to Menu
+          </Link>
           <p className="text-lg text-gray-600">
             Add your unique style to the template and submit your masterpiece!
           </p>
