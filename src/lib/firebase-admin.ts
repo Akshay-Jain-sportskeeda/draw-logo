@@ -28,7 +28,24 @@ function getAdminApp() {
   console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n') || false);
   console.log('=== END SERVICE ACCOUNT OBJECT DEBUG ===');
 
-  if (admin.apps.length === 0) {
+  // Force fresh initialization to ensure we use current credentials
+  if (admin.apps.length === 0 || true) { // Always reinitialize for debugging
+    
+    // Delete existing apps if any
+    if (admin.apps.length > 0) {
+      console.log('Deleting existing Firebase Admin apps for fresh initialization...');
+      admin.apps.forEach(app => {
+        if (app) {
+          try {
+            app.delete();
+            console.log('Deleted existing app');
+          } catch (error) {
+            console.log('Error deleting existing app:', error);
+          }
+        }
+      });
+    }
+    
     // Check if we have the required environment variables
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
       console.log('ERROR: NEXT_PUBLIC_FIREBASE_PROJECT_ID missing');
@@ -87,6 +104,27 @@ function getAdminApp() {
     const existingApp = admin.apps[0];
     if (existingApp) {
       adminApp = existingApp;
+      
+      // Log details about the existing app's credentials
+      console.log('=== EXISTING APP CREDENTIAL DEBUG ===');
+      try {
+        // Try to access the credential information
+        const credential = existingApp.options.credential;
+        if (credential) {
+          console.log('Existing app has credential:', !!credential);
+          // Try to get service account info if available
+          if ('getAccessToken' in credential) {
+            console.log('Credential type: Service Account');
+          } else {
+            console.log('Credential type: Unknown');
+          }
+        } else {
+          console.log('No credential found in existing app');
+        }
+      } catch (error) {
+        console.log('Error accessing existing app credential:', error);
+      }
+      console.log('=== END EXISTING APP CREDENTIAL DEBUG ===');
       
       console.log('=== EXISTING FIREBASE ADMIN APP DEBUG ===');
       console.log('Raw adminApp.options.projectId:', adminApp.options.projectId);
