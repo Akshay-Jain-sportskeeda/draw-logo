@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import styles from '../styles/PFSNHeader.module.css';
+import styles from './PFSNHeader.module.css';
 
 interface HeaderProps {
   currentGame?: string;

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import GamesPageSidebar from '@/components/GamesPageSidebar'
 import PFSNFooter from '@/components/PFSNFooter'
+import PFSNHeader from '@/components/PFSNHeader'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,9 +30,9 @@ export default function RootLayout({
           
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col lg:ml-0">
-            {/* Mobile Sidebar */}
+            {/* Mobile Header */}
             <div className="lg:hidden">
-              <GamesPageSidebar currentGame="NFL Logo Drawing Game" isMobile={true} />
+              <PFSNHeader currentGame="NFL Logo Drawing Game" />
             </div>
             
             {/* Page Content */}
