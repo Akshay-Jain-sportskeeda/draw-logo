@@ -20,11 +20,12 @@ console.log('Project ID:', firebaseConfig.projectId);
 console.log('Database URL:', firebaseConfig.databaseURL);
 console.log('Auth Domain:', firebaseConfig.authDomain);
 console.log('Storage Bucket:', firebaseConfig.storageBucket);
+console.log('Connecting to Firestore database: leaderboards');
 console.log('=== END CLIENT-SIDE FIREBASE CONFIG DEBUG ===');
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const storage = getStorage(app);
-const firestore = getFirestore(app);
+const firestore = getFirestore(app, 'leaderboards');
 const auth = getAuth(app);
 
 export { app, storage, firestore, auth };
