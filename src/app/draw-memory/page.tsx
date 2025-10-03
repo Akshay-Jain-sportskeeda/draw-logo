@@ -173,16 +173,14 @@ export default function DrawMemoryPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
-          <div className="mb-6">
+          <div className="flex items-center justify-between mb-6">
             <Link href="/" className="inline-block text-blue-600 hover:text-blue-700 font-medium">
               ← Back
             </Link>
-          </div>
-          
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-semibold text-gray-800 flex-1 text-center">
               Draw the {currentTeam} logo
             </h2>
+            <div className="w-16"></div> {/* Spacer to center the heading */}
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 items-start">
