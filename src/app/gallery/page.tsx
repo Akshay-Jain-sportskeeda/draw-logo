@@ -22,40 +22,39 @@ export default function GalleryPage() {
   const [filterMode, setFilterMode] = useState<'all' | 'creative-remix'>('all');
 
   useEffect(() => {
-    const submissionsRef = ref(database, 'nfl-draw-logo');
+    const submissionsRef = collection(firestore, 'nfl-draw-logo');
+    const q = query(
+      submissionsRef, 
+      where('status', '==', 'approved'),
+      orderBy('rating', 'desc'),
+      orderBy('timestamp', 'desc')
+    );
 
-    const unsubscribe = onValue(submissionsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const submissionsArray: Submission[] = Object.entries(data)
-          .map(([id, value]: [string, any]) => ({
-            id,
-            drawingUrl: value.drawingUrl || '',
-            userName: value.userName || 'Anonymous',
-            timestamp: value.timestamp || Date.now(),
-            status: value.status || 'pending',
-            rating: value.rating,
-            gameMode: value.gameMode || 'creative-remix'
-          }))
-          .filter(sub => sub.status === 'approved');
-
-        submissionsArray.sort((a, b) => {
-          if (a.rating && b.rating) {
-            return b.rating - a.rating;
-          }
-          if (a.rating) return -1;
-          if (b.rating) return 1;
-          return b.timestamp - a.timestamp;
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const submissionsArray: Submission[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        submissionsArray.push({
+          id: doc.id,
+          drawingUrl: data.drawingUrl || '',
+          userName: data.userName || 'Anonymous',
+          timestamp: data.timestamp || Date.now(),
+          status: data.status || 'pending',
+          rating: data.rating,
+          gameMode: data.gameMode || 'creative-remix'
         });
-
-        setSubmissions(submissionsArray);
-      } else {
-        setSubmissions([]);
-      }
+      });
+      setSubmissions(submissionsArray);
+      setIsLoading(false);
+    }, (error) => {
+      console.error('Error fetching submissions:', error);
+      setSubmissions([]);
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const filteredSubmissions = filterMode === 'all'
