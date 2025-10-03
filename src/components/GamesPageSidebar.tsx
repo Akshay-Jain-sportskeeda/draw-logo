@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from '../styles/sidebar.module.css';
+import styles from './sidebar.module.css';
 
 interface Game {
   title: string;
