@@ -9,7 +9,10 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    if (!isServer) {
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('firebase-admin');
+    } else {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
