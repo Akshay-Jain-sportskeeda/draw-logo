@@ -188,9 +188,6 @@ export default function DrawMemoryPage() {
           <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
             ← Back to Menu
           </Link>
-          <p className="text-lg text-gray-600">
-            Draw the logo from memory and see how well you did!
-          </p>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
