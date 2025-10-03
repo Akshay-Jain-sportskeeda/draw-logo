@@ -13,6 +13,15 @@ const nextConfig = {
       config.externals = config.externals || [];
       config.externals.push('firebase-admin');
     } else {
+      // For client-side builds, ignore firebase-admin completely
+      const webpack = require('webpack');
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^firebase-admin$/,
+        })
+      );
+      
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
