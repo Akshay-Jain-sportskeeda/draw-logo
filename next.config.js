@@ -8,6 +8,19 @@ const nextConfig = {
       'upload.wikimedia.org'
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+    return config;
+  },
+  transpilePackages: ['firebase', '@firebase/database'],
 };
 
 module.exports = nextConfig;
