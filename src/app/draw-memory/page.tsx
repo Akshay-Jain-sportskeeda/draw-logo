@@ -172,32 +172,20 @@ export default function DrawMemoryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="text-center mb-8 lg:block hidden">
-          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
-            ← Back to Menu
-          </Link>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Draw from Memory
-          </h1>
-          <p className="text-lg text-gray-600">
-            Draw the logo from memory and see how well you did!
-          </p>
-        </div>
-
-        <div className="text-center mb-8 lg:hidden block">
-          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
-            ← Back to Menu
-          </Link>
-          <p className="text-lg text-gray-600">
-            Draw the logo from memory and see how well you did!
-          </p>
-        </div>
-
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+          <div className="text-center mb-6">
+            <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
+              ← Back to Menu
+            </Link>
+          </div>
+
           <div className="text-center mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               Draw the {currentTeam} logo
             </h2>
+            <p className="text-lg text-gray-600 mb-4">
+              Draw the logo from memory and see how well you did!
+            </p>
             {isLoadingColors ? (
               <p className="text-gray-600">
                 Loading logo colors...
@@ -219,10 +207,6 @@ export default function DrawMemoryPage() {
                   </p>
                 </details>
               </div>
-            ) : (
-              <p className="text-gray-600">
-                Try to draw it from memory using the logo's actual colors, or reveal the logo if you need help!
-              </p>
             )}
           </div>
 
