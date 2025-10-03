@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
+import { storage, database } from '@/lib/firebase';
+import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref as dbRef, push, set } from 'firebase/database';
 
 interface SubmissionFormProps {
   drawingData: string;
@@ -41,35 +44,70 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
     setValidationError('');
 
     try {
-      // Get the user's ID token for authentication
-      const idToken = await user!.getIdToken();
-      
       // Get the user's display name or email as fallback
       const userName = user!.displayName || user!.email?.split('@')[0] || 'Anonymous';
 
-      const response = await fetch('/api/submit-creative', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          drawingData,
-          userName,
-          gameMode: 'creative-remix'
-        }),
-      });
+      // Create a unique filename for the drawing
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileName = `creative-remix/${user!.uid}/${timestamp}-${randomString}.png`;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit drawing');
+      // Upload the drawing to Firebase Storage
+      const imageRef = storageRef(storage, fileName);
+      
+      // Remove the data URL prefix if present
+      const base64Data = drawingData.replace(/^data:image\/[a-z]+;base64,/, '');
+      
+      // Upload the base64 string as a data URL
+      await uploadString(imageRef, drawingData, 'data_url');
+
+      // Get the public download URL
+      const publicUrl = await getDownloadURL(imageRef);
+
+      // Save submission data to Realtime Database
+      const submissionsRef = dbRef(database, 'nfl-draw-logo');
+      const newSubmissionRef = push(submissionsRef);
+
+      const submissionData = {
+        drawingUrl: publicUrl,
+        userName: userName,
+        userId: user!.uid,
+        userEmail: user!.email,
+        timestamp: Date.now(),
+        status: 'pending',
+        rating: null,
+        gameMode: 'creative-remix',
+        adminNotes: ''
+      };
+
+      await set(newSubmissionRef, submissionData);
+
+      // Get the generated key as submission ID
+      const submissionId = newSubmissionRef.key;
+      
+      if (submissionId) {
+        onSubmitSuccess(submissionId);
+      } else {
+        throw new Error('Failed to generate submission ID');
       }
 
-      const result = await response.json();
-      onSubmitSuccess(result.submissionId);
     } catch (error) {
       console.error('Submission error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit drawing. Please try again.';
+      let errorMessage = 'Failed to submit drawing. Please try again.';
+      
+      if (error instanceof Error) {
+        // Handle specific Firebase errors
+        if (error.message.includes('storage/unauthorized')) {
+          errorMessage = 'You do not have permission to upload files. Please contact support.';
+        } else if (error.message.includes('database/permission-denied')) {
+          errorMessage = 'You do not have permission to save submissions. Please contact support.';
+        } else if (error.message.includes('storage/quota-exceeded')) {
+          errorMessage = 'Storage quota exceeded. Please try again later.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       onSubmitError(errorMessage);
       setValidationError(errorMessage);
     } finally {
