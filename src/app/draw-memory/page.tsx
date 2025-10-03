@@ -177,7 +177,7 @@ export default function DrawMemoryPage() {
             <Link href="/" className="inline-block text-blue-600 hover:text-blue-700 font-medium self-start md:self-auto">
               ← Back
             </Link>
-            <h2 className="text-2xl font-semibold text-gray-800 md:flex-1 md:text-center text-left order-first md:order-none">
+            <h2 className="text-2xl font-semibold text-gray-800 md:flex-1 text-center w-full md:w-auto">
               Draw the {currentTeam} logo
             </h2>
             <div className="w-16 hidden md:block"></div> {/* Spacer to center the heading */}
