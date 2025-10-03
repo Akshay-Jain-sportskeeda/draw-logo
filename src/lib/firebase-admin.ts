@@ -88,10 +88,37 @@ function getAdminApp() {
     console.log('Initialized app storage bucket:', adminApp.options.storageBucket);
   } else {
     console.log('Using existing Firebase Admin app');
-    const app = admin.apps[0];
-    if (app) {
-      adminApp = app;
-      console.log('Existing app project ID:', adminApp.options.projectId);
+    const existingApp = admin.apps[0];
+    if (existingApp) {
+      adminApp = existingApp;
+      
+      console.log('=== EXISTING FIREBASE ADMIN APP DEBUG ===');
+      console.log('Raw adminApp.options.projectId:', adminApp.options.projectId);
+      console.log('Raw adminApp.options.databaseURL:', adminApp.options.databaseURL);
+      console.log('Raw adminApp.options.storageBucket:', adminApp.options.storageBucket);
+      
+      // Try to infer project ID from database URL if not directly available
+      let existingProjectId = adminApp.options.projectId;
+      if (!existingProjectId && adminApp.options.databaseURL) {
+        console.log('Project ID not found in options, attempting to extract from database URL...');
+        const dbUrl = adminApp.options.databaseURL;
+        console.log('Database URL for extraction:', dbUrl);
+        
+        const match = dbUrl.match(/https:\/\/([^-]+(?:-[^-]+)*)-default-rtdb\.firebaseio\.com/);
+        console.log('Regex match result:', match);
+        
+        if (match && match[1]) {
+          existingProjectId = match[1];
+          console.log('Successfully extracted project ID from database URL:', existingProjectId);
+        } else {
+          console.log('Failed to extract project ID from database URL');
+        }
+      }
+      
+      console.log('Final resolved project ID:', existingProjectId || 'COULD NOT DETERMINE');
+      console.log('=== END EXISTING FIREBASE ADMIN APP DEBUG ===');
+      
+      console.log('Existing app project ID:', existingProjectId || 'undefined');
       console.log('Existing app database URL:', adminApp.options.databaseURL);
       console.log('Existing app storage bucket:', adminApp.options.storageBucket);
     }
