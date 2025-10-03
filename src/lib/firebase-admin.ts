@@ -8,6 +8,26 @@ function getAdminApp() {
   console.log('=== FIREBASE ADMIN INITIALIZATION DEBUG ===');
   console.log('Existing admin apps count:', admin.apps.length);
   
+  // Always build and log service account for debugging, regardless of branch
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    : {
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: getFormattedPrivateKey(),
+      };
+
+  console.log('=== SERVICE ACCOUNT OBJECT DEBUG ===');
+  console.log('Service Account Object Structure:');
+  console.log('- projectId:', serviceAccount.projectId);
+  console.log('- clientEmail:', serviceAccount.clientEmail);
+  console.log('- privateKey (first 50 chars):', serviceAccount.privateKey?.substring(0, 50) || 'MISSING');
+  console.log('- privateKey (last 50 chars):', serviceAccount.privateKey?.substring(serviceAccount.privateKey.length - 50) || 'MISSING');
+  console.log('- privateKey total length:', serviceAccount.privateKey?.length || 0);
+  console.log('- privateKey starts with BEGIN:', serviceAccount.privateKey?.startsWith('-----BEGIN PRIVATE KEY-----') || false);
+  console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n') || false);
+  console.log('=== END SERVICE ACCOUNT OBJECT DEBUG ===');
+
   if (admin.apps.length === 0) {
     // Check if we have the required environment variables
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
@@ -19,23 +39,6 @@ function getAdminApp() {
     console.log('Client Email exists:', !!process.env.FIREBASE_CLIENT_EMAIL);
     console.log('Service Account JSON exists:', !!process.env.FIREBASE_SERVICE_ACCOUNT);
     console.log('Private Key exists:', !!process.env.FIREBASE_PRIVATE_KEY);
-    
-    // Handle service account credentials
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-      ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-      : {
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: getFormattedPrivateKey(),
-        };
-
-    console.log('=== SERVICE ACCOUNT CREDENTIALS DEBUG ===');
-    console.log('Service account structure:');
-    console.log('- projectId:', serviceAccount.projectId);
-    console.log('- clientEmail:', serviceAccount.clientEmail);
-    console.log('- privateKey length:', serviceAccount.privateKey?.length || 0);
-    console.log('- privateKey starts with BEGIN:', serviceAccount.privateKey?.startsWith('-----BEGIN PRIVATE KEY-----'));
-    console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n'));
     
     // Log which method we're using for credentials
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -65,24 +68,6 @@ function getAdminApp() {
 
     console.log('Database URL:', databaseURL);
     console.log('Storage Bucket:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
-    
-    console.log('=== FIREBASE ADMIN SDK INITIALIZATION ===');
-    console.log('Initializing Firebase Admin with:');
-    console.log('- Project ID for credential:', serviceAccount.projectId);
-    console.log('- Client Email for credential:', serviceAccount.clientEmail);
-    console.log('- Database URL:', databaseURL);
-    console.log('- Storage Bucket:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
-    
-    console.log('=== SERVICE ACCOUNT OBJECT BEFORE INITIALIZATION ===');
-    console.log('Service Account Object Structure:');
-    console.log('- projectId:', serviceAccount.projectId);
-    console.log('- clientEmail:', serviceAccount.clientEmail);
-    console.log('- privateKey (first 50 chars):', serviceAccount.privateKey?.substring(0, 50) || 'MISSING');
-    console.log('- privateKey (last 50 chars):', serviceAccount.privateKey?.substring(serviceAccount.privateKey.length - 50) || 'MISSING');
-    console.log('- privateKey total length:', serviceAccount.privateKey?.length || 0);
-    console.log('- privateKey starts with BEGIN:', serviceAccount.privateKey?.startsWith('-----BEGIN PRIVATE KEY-----') || false);
-    console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n') || false);
-    console.log('=== END SERVICE ACCOUNT OBJECT DEBUG ===');
     
     console.log('Attempting to initialize Firebase Admin...');
     
