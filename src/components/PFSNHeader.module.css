@@ -1,0 +1,200 @@
+/* Mobile-only header styles */
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  background-color: #000000;
+  padding: 0.625rem 1rem;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 48px;
+}
+
+.hamburgerButton {
+  background: none;
+  border: none;
+  padding: 0 4px 0 4px;
+  margin: 3px 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3px;
+  width: 33px;
+  height: 35px;
+}
+
+.hamburgerLine {
+  display: block;
+  width: 25px;
+  height: 3px;
+  margin: 1.5px 0;
+  background-color: #ffffff;
+}
+
+.headerLogo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.logoImage {
+  height: 24.98px;
+  width: 60.44px;
+  display: block;
+}
+
+.gameTitle {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 48px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 98;
+}
+
+/* Slide-out menu */
+.slideMenu {
+  position: fixed;
+  top: 48px;
+  left: -100%;
+  width: 90%;
+  max-width: 90%;
+  height: calc(100vh - 48px - 95px);
+  background-color: #000000;
+  transition: left 0.3s ease;
+  z-index: 99;
+  display: flex;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.slideMenuOpen {
+  left: 0;
+}
+
+/* Left sidebar in menu */
+.menuSidebar {
+  width: 125px;
+  background-color: #000000;
+  border-right: 1px solid #222;
+  padding: 1.5rem 0 1.5rem 35px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebarItem {
+  padding: 0.75rem 1rem;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s;
+  letter-spacing: 0.05em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.sidebarItem:hover {
+  color: #ffffff;
+}
+
+.sidebarItemActive {
+  color: #cc3333;
+}
+
+/* Main menu content */
+.menuMain {
+  flex: 1;
+  padding: 1.5rem 1.25rem;
+  overflow-y: auto;
+  background-color: #000000;
+}
+
+.menuSection {
+  margin-bottom: 1.75rem;
+}
+
+.menuSection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  color: #cc3333;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #333333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.gamesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gameLink {
+  display: block;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0.5rem 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.gameLink:hover {
+  color: #ffffff;
+}
+
+/* Scrollbar styles */
+.slideMenu::-webkit-scrollbar,
+.menuMain::-webkit-scrollbar,
+.menuSidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.slideMenu::-webkit-scrollbar-track,
+.menuMain::-webkit-scrollbar-track,
+.menuSidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slideMenu::-webkit-scrollbar-thumb,
+.menuMain::-webkit-scrollbar-thumb,
+.menuSidebar::-webkit-scrollbar-thumb {
+  background-color: #333;
+  border-radius: 2px;
+}
+
+/* Hide on desktop (when screen is larger than 1024px) */
+@media (min-width: 1024px) {
+  .mobileHeader {
+    display: none;
+  }
+  .slideMenu {
+    display: none;
+  }
+  .overlay {
+    display: none;
+  }
+}
