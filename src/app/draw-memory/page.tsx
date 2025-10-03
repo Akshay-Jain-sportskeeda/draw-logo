@@ -4,6 +4,14 @@ import React, { useState, useEffect } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import Link from 'next/link';
 
+const getScoreMessage = (score: number) => {
+  if (score >= 80) return "Excellent! You're a logo master!";
+  if (score >= 60) return "Great job! Very recognizable!";
+  if (score >= 40) return "Good effort! Getting there!";
+  if (score >= 20) return "Nice try! Keep practicing!";
+  return "Keep going! Every artist starts somewhere!";
+};
+
 export default function DrawMemoryPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [showLogo, setShowLogo] = useState(false);
@@ -159,14 +167,6 @@ export default function DrawMemoryPage() {
     setShowLogo(false);
     setColorExtractionError(null);
     setOverlayLogoUrl(null);
-  };
-
-  const getScoreMessage = (score: number) => {
-    if (score >= 80) return "Excellent! You're a logo master!";
-    if (score >= 60) return "Great job! Very recognizable!";
-    if (score >= 40) return "Good effort! Getting there!";
-    if (score >= 20) return "Nice try! Keep practicing!";
-    return "Keep going! Every artist starts somewhere!";
   };
 
   return (
