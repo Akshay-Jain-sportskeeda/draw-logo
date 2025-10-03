@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
 import { User, LogIn, LogOut, Edit } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
-import styles from '../styles/TopBar.module.css';
+import styles from './TopBar.module.css';
 import EditProfileModal from './EditProfileModal';
 
 interface TopBarProps {

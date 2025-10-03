@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react'
 import { 
   User, 
@@ -9,7 +11,7 @@ import {
   signInWithPopup,
   updateProfile
 } from 'firebase/auth'
-import { auth } from '../utils/firebase'
+import { auth } from '@/lib/firebase'
 
 export interface AuthState {
   user: User | null

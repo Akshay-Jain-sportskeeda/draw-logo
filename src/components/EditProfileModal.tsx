@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { X, User } from 'lucide-react';
 import { updateProfile } from 'firebase/auth';
