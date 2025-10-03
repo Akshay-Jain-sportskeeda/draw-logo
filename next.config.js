@@ -11,7 +11,6 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = config.externals || [];
-      config.externals.push('firebase-admin');
     } else {
       // For client-side builds, ignore firebase-admin completely
       const webpack = require('webpack');
