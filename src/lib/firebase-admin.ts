@@ -1,13 +1,11 @@
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
-import { getStorage } from 'firebase-admin/storage';
-import { getDatabase } from 'firebase-admin/database';
+import * as admin from 'firebase-admin';
 
-let adminApp: App;
+let adminApp: admin.app.App | undefined;
 
 function getAdminApp() {
   if (adminApp) return adminApp;
 
-  if (getApps().length === 0) {
+  if (admin.apps.length === 0) {
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
       ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
       : {
@@ -16,22 +14,25 @@ function getAdminApp() {
           privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         };
 
-    adminApp = initializeApp({
-      credential: cert(serviceAccount),
+    adminApp = admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       databaseURL: `https://leaderboards.firebaseio.com`
     });
   } else {
-    adminApp = getApps()[0];
+    const app = admin.apps[0];
+    if (app) {
+      adminApp = app;
+    }
   }
 
   return adminApp;
 }
 
 export function getAdminStorage() {
-  return getStorage(getAdminApp());
+  return admin.storage(getAdminApp());
 }
 
 export function getAdminDatabase() {
-  return getDatabase(getAdminApp());
+  return admin.database(getAdminApp());
 }
