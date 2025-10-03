@@ -121,7 +121,7 @@ export default function CreativeRemixPage() {
           <div className="flex flex-col items-center space-y-8">
             <div className="w-full flex flex-col items-center">
               <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">
-                Your Creative Remix
+                Draw around this image
               </h3>
               <DrawingCanvas
                 onDrawingChange={handleDrawingChange}
