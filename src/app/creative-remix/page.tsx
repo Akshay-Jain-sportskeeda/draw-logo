@@ -109,9 +109,6 @@ export default function CreativeRemixPage() {
           <Link href="/" className="inline-block mb-4 text-green-600 hover:text-green-700 font-medium">
             ← Back to Menu
           </Link>
-          <p className="text-lg text-gray-600">
-            Add your unique style to the template and submit your masterpiece!
-          </p>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
