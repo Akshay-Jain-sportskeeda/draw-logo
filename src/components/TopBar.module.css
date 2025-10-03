@@ -1,0 +1,262 @@
+/* TopBar Styles */
+.pfsnHeaderWrap {
+  background: #cc3333;
+  border-bottom: 1px solid #b32d2d;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Adjust for sidebar on desktop */
+@media (min-width: 1024px) {
+  .pfsnHeaderWrap {
+    margin-left: 256px;
+    width: calc(100% - 256px);
+  }
+}
+
+.pfsnHeaderContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+}
+
+.headerLayout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  position: relative;
+}
+
+.pfsnLogoSection {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.gameTitle {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+/* Hide game title on mobile */
+@media (max-width: 768px) {
+  .gameTitle {
+    display: none;
+  }
+}
+.tabsContainer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+}
+
+.tabsWrapper {
+  display: flex;
+  background: transparent;
+  border-radius: 8px;
+  padding: 0;
+  gap: 0;
+  align-items: center;
+}
+
+.tabButton {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
+  background: transparent;
+  color: white;
+}
+
+.tabButton:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.activeTab {
+  background: white;
+  color: #cc3333;
+  box-shadow: none;
+}
+
+.inactiveTab {
+  background: transparent;
+  color: white;
+}
+
+.inactiveTab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+
+.userSection {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.userDropdown {
+  position: relative;
+  display: flex;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.userButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.userAvatar {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userName {
+  font-size: 0.875rem;
+  color: white;
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  padding: 8px 0;
+  min-width: 180px;
+  z-index: 50;
+}
+
+.userInfo {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.userDisplayName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.userEmail {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: #f9fafb;
+}
+
+.dropdownOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .pfsnHeaderContainer {
+    padding: 0 16px;
+    height: 48px;
+  }
+
+  .gameTitle {
+    font-size: 1.125rem;
+  }
+
+  .tabsWrapper {
+    padding: 0;
+  }
+
+  .tabButton {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .tabButton:not(:last-child)::after {
+    height: 16px;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .userButton {
+    padding: 4px 6px;
+  }
+
+  .dropdownMenu {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pfsnHeaderContainer {
+    padding: 0 12px;
+  }
+
+  .gameTitle {
+    font-size: 1rem;
+  }
+
+  .tabButton {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+}
