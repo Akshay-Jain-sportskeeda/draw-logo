@@ -105,13 +105,14 @@ export default function CreativeRemixPage() {
           </p>
         </div>
 
-        <div className="text-center mb-8 lg:hidden block">
-          <Link href="/" className="inline-block mb-4 text-green-600 hover:text-green-700 font-medium">
-            ← Back to Menu
-          </Link>
-        </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+          <div className="mb-6">
+            <Link href="/" className="inline-block text-green-600 hover:text-green-700 font-medium">
+              ← Back
+            </Link>
+          </div>
+          
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
               {template.name}
