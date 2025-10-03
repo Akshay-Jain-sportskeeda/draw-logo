@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import Link from 'next/link';
+import { useAuth } from '@/lib/useAuth';
+import { useAuthModal } from '@/context/AuthModalContext';
+import { firestore } from '@/lib/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export default function DrawMemoryPage() {
   const [drawingData, setDrawingData] = useState<string>('');
@@ -15,6 +19,13 @@ export default function DrawMemoryPage() {
   const [colorExtractionError, setColorExtractionError] = useState<string | null>(null);
   const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [overlayLogoUrl, setOverlayLogoUrl] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<number>(Date.now());
+  const [timeTaken, setTimeTaken] = useState<number | null>(null);
+  const [isSavingScore, setIsSavingScore] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false);
+
+  const { user } = useAuth();
+  const { setShowLoginModal } = useAuthModal();
 
   const challenges = [
     {
@@ -96,6 +107,13 @@ export default function DrawMemoryPage() {
     fetchLogoColors();
   }, [logoUrl]);
 
+  // Reset start time when challenge changes
+  useEffect(() => {
+    setStartTime(Date.now());
+    setTimeTaken(null);
+    setScoreSaved(false);
+  }, [currentChallengeIndex]);
+
   const handleDrawingChange = (dataUrl: string) => {
     setDrawingData(dataUrl);
   };
@@ -122,6 +140,11 @@ export default function DrawMemoryPage() {
       return;
     }
 
+    // Calculate time taken
+    const endTime = Date.now();
+    const calculatedTimeTaken = Math.round((endTime - startTime) / 1000); // in seconds
+    setTimeTaken(calculatedTimeTaken);
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/score-drawing', {
@@ -142,11 +165,47 @@ export default function DrawMemoryPage() {
       const result = await response.json();
       setScore(result.score);
       setScoreBreakdown(result.breakdown);
+
+      // Save score to database if user is logged in
+      if (user && result.score !== null) {
+        await saveScoreToFirestore(result.score, calculatedTimeTaken, currentTeam);
+      }
     } catch (error) {
       console.error('Error scoring drawing:', error);
       alert('Failed to score drawing. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string) => {
+    if (!user) return;
+
+    setIsSavingScore(true);
+    try {
+      const scoresRef = collection(firestore, 'nfl-draw-logo');
+      
+      const scoreData = {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+        userEmail: user.email,
+        score: score,
+        timeTaken: timeTaken, // in seconds
+        challengeName: challengeName,
+        timestamp: Date.now(),
+        gameMode: 'draw-memory',
+        // Additional metadata
+        scoreBreakdown: scoreBreakdown
+      };
+
+      await addDoc(scoresRef, scoreData);
+      setScoreSaved(true);
+      console.log('Score saved successfully to Firestore');
+    } catch (error) {
+      console.error('Error saving score to Firestore:', error);
+      // Don't show an alert for this error as it's not critical to the user experience
+    } finally {
+      setIsSavingScore(false);
     }
   };
 
@@ -159,6 +218,8 @@ export default function DrawMemoryPage() {
     setShowLogo(false);
     setColorExtractionError(null);
     setOverlayLogoUrl(null);
+    setTimeTaken(null);
+    setScoreSaved(false);
   };
 
   const getScoreMessage = (score: number) => {
@@ -268,10 +329,10 @@ export default function DrawMemoryPage() {
           <div className="flex justify-center mt-8">
             <button
               onClick={handleSubmitDrawing}
-              disabled={isLoading}
+              disabled={isLoading || isSavingScore}
               className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Scoring...' : 'Submit Drawing'}
+              {isLoading ? 'Scoring...' : isSavingScore ? 'Saving Score...' : 'Submit Drawing'}
             </button>
           </div>
 
@@ -281,9 +342,49 @@ export default function DrawMemoryPage() {
                 <h3 className="text-2xl font-bold text-gray-800 mb-2">
                   Your Score: {score}%
                 </h3>
+                {timeTaken !== null && (
+                  <p className="text-lg text-gray-600 mb-2">
+                    Time taken: {timeTaken} seconds
+                  </p>
+                )}
                 <p className="text-lg text-gray-700">
                   {getScoreMessage(score)}
                 </p>
+
+                {/* User login/score saving status */}
+                <div className="mt-4">
+                  {!user ? (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-sm text-yellow-700 mb-2">
+                        Want to save your score to the leaderboard?
+                      </p>
+                      <button
+                        onClick={() => setShowLoginModal(true)}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                      >
+                        Login to Save Score
+                      </button>
+                    </div>
+                  ) : scoreSaved ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-700">
+                        ✅ Score saved to leaderboard!
+                      </p>
+                    </div>
+                  ) : isSavingScore ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-sm text-blue-700">
+                        💾 Saving score to leaderboard...
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <p className="text-sm text-green-700">
+                        Logged in as: {user.displayName || user.email?.split('@')[0] || 'User'}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 {scoreBreakdown && (
                   <div className="mt-6 bg-white rounded-lg p-4 shadow-md">
