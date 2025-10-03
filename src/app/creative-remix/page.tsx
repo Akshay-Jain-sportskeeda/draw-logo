@@ -116,9 +116,6 @@ export default function CreativeRemixPage() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
               {template.name}
             </h2>
-            <p className="text-gray-600 text-center">
-              {template.description}
-            </p>
           </div>
 
           <div className="flex flex-col items-center space-y-8">
