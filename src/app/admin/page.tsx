@@ -70,6 +70,22 @@ export default function AdminPage() {
     };
   }, [isAuthenticated]);
 
+  const handleUpdateSubmission = async (id: string, updates: Partial<Submission>) => {
+    setIsUpdating(true);
+    try {
+      const submissionRef = doc(firestore, 'nfl-draw-logo', id);
+      await updateDoc(submissionRef, updates);
+      setSelectedSubmission(null);
+      setEditRating(null);
+      setEditNotes('');
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      alert('Failed to update submission');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -86,22 +102,6 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin_authenticated');
     setPassword('');
-  };
-
-  const handleUpdateSubmission = async (id: string, updates: Partial<Submission>) => {
-    setIsUpdating(true);
-    try {
-      const submissionRef = doc(firestore, 'nfl-draw-logo', id);
-      await updateDoc(submissionRef, updates);
-      setSelectedSubmission(null);
-      setEditRating(null);
-      setEditNotes('');
-    } catch (error) {
-      console.error('Error updating submission:', error);
-      alert('Failed to update submission');
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   const openSubmissionDetail = (submission: Submission) => {
