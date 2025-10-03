@@ -140,13 +140,21 @@ export default function DrawMemoryPage() {
       return;
     }
 
+    console.log('=== SUBMIT DRAWING DEBUG START ===');
+    console.log('User object:', user);
+    console.log('User logged in:', !!user);
+    console.log('Drawing data exists:', !!drawingData);
+    console.log('Current challenge:', currentTeam);
+
     // Calculate time taken
     const endTime = Date.now();
     const calculatedTimeTaken = Math.round((endTime - startTime) / 1000); // in seconds
     setTimeTaken(calculatedTimeTaken);
+    console.log('Time calculation - Start:', startTime, 'End:', endTime, 'Duration (seconds):', calculatedTimeTaken);
 
     setIsLoading(true);
     try {
+      console.log('Starting API call to score drawing...');
       const response = await fetch('/api/score-drawing', {
         method: 'POST',
         headers: {
@@ -163,27 +171,50 @@ export default function DrawMemoryPage() {
       }
 
       const result = await response.json();
+      console.log('API response received:', result);
       setScore(result.score);
       setScoreBreakdown(result.breakdown);
 
       // Save score to database if user is logged in
       if (user && result.score !== null) {
+        console.log('User is logged in and score exists, calling saveScoreToFirestore...');
         await saveScoreToFirestore(result.score, calculatedTimeTaken, currentTeam);
+      } else {
+        console.log('Score not saved - User logged in:', !!user, 'Score exists:', result.score !== null);
       }
     } catch (error) {
       console.error('Error scoring drawing:', error);
       alert('Failed to score drawing. Please try again.');
     } finally {
       setIsLoading(false);
+      console.log('=== SUBMIT DRAWING DEBUG END ===');
     }
   };
 
   const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string) => {
-    if (!user) return;
+    console.log('=== SAVE SCORE TO FIRESTORE DEBUG START ===');
+    console.log('Function called with parameters:');
+    console.log('- score:', score);
+    console.log('- timeTaken:', timeTaken);
+    console.log('- challengeName:', challengeName);
+    
+    if (!user) {
+      console.log('ERROR: No user found, cannot save score');
+      return;
+    }
+
+    console.log('User details:');
+    console.log('- uid:', user.uid);
+    console.log('- displayName:', user.displayName);
+    console.log('- email:', user.email);
 
     setIsSavingScore(true);
+    console.log('Set isSavingScore to true');
+    
     try {
+      console.log('Creating Firestore reference to nfl-draw-logo collection...');
       const scoresRef = collection(firestore, 'nfl-draw-logo');
+      console.log('Firestore collection reference created successfully');
       
       const scoreData = {
         userId: user.uid,
@@ -198,14 +229,28 @@ export default function DrawMemoryPage() {
         scoreBreakdown: scoreBreakdown
       };
 
+      console.log('Score data object created:');
+      console.log(JSON.stringify(scoreData, null, 2));
+      
+      console.log('Attempting to add document to Firestore...');
       await addDoc(scoresRef, scoreData);
+      console.log('Document successfully added to Firestore!');
+      
       setScoreSaved(true);
-      console.log('Score saved successfully to Firestore');
+      console.log('Set scoreSaved state to true');
+      console.log('Score saved successfully to Firestore - COMPLETE');
     } catch (error) {
-      console.error('Error saving score to Firestore:', error);
+      console.error('=== FIRESTORE SAVE ERROR ===');
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error?.message);
+      console.error('Full error object:', error);
+      console.error('Error stack:', error?.stack);
+      console.error('=== END FIRESTORE SAVE ERROR ===');
       // Don't show an alert for this error as it's not critical to the user experience
     } finally {
       setIsSavingScore(false);
+      console.log('Set isSavingScore to false');
+      console.log('=== SAVE SCORE TO FIRESTORE DEBUG END ===');
     }
   };
 
