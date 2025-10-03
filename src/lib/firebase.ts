@@ -11,8 +11,16 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-  databaseURL: 'https://leaderboards.firebaseio.com'
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
+    `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com/`
 };
+
+console.log('=== CLIENT-SIDE FIREBASE CONFIG DEBUG ===');
+console.log('Project ID:', firebaseConfig.projectId);
+console.log('Database URL:', firebaseConfig.databaseURL);
+console.log('Auth Domain:', firebaseConfig.authDomain);
+console.log('Storage Bucket:', firebaseConfig.storageBucket);
+console.log('=== END CLIENT-SIDE FIREBASE CONFIG DEBUG ===');
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const storage = getStorage(app);
