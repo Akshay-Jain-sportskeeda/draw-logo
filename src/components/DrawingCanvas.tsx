@@ -7,9 +7,11 @@ interface DrawingCanvasProps {
   availableColors?: string[];
   overlayImageUrl?: string | null;
   onClearCanvas?: () => void;
+  permanentTemplate?: boolean;
+  templateImageUrl?: string;
 }
 
-export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const userDrawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -107,19 +109,19 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           const padding = 16;
           const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
           const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
-          
+
           // Calculate scale to fit entire image within effective area (object-contain behavior)
           const scaleX = effectiveCanvasWidth / img.width;
           const scaleY = effectiveCanvasHeight / img.height;
           const scale = Math.min(scaleX, scaleY);
-          
+
           const drawWidth = img.width * scale;
           const drawHeight = img.height * scale;
           const offsetX = padding + (effectiveCanvasWidth - drawWidth) / 2;
           const offsetY = padding + (effectiveCanvasHeight - drawHeight) / 2;
-          
-          // Draw the overlay image with transparency
-          overlayCtx.globalAlpha = 0.3;
+
+          // For permanent templates, use full opacity, otherwise use transparency
+          overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
           overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           overlayCtx.globalAlpha = 1.0;
         };
@@ -133,10 +135,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
   };
 
-  // Handle overlay image changes
+  // Handle overlay image changes or permanent template
   useEffect(() => {
-    renderOverlay(overlayImageUrl || null);
-  }, [overlayImageUrl]);
+    if (permanentTemplate && templateImageUrl) {
+      renderOverlay(templateImageUrl);
+    } else {
+      renderOverlay(overlayImageUrl || null);
+    }
+  }, [overlayImageUrl, permanentTemplate, templateImageUrl]);
 
   // Update stroke color when color changes
   useEffect(() => {
