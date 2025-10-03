@@ -19,7 +19,7 @@ function getAdminApp() {
     adminApp = initializeApp({
       credential: cert(serviceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com`
+      databaseURL: `https://leaderboards.firebaseio.com`
     });
   } else {
     adminApp = getApps()[0];
