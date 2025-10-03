@@ -73,6 +73,17 @@ function getAdminApp() {
     console.log('- Database URL:', databaseURL);
     console.log('- Storage Bucket:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
     
+    console.log('=== SERVICE ACCOUNT OBJECT BEFORE INITIALIZATION ===');
+    console.log('Service Account Object Structure:');
+    console.log('- projectId:', serviceAccount.projectId);
+    console.log('- clientEmail:', serviceAccount.clientEmail);
+    console.log('- privateKey (first 50 chars):', serviceAccount.privateKey?.substring(0, 50) || 'MISSING');
+    console.log('- privateKey (last 50 chars):', serviceAccount.privateKey?.substring(serviceAccount.privateKey.length - 50) || 'MISSING');
+    console.log('- privateKey total length:', serviceAccount.privateKey?.length || 0);
+    console.log('- privateKey starts with BEGIN:', serviceAccount.privateKey?.startsWith('-----BEGIN PRIVATE KEY-----') || false);
+    console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n') || false);
+    console.log('=== END SERVICE ACCOUNT OBJECT DEBUG ===');
+    
     console.log('Attempting to initialize Firebase Admin...');
     
     adminApp = admin.initializeApp({
