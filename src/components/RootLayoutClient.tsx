@@ -7,22 +7,18 @@ import PFSNFooter from '@/components/PFSNFooter'
 import TopBar from '@/components/TopBar'
 import { useAuth } from '@/lib/useAuth';
 import Auth from '@/components/Auth'; // Assuming Auth is your login modal component
-import { useState } from 'react'
+import { AuthModalProvider, useAuthModal } from '@/context/AuthModalContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
-function RootLayoutClient({
+function RootLayoutContent({
   children,
 }: {
   children: React.ReactNode
 }) {
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState<'game' | 'leaderboard' | 'dashboard'>('game');
-  const [showLoginModal, setShowLoginModal] = useState(false);
-
-  const handleShowLogin = () => {
-    setShowLoginModal(true);
-  }
+  const { showLoginModal, setShowLoginModal } = useAuthModal();
 
   return (
     <div className={inter.className}>
@@ -41,7 +37,7 @@ function RootLayoutClient({
             user={user}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            onShowLogin={handleShowLogin}
+            onShowLogin={() => setShowLoginModal(true)}
             onLogout={logout}
           />
           
@@ -69,6 +65,19 @@ function RootLayoutClient({
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
       />
     </div>
+  )
+}
+function RootLayoutClient({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AuthModalProvider>
+      <RootLayoutContent>
+        {children}
+      </RootLayoutContent>
+    </AuthModalProvider>
   )
 }
 

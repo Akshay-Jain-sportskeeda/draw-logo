@@ -36,3 +36,7 @@ export function getAdminStorage() {
 export function getAdminDatabase() {
   return admin.database(getAdminApp());
 }
+
+export function getAdminAuth() {
+  return admin.auth(getAdminApp());
+}

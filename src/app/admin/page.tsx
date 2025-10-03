@@ -8,6 +8,8 @@ interface Submission {
   id: string;
   drawingUrl: string;
   userName: string;
+  userId?: string;
+  userEmail?: string;
   timestamp: number;
   status: 'pending' | 'approved' | 'rejected';
   rating: number | null;
@@ -46,6 +48,8 @@ export default function AdminPage() {
           id,
           drawingUrl: value.drawingUrl || '',
           userName: value.userName || 'Anonymous',
+          userId: value.userId,
+          userEmail: value.userEmail,
           timestamp: value.timestamp || Date.now(),
           status: value.status || 'pending',
           rating: value.rating,
@@ -281,6 +285,9 @@ export default function AdminPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">User Name</label>
                       <p className="text-gray-800">{selectedSubmission.userName}</p>
+                      {selectedSubmission.userEmail && (
+                        <p className="text-xs text-gray-500">{selectedSubmission.userEmail}</p>
+                      )}
                     </div>
 
                     <div>

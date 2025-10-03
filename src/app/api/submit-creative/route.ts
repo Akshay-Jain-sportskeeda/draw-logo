@@ -1,10 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminStorage, getAdminDatabase } from '@/lib/firebase-admin';
+import { getAdminStorage, getAdminDatabase, getAdminAuth } from '@/lib/firebase-admin';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    let decodedToken;
+    
+    try {
+      const adminAuth = getAdminAuth();
+      decodedToken = await adminAuth.verifyIdToken(idToken);
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return NextResponse.json(
+        { error: 'Invalid authentication token' },
+        { status: 401 }
+      );
+    }
+
     const { drawingData, userName, gameMode } = await request.json();
 
     if (!drawingData) {
@@ -41,7 +64,9 @@ export async function POST(request: NextRequest) {
 
     const submissionData = {
       drawingUrl: publicUrl,
-      userName: userName || 'Anonymous',
+      userName: userName || decodedToken.name || decodedToken.email?.split('@')[0] || 'Anonymous',
+      userId: decodedToken.uid,
+      userEmail: decodedToken.email,
       timestamp: Date.now(),
       status: 'pending',
       rating: null,

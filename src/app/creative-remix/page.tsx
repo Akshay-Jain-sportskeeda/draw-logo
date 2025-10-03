@@ -5,11 +5,16 @@ import DrawingCanvas from '@/components/DrawingCanvas';
 import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { getDefaultTemplate } from '@/lib/templates';
+import { useAuth } from '@/lib/useAuth';
+import { useAuthModal } from '@/context/AuthModalContext';
 
 export default function CreativeRemixPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState<string>('');
+
+  const { user } = useAuth();
+  const { setShowLoginModal } = useAuthModal();
 
   const template = getDefaultTemplate();
 
@@ -138,6 +143,8 @@ export default function CreativeRemixPage() {
               </h3>
               <SubmissionForm
                 drawingData={drawingData}
+                user={user}
+                onShowLogin={() => setShowLoginModal(true)}
                 onSubmitSuccess={handleSubmitSuccess}
                 onSubmitError={handleSubmitError}
               />

@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
+import { User as FirebaseUser } from 'firebase/auth';
 
 interface SubmissionFormProps {
   drawingData: string;
+  user: FirebaseUser | null;
+  onShowLogin: () => void;
   onSubmitSuccess: (submissionId: string) => void;
   onSubmitError: (error: string) => void;
 }
 
-export default function SubmissionForm({ drawingData, onSubmitSuccess, onSubmitError }: SubmissionFormProps) {
-  const [userName, setUserName] = useState('');
+export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmitSuccess, onSubmitError }: SubmissionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
@@ -19,8 +21,8 @@ export default function SubmissionForm({ drawingData, onSubmitSuccess, onSubmitE
       return false;
     }
 
-    if (userName.length > 50) {
-      setValidationError('Name must be 50 characters or less');
+    if (!user) {
+      setValidationError('Please log in to submit your drawing');
       return false;
     }
 
@@ -39,14 +41,21 @@ export default function SubmissionForm({ drawingData, onSubmitSuccess, onSubmitE
     setValidationError('');
 
     try {
+      // Get the user's ID token for authentication
+      const idToken = await user!.getIdToken();
+      
+      // Get the user's display name or email as fallback
+      const userName = user!.displayName || user!.email?.split('@')[0] || 'Anonymous';
+
       const response = await fetch('/api/submit-creative', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           drawingData,
-          userName: userName.trim() || 'Anonymous',
+          userName,
           gameMode: 'creative-remix'
         }),
       });
@@ -68,24 +77,30 @@ export default function SubmissionForm({ drawingData, onSubmitSuccess, onSubmitE
     }
   };
 
+  // If user is not logged in, show login prompt
+  if (!user) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-600 mb-4">
+            Please log in to submit your artwork to the gallery
+          </p>
+          <button
+            onClick={onShowLogin}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            Login to Submit
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
-          Your Name (Optional)
-        </label>
-        <input
-          type="text"
-          id="userName"
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-          maxLength={50}
-          placeholder="Anonymous"
-          disabled={isSubmitting}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-        />
-        <p className="text-xs text-gray-500 mt-1">
-          {userName.length}/50 characters
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+        <p className="text-sm text-blue-700">
+          <strong>Submitting as:</strong> {user.displayName || user.email?.split('@')[0] || 'Anonymous'}
         </p>
       </div>
 
