@@ -55,6 +55,9 @@ export default function GalleryPage() {
       setIsLoading(false);
     });
 
+    return () => unsubscribe();
+  }, []);
+
   const filteredSubmissions = filterMode === 'all'
     ? submissions
     : submissions.filter(sub => sub.gameMode === filterMode);
