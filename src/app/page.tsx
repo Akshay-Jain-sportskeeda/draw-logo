@@ -18,7 +18,7 @@ export default function Home() {
 
         <div className="text-center mb-8 lg:hidden block">
           <p className="text-lg text-gray-600">
-            Choose your challenge and unleash your creativity!
+            Choose Game Mode
           </p>
         </div>
 
