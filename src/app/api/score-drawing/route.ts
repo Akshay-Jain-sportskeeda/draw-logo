@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Jimp from 'jimp';
 import { ssim } from 'ssim.js';
-import { createCanvas } from 'canvas';
 
 // Helper function to determine if a pixel is background
 function isBackgroundPixel(r: number, g: number, b: number, a: number): boolean {
@@ -162,21 +161,18 @@ function pixelSimilarityScore(userGray: Uint8Array, targetGray: Uint8Array) {
 
 // SSIM score
 function ssimScore(userRgba: Uint8ClampedArray, targetRgba: Uint8ClampedArray, width: number, height: number) {
-  // Convert RGBA data to RGB format (remove alpha channel)
-  const userRgb = [];
-  const targetRgb = [];
+  // Create ImageData-like objects directly without canvas
+  const userImg = {
+    data: userRgba,
+    width: width,
+    height: height
+  };
   
-  for (let i = 0; i < userRgba.length; i += 4) {
-    userRgb.push(userRgba[i], userRgba[i + 1], userRgba[i + 2]);
-    targetRgb.push(targetRgba[i], targetRgba[i + 1], targetRgba[i + 2]);
-  }
-  
-  const canvas = createCanvas(width, height);
-const ctx = canvas.getContext('2d');
-const userImg = ctx.createImageData(width, height);
-  userImg.data.set(new Uint8ClampedArray(userRgb));
-  const targetImg = ctx.createImageData(width, height);
-  targetImg.data.set(new Uint8ClampedArray(targetRgb));
+  const targetImg = {
+    data: targetRgba,
+    width: width,
+    height: height
+  };
   
   return ssim(userImg, targetImg).mssim * 100;
 }
