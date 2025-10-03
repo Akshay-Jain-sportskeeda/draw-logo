@@ -12,8 +12,8 @@
 /* Adjust for sidebar on desktop */
 @media (min-width: 1024px) {
   .pfsnHeaderWrap {
-    margin-left: 256px;
-    width: calc(100% - 256px);
+    margin-left: 0;
+    width: 100%;
   }
 }
 
