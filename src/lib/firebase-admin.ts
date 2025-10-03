@@ -18,6 +18,7 @@ function getAdminApp() {
     console.log('Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
     console.log('Client Email exists:', !!process.env.FIREBASE_CLIENT_EMAIL);
     console.log('Service Account JSON exists:', !!process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log('Private Key exists:', !!process.env.FIREBASE_PRIVATE_KEY);
     
     // Handle service account credentials
     const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -28,11 +29,24 @@ function getAdminApp() {
           privateKey: getFormattedPrivateKey(),
         };
 
+    console.log('=== SERVICE ACCOUNT CREDENTIALS DEBUG ===');
     console.log('Service account structure:');
     console.log('- projectId:', serviceAccount.projectId);
     console.log('- clientEmail:', serviceAccount.clientEmail);
     console.log('- privateKey length:', serviceAccount.privateKey?.length || 0);
     console.log('- privateKey starts with BEGIN:', serviceAccount.privateKey?.startsWith('-----BEGIN PRIVATE KEY-----'));
+    console.log('- privateKey ends with END:', serviceAccount.privateKey?.endsWith('-----END PRIVATE KEY-----\n'));
+    
+    // Log which method we're using for credentials
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      console.log('CREDENTIALS SOURCE: Using FIREBASE_SERVICE_ACCOUNT JSON');
+      console.log('FIREBASE_SERVICE_ACCOUNT content (first 100 chars):', process.env.FIREBASE_SERVICE_ACCOUNT.substring(0, 100));
+    } else {
+      console.log('CREDENTIALS SOURCE: Using individual environment variables');
+      console.log('- NEXT_PUBLIC_FIREBASE_PROJECT_ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+      console.log('- FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL);
+      console.log('- FIREBASE_PRIVATE_KEY length:', process.env.FIREBASE_PRIVATE_KEY?.length || 0);
+    }
     
     // Validate that we have the required credentials
     if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
@@ -52,6 +66,13 @@ function getAdminApp() {
     console.log('Database URL:', databaseURL);
     console.log('Storage Bucket:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
     
+    console.log('=== FIREBASE ADMIN SDK INITIALIZATION ===');
+    console.log('Initializing Firebase Admin with:');
+    console.log('- Project ID for credential:', serviceAccount.projectId);
+    console.log('- Client Email for credential:', serviceAccount.clientEmail);
+    console.log('- Database URL:', databaseURL);
+    console.log('- Storage Bucket:', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+    
     console.log('Attempting to initialize Firebase Admin...');
     
     adminApp = admin.initializeApp({
@@ -61,11 +82,14 @@ function getAdminApp() {
     });
     
     console.log('Firebase Admin initialized successfully');
+    console.log('Initialized app project ID:', adminApp.options.projectId);
+    console.log('Initialized app database URL:', adminApp.options.databaseURL);
   } else {
     console.log('Using existing Firebase Admin app');
     const app = admin.apps[0];
     if (app) {
       adminApp = app;
+      console.log('Existing app project ID:', adminApp.options.projectId);
     }
   }
 
