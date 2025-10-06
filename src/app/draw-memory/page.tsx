@@ -256,7 +256,7 @@ export default function DrawMemoryPage() {
       
       const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
       const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
-      const finalScore = Math.round(0.6 * accuracyScore + 0.4 * timeScore); // Combined score
+      const finalScore = Math.round(0.75 * accuracyScore + 0.25 * timeScore); // Combined score
       
       console.log('Full scoring breakdown:');
       console.log('- Accuracy Score:', accuracyScore);
@@ -269,8 +269,8 @@ export default function DrawMemoryPage() {
         accuracyScore: Math.round(accuracyScore * 100) / 100,
         timeScore: Math.round(timeScore * 100) / 100,
         finalScore: finalScore,
-        accuracyContribution: Math.round(0.6 * accuracyScore * 100) / 100,
-        timeContribution: Math.round(0.4 * timeScore * 100) / 100,
+        accuracyContribution: Math.round(0.75 * accuracyScore * 100) / 100,
+        timeContribution: Math.round(0.25 * timeScore * 100) / 100,
         cappedTimeSeconds: cappedTimeSeconds,
         actualTimeSeconds: calculatedTimeTaken,
         drawingAnalysis: result.breakdown // Keep original drawing analysis
@@ -619,16 +619,18 @@ export default function DrawMemoryPage() {
                 </div>
                 <div className="flex justify-between items-center p-4 rounded-lg border border-gray-200 bg-yellow-50">
                   <div className="text-gray-700 font-medium">Time Score</div>
-                  <span className="text-xl font-bold text-orange-600">{Math.round(scoreBreakdown.timeScore)}%</span>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-orange-600">{Math.round(scoreBreakdown.timeScore)}%</div>
+                    <div className="text-xs text-gray-600">Time: {formatTime(timeTaken)}</div>
+                  </div>
                 </div>
                 <div className="flex flex-col p-4 rounded-lg border border-gray-200 bg-green-50">
                   <div className="flex justify-between items-center mb-2">
                     <div className="text-gray-700 font-medium">Final Score</div>
                     <span className="text-xl font-bold text-green-600">{score}%</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <div>Time: {formatTime(timeTaken)}</div>
-                    <div>60% accuracy + 40% time</div>
+                  <div className="text-center text-sm text-gray-600">
+                    <div>75% accuracy + 25% time</div>
                   </div>
                 </div>
               </div>

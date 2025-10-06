@@ -67,7 +67,12 @@ const WinScreen: React.FC<WinScreenProps> = ({
           </div>
           <div className={styles.statItem}>
             <div className={styles.statLabel}>Time Score</div>
-            <span className={styles.statValue}>{Math.round(timeScore)}%</span>
+            <div style={{ textAlign: 'right' }}>
+              <div className={styles.statValue}>{Math.round(timeScore)}%</div>
+              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
+                Time: {stats.displayTime}
+              </div>
+            </div>
           </div>
           <div className={styles.statItem}>
             <div className={styles.statRow}>
@@ -75,8 +80,7 @@ const WinScreen: React.FC<WinScreenProps> = ({
               <span className={styles.statValue}>{score}%</span>
             </div>
             <div className={styles.timeBreakdown}>
-              <div className={styles.penaltyText}>Time: {stats.displayTime}</div>
-              <div className={styles.calculationText}>60% accuracy + 40% time</div>
+              <div className={styles.calculationText}>75% accuracy + 25% time</div>
             </div>
           </div>
         </div>
