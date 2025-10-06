@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         const fallbackChallenge = challengeData[0];
         console.log('Using fallback challenge:', fallbackChallenge);
         
-        const response: DailyChallengeResponse = {
+        const challengeResponse: DailyChallengeResponse = {
           date: fallbackChallenge.date,
           memoryChallenge: {
             name: extractTeamNameFromUrl(fallbackChallenge.memory),
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
           }
         };
         
-        return NextResponse.json(response);
+        return NextResponse.json(challengeResponse);
       }
       
       return NextResponse.json(
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
     
     console.log('Found challenge for today:', todayChallenge);
     
-    const response: DailyChallengeResponse = {
+    const challengeResponse: DailyChallengeResponse = {
       date: todayChallenge.date,
       memoryChallenge: {
         name: extractTeamNameFromUrl(todayChallenge.memory),
@@ -143,10 +143,10 @@ export async function GET(request: NextRequest) {
       }
     };
     
-    console.log('Returning response:', response);
+    console.log('Returning response:', challengeResponse);
     console.log('=== DAILY CHALLENGE API DEBUG END ===');
     
-    return NextResponse.json(response);
+    return NextResponse.json(challengeResponse);
     
   } catch (error) {
     console.error('=== DAILY CHALLENGE API ERROR ===');
