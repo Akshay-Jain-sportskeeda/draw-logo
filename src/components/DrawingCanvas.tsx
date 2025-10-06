@@ -154,6 +154,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         // Initial data will be emitted when overlay becomes ready
       }
     }
+  }, [internalSelectedColor, drawingData, permanentTemplate, isOverlayReady, getCombinedDrawingDataUrl, onDrawingChange]);
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
