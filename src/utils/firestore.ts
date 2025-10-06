@@ -60,7 +60,7 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
       where('gameMode', '==', 'draw-memory'),
       where('puzzleDate', '==', date),
       orderBy('score', 'desc'),
-      orderBy('timeTaken', 'asc'),
+      orderBy('totalTime', 'asc'),
       limit(20)
     );
     console.log('Firestore query created for leaderboard entries');
@@ -79,7 +79,7 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
         displayName: data.userName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
-        totalTime: data.timeTaken ? data.timeTaken * 1000 : 0, // Convert seconds to milliseconds
+        totalTime: data.totalTime || 0, // Already in milliseconds
         completedAt: new Date(data.timestamp),
         puzzleDate: data.puzzleDate || date
       });
@@ -109,7 +109,7 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
       where('gameMode', '==', 'draw-memory'),
       where('puzzleDate', '==', puzzleDate),
       orderBy('score', 'desc'),
-      orderBy('timeTaken', 'asc')
+      orderBy('totalTime', 'asc')
     );
     console.log('Firestore query created for user rank');
     console.log('Query filters: gameMode=draw-memory, puzzleDate=' + puzzleDate);
@@ -126,7 +126,7 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
         displayName: data.userName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
-        totalTime: data.timeTaken ? data.timeTaken * 1000 : 0, // Convert seconds to milliseconds
+        totalTime: data.totalTime || 0, // Already in milliseconds
         completedAt: new Date(data.timestamp),
         puzzleDate: data.puzzleDate || puzzleDate
       });
@@ -160,3 +160,4 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
     throw error;
   }
 }
+        totalTime: data.totalTime || 0, // Already in milliseconds
