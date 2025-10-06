@@ -60,6 +60,7 @@ interface GameState {
   dailyChallenge: DailyChallenge | null;
   isLoadingChallenge: boolean;
   challengeError: string | null;
+  currentPuzzleDate: string;
   
   // Actions
   handleDrawingChange: (dataUrl: string) => void;
@@ -73,6 +74,9 @@ interface GameState {
   handleWinScreenClose: () => void;
   handleShare: () => Promise<void>;
   handleArchive: () => void;
+  setDailyChallengeByDate: (date: string) => void;
+  showArchiveScreen: boolean;
+  setShowArchiveScreen: (show: boolean) => void;
 }
 
 const GameStateContext = createContext<GameState | undefined>(undefined);
@@ -107,6 +111,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toISOString().split('T')[0]);
   
   // Archive screen
   const [showArchiveScreen, setShowArchiveScreen] = useState(false);
@@ -127,6 +132,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         
         const challengeData: DailyChallenge = await response.json();
         setDailyChallenge(challengeData);
+        setCurrentPuzzleDate(challengeData.date);
       } catch (error) {
         console.error('Error fetching daily challenge:', error);
         setChallengeError(error instanceof Error ? error.message : 'Failed to load daily challenge');
@@ -516,6 +522,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       
       const challengeData: DailyChallenge = await response.json();
       setDailyChallenge(challengeData);
+      setCurrentPuzzleDate(date);
       
       // Reset all game state for new challenge
       setDrawingData('');
@@ -580,6 +587,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     dailyChallenge,
     isLoadingChallenge,
     challengeError,
+    currentPuzzleDate,
     
     // Archive screen
     showArchiveScreen,

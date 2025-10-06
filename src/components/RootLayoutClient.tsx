@@ -23,12 +23,13 @@ function RootLayoutContent({
   children: React.ReactNode
 }) {
   const { user, logout } = useAuth()
+  const gameState = useGame()
   const [activeTab, setActiveTab] = useState<'game' | 'leaderboard' | 'dashboard'>('game');
   const { showLoginModal, setShowLoginModal } = useAuthModal();
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
-  const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
+  const currentPuzzleDate = gameState.currentPuzzleDate;
 
   // Handle navigation to leaderboard from WinScreen
   React.useEffect(() => {
