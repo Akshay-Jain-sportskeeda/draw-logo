@@ -1,0 +1,44 @@
+export interface GameResult {
+  id: string;
+  userId: string;
+  displayName: string;
+  moves: number;
+  hintsUsed: number;
+  totalTime: number;
+  completedAt: Date;
+  puzzleDate: string;
+  challengeName: string;
+  score: number;
+  gameMode: string;
+}
+
+export interface UserStats {
+  totalGames: number;
+  totalMoves: number;
+  totalHints: number;
+  totalTimeSpent: number;
+  unassistedGamesCount: number;
+  bestUnassistedTime: number | null;
+  bestTime: number;
+  bestRank: number;
+  averageMoves: number;
+  averageHints: number;
+  averageTime: number;
+  gamesThisWeek: number;
+  currentStreak: number;
+  bestUnassistedTimeDate?: string;
+  bestTimeDate: string;
+  bestRankDate: string;
+  completedDates: string[];
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  userId: string;
+  displayName: string;
+  moves: number;
+  hintsUsed: number;
+  totalTime: number;
+  completedAt: Date;
+  puzzleDate: string;
+}

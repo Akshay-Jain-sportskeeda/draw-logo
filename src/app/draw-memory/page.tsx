@@ -246,6 +246,7 @@ export default function DrawMemoryPage() {
         score: score,
         timeTaken: timeTaken, // in seconds
         challengeName: challengeName,
+        puzzleDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD format
         timestamp: Date.now(),
         gameMode: 'draw-memory',
         // Additional metadata

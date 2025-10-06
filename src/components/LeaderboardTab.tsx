@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Trophy, Clock, Target, Lightbulb, LogIn } from 'lucide-react';
-import { LeaderboardEntry } from './LeaderboardModal';
+import { LeaderboardEntry } from '@/types/game';
 import { trackLeaderboardView, trackLeaderboardRankView, trackCTAClick } from '../utils/analytics';
 
 interface LeaderboardTabProps {
