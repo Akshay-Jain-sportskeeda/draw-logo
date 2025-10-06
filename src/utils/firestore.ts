@@ -73,6 +73,8 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
     querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
       console.log('Processing document:', doc.id, 'data:', data);
+      console.log('accuracyScore from data:', data.accuracyScore);
+      console.log('score from data:', data.score);
       leaderboardEntries.push({
         id: doc.id,
         userId: data.userId,

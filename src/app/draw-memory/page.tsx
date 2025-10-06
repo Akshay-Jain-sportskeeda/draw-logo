@@ -316,6 +316,8 @@ export default function DrawMemoryPage() {
 
       console.log('Score data object created:');
       console.log(JSON.stringify(scoreData, null, 2));
+      console.log('accuracyScore being saved:', scoreData.accuracyScore);
+      console.log('breakdown.accuracyScore:', breakdown.accuracyScore);
       
       console.log('Attempting to add document to Firestore...');
       await addDoc(scoresRef, scoreData);
