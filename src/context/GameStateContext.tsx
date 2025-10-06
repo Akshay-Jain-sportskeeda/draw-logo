@@ -271,6 +271,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   // Action handlers
   const handleDrawingChange = useCallback((dataUrl: string) => {
     setDrawingData(dataUrl);
+    // Hide win screen when drawing changes
+    if (showWinScreen) {
+      setShowWinScreen(false);
+    }
   }, []);
 
   const handleRevealLogo = useCallback(() => {
@@ -289,6 +293,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
   const handleClearCanvas = useCallback(() => {
     setDrawingData('');
+    // Hide win screen when canvas is cleared
+    if (showWinScreen) {
+      setShowWinScreen(false);
+    }
   }, []);
 
   const handleSubmitDrawing = useCallback(async () => {
