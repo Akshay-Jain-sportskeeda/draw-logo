@@ -50,11 +50,13 @@ async function preprocess(imageBuffer: Buffer, size = 64) {
   const bounds = findContentBounds(image);
   
   let processedImage: any;
+  let activePixelCount = 0;
   
   if (!bounds) {
     console.log('No content found, using blank white image');
     // No content found, create blank white image
     processedImage = new Jimp(size, size, '#ffffff');
+    activePixelCount = 0;
   } else {
     console.log(`Content bounds: (${bounds.minX}, ${bounds.minY}) to (${bounds.maxX}, ${bounds.maxY})`);
     
@@ -77,6 +79,19 @@ async function preprocess(imageBuffer: Buffer, size = 64) {
     
     // Paste cropped content onto the centered position
     processedImage.composite(croppedImage, offsetX, offsetY);
+    
+    // Count active pixels in the final processed image
+    const { data } = processedImage.bitmap;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      
+      if (!isBackgroundPixel(r, g, b, a)) {
+        activePixelCount++;
+      }
+    }
   }
   
   const { data, width, height } = processedImage.bitmap;
@@ -90,7 +105,7 @@ async function preprocess(imageBuffer: Buffer, size = 64) {
     const b = data[i + 2];
     gray[i / 4] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
   }
-  return { gray, width, height, rgbaData: data };
+  return { gray, width, height, rgbaData: data, activePixelCount };
 }
 
 // Helper function to calculate Jaccard Index (Intersection over Union)
@@ -211,10 +226,44 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   console.log('=== SIMILARITY SCORING BREAKDOWN ===');
   
   const newSize = 256; // Increased from 64 to retain more detail
-  const { gray: userGray, width, height, rgbaData: userRgba } = await preprocess(userBuffer, newSize);
+  const { gray: userGray, width, height, rgbaData: userRgba, activePixelCount: userActivePixelCount } = await preprocess(userBuffer, newSize);
   const { gray: targetGray, rgbaData: targetRgba } = await preprocess(targetBuffer, newSize);
   
   console.log(`Image dimensions: ${width}x${height} (${width * height} pixels)`);
+  console.log(`User drawing active pixels: ${userActivePixelCount}`);
+  
+  // Calculate content density
+  const totalPixels = width * height;
+  const userContentDensity = userActivePixelCount / totalPixels;
+  const MIN_CONTENT_DENSITY_THRESHOLD = 0.005; // 0.5% of total pixels
+  
+  console.log(`User content density: ${(userContentDensity * 100).toFixed(2)}% (${userActivePixelCount}/${totalPixels} pixels)`);
+  console.log(`Minimum content density threshold: ${(MIN_CONTENT_DENSITY_THRESHOLD * 100).toFixed(2)}%`);
+  
+  // Check if user drawing has sufficient content
+  if (userContentDensity < MIN_CONTENT_DENSITY_THRESHOLD) {
+    console.log('INSUFFICIENT CONTENT DETECTED - Returning minimal score');
+    console.log('User drawing does not meet minimum content density requirement');
+    
+    const minimalScore = 1;
+    const breakdown = {
+      pixelScore: 0,
+      ssimScore: 0,
+      edgeScore: 0,
+      pixelContribution: 0,
+      ssimContribution: 0,
+      edgeContribution: 0
+    };
+    
+    console.log(`\n--- FINAL RESULT (INSUFFICIENT CONTENT) ---`);
+    console.log(`Minimal Score: ${minimalScore}%`);
+    console.log('=====================================\n');
+    
+    return {
+      totalScore: minimalScore,
+      breakdown: breakdown
+    };
+  }
 
   // Calculate individual scores
   const pixelScore = pixelSimilarityScore(userGray, targetGray);
@@ -236,23 +285,17 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   console.log('   - Measures overlap of edge pixels: TP / (TP + FP + FN)');
   console.log('   - Focuses on shapes and outlines (threshold: 15 for softer hand-drawn edges)');
 
-  // Apply leniency multiplier to pixel score
-  const pixelMultiplier = 1.5;
-  const adjustedPixelScore = Math.min(100, pixelScore * pixelMultiplier);
-  console.log(`4. ADJUSTED PIXEL SCORE: ${pixelScore.toFixed(2)}% × ${pixelMultiplier} = ${adjustedPixelScore.toFixed(2)}%`);
-  console.log('   - Applied leniency multiplier to make pixel matching more forgiving');
-
   // Calculate weighted contributions
-  const pixelContribution = 0.30 * adjustedPixelScore;
-  const ssimContribution = 0.55 * ssimVal;
-  const edgeContribution = 0.15 * edgeScore;
+  const pixelContribution = 0.40 * pixelScore;
+  const ssimContribution = 0.40 * ssimVal;
+  const edgeContribution = 0.20 * edgeScore;
   
   console.log('\n--- WEIGHTED CONTRIBUTIONS ---');
-  console.log(`Adjusted Pixel Score (30% weight): ${adjustedPixelScore.toFixed(2)}% × 0.30 = ${pixelContribution.toFixed(2)}`);
-  console.log(`SSIM Score (55% weight): ${ssimVal.toFixed(2)}% × 0.55 = ${ssimContribution.toFixed(2)}`);
-  console.log(`Edge Score (15% weight): ${edgeScore.toFixed(2)}% × 0.15 = ${edgeContribution.toFixed(2)}`);
+  console.log(`Pixel Score (40% weight): ${pixelScore.toFixed(2)}% × 0.40 = ${pixelContribution.toFixed(2)}`);
+  console.log(`SSIM Score (40% weight): ${ssimVal.toFixed(2)}% × 0.40 = ${ssimContribution.toFixed(2)}`);
+  console.log(`Edge Score (20% weight): ${edgeScore.toFixed(2)}% × 0.20 = ${edgeContribution.toFixed(2)}`);
   
-  const finalScore = 0.30 * adjustedPixelScore + 0.55 * ssimVal + 0.15 * edgeScore;
+  const finalScore = 0.40 * pixelScore + 0.40 * ssimVal + 0.20 * edgeScore;
   
   console.log(`\n--- FINAL RESULT ---`);
   console.log(`Combined Score: ${pixelContribution.toFixed(2)} + ${ssimContribution.toFixed(2)} + ${edgeContribution.toFixed(2)} = ${finalScore.toFixed(2)}%`);
@@ -262,7 +305,7 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   return {
     totalScore: Math.round(finalScore),
     breakdown: {
-      pixelScore: Math.round(adjustedPixelScore * 100) / 100,
+      pixelScore: Math.round(pixelScore * 100) / 100,
       ssimScore: Math.round(ssimVal * 100) / 100,
       edgeScore: Math.round(edgeScore * 100) / 100,
       pixelContribution: Math.round(pixelContribution * 100) / 100,

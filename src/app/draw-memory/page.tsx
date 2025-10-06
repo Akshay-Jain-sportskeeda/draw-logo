@@ -519,16 +519,16 @@ export default function DrawMemoryPage() {
                       <h5 className="font-medium text-gray-700 mb-2">Weighted Contributions</h5>
                       <div className="text-sm text-gray-600 space-y-1">
                         <div className="flex justify-between">
-                          <span>Pixel Score (20% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.pixelScore}% × 0.2 = {scoreBreakdown.pixelContribution}</span>
+                          <span>Pixel Score (40% weight):</span>
+                          <span className="font-medium">{scoreBreakdown.pixelScore}% × 0.40 = {scoreBreakdown.pixelContribution}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>SSIM Score (65% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.ssimScore}% × 0.65 = {scoreBreakdown.ssimContribution}</span>
+                          <span>SSIM Score (40% weight):</span>
+                          <span className="font-medium">{scoreBreakdown.ssimScore}% × 0.40 = {scoreBreakdown.ssimContribution}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Edge Score (15% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.edgeScore}% × 0.15 = {scoreBreakdown.edgeContribution}</span>
+                          <span>Edge Score (20% weight):</span>
+                          <span className="font-medium">{scoreBreakdown.edgeScore}% × 0.20 = {scoreBreakdown.edgeContribution}</span>
                         </div>
                         <div className="flex justify-between border-t pt-2 font-semibold">
                           <span>Final Score:</span>
