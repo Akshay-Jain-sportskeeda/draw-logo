@@ -35,6 +35,10 @@ function RootLayoutContent({
   React.useEffect(() => {
     const handleNavigateToLeaderboard = () => {
       setActiveTab('leaderboard');
+      // Scroll to top when navigating to leaderboard
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     };
 
     window.addEventListener('navigateToLeaderboard', handleNavigateToLeaderboard);
