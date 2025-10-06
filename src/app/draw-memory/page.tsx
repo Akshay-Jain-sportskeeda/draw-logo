@@ -317,6 +317,8 @@ export default function DrawMemoryPage() {
       </div>
     );
   }
+
+  const handleResetChallenge = () => {
     setDrawingData('');
     setScore(null);
     setScoreBreakdown(null);
