@@ -54,11 +54,7 @@ function parseCSV(csvText: string): DailyChallengeData[] {
 }
 
 function getTodayDateString(): string {
-  const today = new Date();
-  const month = (today.getMonth() + 1).toString().padStart(2, '0');
-  const day = today.getDate().toString().padStart(2, '0');
-  const year = today.getFullYear();
-  return `${month}/${day}/${year}`;
+  return new Date().toLocaleDateString('en-CA'); // Returns YYYY-MM-DD format
 }
 
 export async function GET(request: NextRequest) {
