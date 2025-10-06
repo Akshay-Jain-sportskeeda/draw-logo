@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import GamesPageSidebar from '@/components/GamesPageSidebar'
@@ -28,7 +28,7 @@ function RootLayoutContent({
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
 
-  const fetchLeaderboard = async (date: string) => {
+  const fetchLeaderboard = useCallback(async (date: string) => {
     setLeaderboardLoading(true);
     setLeaderboardError(null);
     try {
@@ -41,16 +41,16 @@ function RootLayoutContent({
     } finally {
       setLeaderboardLoading(false);
     }
-  };
+  }, []);
 
-  const getUserRankInfo = async (userId: string, puzzleDate: string) => {
+  const getUserRankInfo = useCallback(async (userId: string, puzzleDate: string) => {
     try {
       return await getUserRank(userId, puzzleDate);
     } catch (error) {
       console.error('Error getting user rank:', error);
       return null;
     }
-  };
+  }, []);
 
   return (
     <div className={inter.className}>
