@@ -7,6 +7,7 @@ import { useAuthModal } from '@/context/AuthModalContext';
 import { useAuth } from '@/lib/useAuth';
 import { useGame } from '@/context/GameStateContext';
 import WinScreen from '@/components/WinScreen';
+import ArchiveScreen from '@/components/ArchiveScreen';
 
 export default function DrawMemoryPage() {
   const { user } = useAuth();
@@ -30,6 +31,8 @@ export default function DrawMemoryPage() {
     challengeError,
     showImprovementTicker,
     showWinScreen,
+    showArchiveScreen,
+    setShowArchiveScreen,
     handleDrawingChange,
     handleRevealLogo,
     handleOverlayLogo,
@@ -41,6 +44,7 @@ export default function DrawMemoryPage() {
     handleWinScreenClose,
     handleShare,
     handleArchive,
+    setDailyChallengeByDate,
   } = gameState;
 
   const getScoreMessage = (score: number) => {
@@ -332,6 +336,19 @@ export default function DrawMemoryPage() {
           show={showWinScreen}
           user={user}
           onLoginClick={() => setShowLoginModal(true)}
+        />
+      )}
+
+      {/* Archive Screen Modal */}
+      {showArchiveScreen && (
+        <ArchiveScreen
+          show={showArchiveScreen}
+          onClose={() => setShowArchiveScreen(false)}
+          onSelectDate={(date) => {
+            setDailyChallengeByDate(date);
+            setShowArchiveScreen(false);
+          }}
+          userId={user?.uid}
         />
       )}
 

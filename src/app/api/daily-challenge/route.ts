@@ -73,6 +73,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log('=== DAILY CHALLENGE API DEBUG START ===');
     
+    const { searchParams } = new URL(request.url);
+    const requestedDate = searchParams.get('date');
+    const getAllPuzzles = searchParams.get('all') === 'true';
+    
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7nrMO_OwQwUiSf4fLtayPTpGaY2R-t6V0R730q-gR0nuis-VWxy2NaG3UsndWq41S66mLqte7ICks/pub?gid=0&single=true&output=csv';
     
     console.log('Fetching CSV from:', csvUrl);
@@ -90,16 +94,28 @@ export async function GET(request: NextRequest) {
     console.log('Parsed CSV data, rows:', challengeData.length);
     console.log('Sample rows:', challengeData.slice(0, 3));
     
-    const todayDate = getTodayDateString();
-    console.log('Looking for date:', todayDate);
+    // If requesting all puzzles, return simplified list
+    if (getAllPuzzles) {
+      console.log('Returning all available puzzles');
+      const puzzleList = challengeData.map(row => ({
+        date: row.date,
+        name: row.memoryTitle
+      }));
+      console.log('Puzzle list:', puzzleList.slice(0, 5));
+      return NextResponse.json(puzzleList);
+    }
     
-    const todayChallenge = challengeData.find(row => row.date === todayDate);
+    // Determine which date to look for
+    const targetDate = requestedDate || getTodayDateString();
+    console.log('Looking for date:', targetDate);
     
-    if (!todayChallenge) {
-      console.log('No challenge found for today, available dates:', challengeData.map(row => row.date));
+    const targetChallenge = challengeData.find(row => row.date === targetDate);
+    
+    if (!targetChallenge) {
+      console.log(`No challenge found for ${targetDate}, available dates:`, challengeData.map(row => row.date));
       
-      // Fallback to the first available challenge
-      if (challengeData.length > 0) {
+      // Fallback to the first available challenge only if looking for today
+      if (!requestedDate && challengeData.length > 0) {
         const fallbackChallenge = challengeData[0];
         console.log('Using fallback challenge:', fallbackChallenge);
         
@@ -119,22 +135,22 @@ export async function GET(request: NextRequest) {
       }
       
       return NextResponse.json(
-        { error: `No challenge found for ${todayDate}` },
+        { error: `No challenge found for ${targetDate}` },
         { status: 404 }
       );
     }
     
-    console.log('Found challenge for today:', todayChallenge);
+    console.log(`Found challenge for ${targetDate}:`, targetChallenge);
     
     const challengeResponse: DailyChallengeResponse = {
-      date: todayChallenge.date,
+      date: targetChallenge.date,
       memoryChallenge: {
-        name: todayChallenge.memoryTitle,
-        logoUrl: todayChallenge.memoryImg
+        name: targetChallenge.memoryTitle,
+        logoUrl: targetChallenge.memoryImg
       },
       freeDrawChallenge: {
-        name: todayChallenge.freeDrawTitle,
-        imageUrl: todayChallenge.freeDrawImg
+        name: targetChallenge.freeDrawTitle,
+        imageUrl: targetChallenge.freeDrawImg
       }
     };
     

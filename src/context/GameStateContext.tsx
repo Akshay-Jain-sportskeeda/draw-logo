@@ -108,6 +108,9 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
   
+  // Archive screen
+  const [showArchiveScreen, setShowArchiveScreen] = useState(false);
+  
   const ACCURACY_THRESHOLD = 10;
 
   // Fetch daily challenge on mount
@@ -498,8 +501,41 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   }, [score, dailyChallenge]);
 
   const handleArchive = useCallback(() => {
-    // Placeholder for archive functionality
-    alert('Archive feature coming soon!');
+    setShowArchiveScreen(true);
+  }, []);
+
+  const setDailyChallengeByDate = useCallback(async (date: string) => {
+    setIsLoadingChallenge(true);
+    setChallengeError(null);
+    
+    try {
+      const response = await fetch(`/api/daily-challenge?date=${date}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch challenge for ${date}: ${response.status}`);
+      }
+      
+      const challengeData: DailyChallenge = await response.json();
+      setDailyChallenge(challengeData);
+      
+      // Reset all game state for new challenge
+      setDrawingData('');
+      setScore(null);
+      setScoreBreakdown(null);
+      setTimeTaken(null);
+      setShowLogo(false);
+      setColorExtractionError(null);
+      setOverlayLogoUrl(null);
+      setStartTime(Date.now());
+      setScoreSaved(false);
+      setShowImprovementTicker(false);
+      setShowWinScreen(false);
+      
+    } catch (error) {
+      console.error('Error fetching challenge by date:', error);
+      setChallengeError(error instanceof Error ? error.message : 'Failed to load challenge');
+    } finally {
+      setIsLoadingChallenge(false);
+    }
   }, []);
 
   const formatTime = (seconds: number): string => {
@@ -545,6 +581,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     isLoadingChallenge,
     challengeError,
     
+    // Archive screen
+    showArchiveScreen,
+    setShowArchiveScreen,
+    
     // Actions
     handleDrawingChange,
     handleRevealLogo,
@@ -557,6 +597,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     handleWinScreenClose,
     handleShare,
     handleArchive,
+    setDailyChallengeByDate,
   };
 
   return (

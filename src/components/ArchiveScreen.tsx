@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Check } from 'lucide-react';
 import { trackArchiveView, trackArchivePuzzleLoad, trackModalOpen, trackModalClose } from '../utils/analytics';
-import { useLeaderboard } from '../hooks/useLeaderboard';
-import styles from '../styles/ArchiveScreen.module.css';
+import { useLeaderboard } from '../lib/useLeaderboard';
+import styles from './ArchiveScreen.module.css';
 
 interface ArchiveScreenProps {
   show?: boolean;
   onClose: () => void;
   onSelectDate: (date: string) => void;
-  availablePuzzles: {date: string; difficulty: string}[];
   userId?: string;
 }
 
@@ -16,11 +15,11 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
   show = true,
   onClose, 
   onSelectDate, 
-  availablePuzzles, 
   userId 
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
+  const [availablePuzzles, setAvailablePuzzles] = useState<{date: string; name: string}[]>([]);
   const { getUserCompletedDates } = useLeaderboard();
 
   // Lock/unlock body scroll when modal opens/closes
@@ -37,7 +36,25 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
   useEffect(() => {
     // Track archive popup view
     trackArchiveView();
-    setIsLoading(false);
+    
+    // Fetch available puzzles
+    const fetchAvailablePuzzles = async () => {
+      try {
+        const response = await fetch('/api/daily-challenge?all=true');
+        if (response.ok) {
+          const puzzles = await response.json();
+          setAvailablePuzzles(puzzles);
+        } else {
+          console.error('Failed to fetch available puzzles');
+        }
+      } catch (error) {
+        console.error('Error fetching available puzzles:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAvailablePuzzles();
   }, []);
 
   useEffect(() => {
