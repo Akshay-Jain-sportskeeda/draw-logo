@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 interface DrawingCanvasProps {
   onDrawingChange: (dataUrl: string) => void;
@@ -20,7 +20,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
-  const [isOverlayReady, setIsOverlayReady] = useState(false);
   
   // Helper function to get a non-white default color
   const getDefaultColor = (colors: string[]): string => {
@@ -39,35 +38,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [lineThickness, setLineThickness] = useState(3);
   const [isErasing, setIsErasing] = useState(false);
-
-  // Function to get combined drawing data URL (template + user drawing)
-  const getCombinedDrawingDataUrl = useCallback(() => {
-    const overlayCanvas = overlayCanvasRef.current;
-    const userDrawingCanvas = userDrawingCanvasRef.current;
-    
-    // If not permanent template or overlay not ready, just return user drawing
-    if (!permanentTemplate || !isOverlayReady || !overlayCanvas || !userDrawingCanvas) {
-      return userDrawingCanvas?.toDataURL('image/png') || '';
-    }
-    
-    // Create temporary canvas for combining
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = overlayCanvas.width;
-    tempCanvas.height = overlayCanvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    if (!tempCtx) {
-      return userDrawingCanvas.toDataURL('image/png');
-    }
-    
-    // Draw template first (background)
-    tempCtx.drawImage(overlayCanvas, 0, 0);
-    
-    // Draw user drawing on top
-    tempCtx.drawImage(userDrawingCanvas, 0, 0);
-    
-    return tempCanvas.toDataURL('image/png');
-  }, [permanentTemplate, isOverlayReady]);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -131,30 +101,19 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       
       // Restore drawing data if it exists
       if (drawingData && drawingData !== '') {
-        console.log('Restoring drawing data');
         const img = new Image();
         img.onload = () => {
           userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
           userDrawingCtx.drawImage(img, 0, 0);
-          
-          // Wait for overlay to be ready before emitting
-          setTimeout(() => {
-            if (permanentTemplate && isOverlayReady) {
-              const combinedDataUrl = getCombinedDrawingDataUrl();
-              onDrawingChange(combinedDataUrl);
-            } else {
-              const dataUrl = userDrawingCanvas.toDataURL('image/png');
-              onDrawingChange(dataUrl);
-            }
-          }, 100);
         };
         img.src = drawingData;
       } else {
-        console.log('No drawing data to restore');
-        // Initial data will be emitted when overlay becomes ready
+        // Initialize with empty drawing
+        const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
+        onDrawingChange(initialDataUrl);
       }
     }
-  }, [internalSelectedColor, drawingData, permanentTemplate, isOverlayReady, getCombinedDrawingDataUrl, onDrawingChange]);
+  }, [drawingData, internalSelectedColor, onDrawingChange]);
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
@@ -190,39 +149,22 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
           overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           overlayCtx.globalAlpha = 1.0;
-          
-          // Mark overlay as ready
-          setIsOverlayReady(true);
-          
-          // Emit initial combined data for permanent templates
-          if (permanentTemplate) {
-            const combinedDataUrl = getCombinedDrawingDataUrl();
-            onDrawingChange(combinedDataUrl);
-          }
         };
         img.onerror = () => {
           console.error('Failed to load overlay image:', imageUrl);
-          setIsOverlayReady(true); // Still mark as ready even if image fails
         };
         img.src = imageUrl;
       } catch (error) {
         console.error('Error loading overlay image:', error);
-        setIsOverlayReady(true); // Still mark as ready even if error occurs
       }
-    } else {
-      // No image to load, mark as ready
-      setIsOverlayReady(true);
     }
   };
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
-    console.log('Overlay effect triggered:', { permanentTemplate, templateImageUrl, overlayImageUrl });
     if (permanentTemplate && templateImageUrl) {
-      console.log('Rendering permanent template:', templateImageUrl);
       renderOverlay(templateImageUrl);
     } else {
-      console.log('Rendering overlay image:', overlayImageUrl);
       renderOverlay(overlayImageUrl || null);
     }
   }, [overlayImageUrl, permanentTemplate, templateImageUrl]);
@@ -346,8 +288,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   return (
-    <>
-      <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
+    <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
         {/* Background/Overlay Canvas */}
         <canvas
           ref={overlayCanvasRef}
@@ -476,7 +417,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             Clear
           </button>
         </div>
-      </div>
-    </>
+    </div>
   );
 }
