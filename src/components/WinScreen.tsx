@@ -1,13 +1,13 @@
 import React from 'react'
-import { WinStats } from '@/types/game'
 import styles from './WinScreen.module.css'
 import { User } from 'firebase/auth'
+import { useGame } from '@/context/GameStateContext'
 
 interface WinScreenProps {
-  stats: WinStats
   score: number
   accuracyScore: number
   timeScore: number
+  displayTime: string
   onShare: () => void
   onArchive: () => void
   onClose: () => void
@@ -17,10 +17,10 @@ interface WinScreenProps {
 }
 
 const WinScreen: React.FC<WinScreenProps> = ({
-  stats,
   score,
   accuracyScore,
   timeScore,
+  displayTime,
   onShare,
   onArchive,
   onClose,
@@ -70,7 +70,7 @@ const WinScreen: React.FC<WinScreenProps> = ({
             <div style={{ textAlign: 'right' }}>
               <div className={styles.statValue}>{Math.round(timeScore)}%</div>
               <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
-                Time: {stats.displayTime}
+                Time: {displayTime}
               </div>
             </div>
           </div>

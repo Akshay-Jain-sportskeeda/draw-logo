@@ -1,60 +1,45 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { firestore } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { useGame } from '@/context/GameStateContext';
 import WinScreen from '@/components/WinScreen';
-import { WinStats } from '@/types/game';
-
-interface DailyChallenge {
-  date: string;
-  memoryChallenge: {
-    name: string;
-    logoUrl: string;
-  };
-  freeDrawChallenge: {
-    name: string;
-    imageUrl: string;
-  };
-}
 
 export default function DrawMemoryPage() {
-  const [drawingData, setDrawingData] = useState<string>('');
-  const [showLogo, setShowLogo] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [scoreBreakdown, setScoreBreakdown] = useState<{
-    accuracyScore: number;
-    timeScore: number;
-    finalScore: number;
-    accuracyContribution: number;
-    timeContribution: number;
-    cappedTimeSeconds: number;
-    actualTimeSeconds: number;
-    drawingAnalysis?: any;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [logoColors, setLogoColors] = useState<string[]>([]);
-  const [isLoadingColors, setIsLoadingColors] = useState(true);
-  const [colorExtractionError, setColorExtractionError] = useState<string | null>(null);
-  const [overlayLogoUrl, setOverlayLogoUrl] = useState<string | null>(null);
-  const [startTime, setStartTime] = useState<number>(Date.now());
-  const [timeTaken, setTimeTaken] = useState<number | null>(null);
-  const [isSavingScore, setIsSavingScore] = useState(false);
-  const [scoreSaved, setScoreSaved] = useState(false);
-  const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
-  const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
-  const [challengeError, setChallengeError] = useState<string | null>(null);
-  const [showImprovementTicker, setShowImprovementTicker] = useState(false);
-  const [showWinScreen, setShowWinScreen] = useState(false);
-  
-  const ACCURACY_THRESHOLD = 10; // Minimum accuracy required to show score
-
-  const { user } = useAuth();
+  const gameState = useGame();
   const { setShowLoginModal } = useAuthModal();
+  
+  const {
+    drawingData,
+    showLogo,
+    score,
+    scoreBreakdown,
+    isLoading,
+    logoColors,
+    isLoadingColors,
+    colorExtractionError,
+    overlayLogoUrl,
+    timeTaken,
+    isSavingScore,
+    dailyChallenge,
+    isLoadingChallenge,
+    challengeError,
+    showImprovementTicker,
+    showWinScreen,
+    handleDrawingChange,
+    handleRevealLogo,
+    handleOverlayLogo,
+    handleRemoveOverlay,
+    handleClearCanvas,
+    handleSubmitDrawing,
+    handleResetChallenge,
+    handleRefreshChallenge,
+    handleWinScreenClose,
+    handleShare,
+    handleArchive,
+  } = gameState;
 
   const getScoreMessage = (score: number) => {
     if (score >= 80) return "Excellent! You're a logo master!";
@@ -74,306 +59,7 @@ export default function DrawMemoryPage() {
     return `${remainingSeconds}s`;
   };
 
-  const getCalculationText = (actualTime: number, cappedTime: number): string => {
-    if (actualTime > 600) {
-      return `${actualTime}s → ${cappedTime}s`;
-    }
-    return `${actualTime}s`;
-  };
-
-  // Fetch daily challenge on component mount
-  useEffect(() => {
-    const fetchDailyChallenge = async () => {
-      setIsLoadingChallenge(true);
-      setChallengeError(null);
-      
-      try {
-        const response = await fetch('/api/daily-challenge');
-        if (!response.ok) {
-          throw new Error(`Failed to fetch daily challenge: ${response.status}`);
-        }
-        
-        const challengeData: DailyChallenge = await response.json();
-        setDailyChallenge(challengeData);
-      } catch (error) {
-        console.error('Error fetching daily challenge:', error);
-        setChallengeError(error instanceof Error ? error.message : 'Failed to load daily challenge');
-      } finally {
-        setIsLoadingChallenge(false);
-      }
-    };
-
-    fetchDailyChallenge();
-  }, []);
-
   const currentTeam = dailyChallenge?.memoryChallenge.name || 'Loading...';
-  const logoUrl = dailyChallenge?.memoryChallenge.logoUrl || '';
-
-  useEffect(() => {
-    if (!logoUrl) return;
-    
-    const fetchLogoColors = async () => {
-      setIsLoadingColors(true);
-      setColorExtractionError(null);
-      try {
-        const response = await fetch('/api/get-logo-colors', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ logoUrl }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.colors) {
-            setLogoColors(result.colors);
-          } else {
-            throw new Error('No colors returned from API');
-          }
-        } else {
-          let errorMessage;
-          try {
-            const errorResult = await response.json();
-            errorMessage = errorResult.error || `HTTP ${response.status}: Failed to fetch logo colors`;
-          } catch (jsonError) {
-            errorMessage = `HTTP ${response.status}: Server returned non-JSON response`;
-          }
-          setColorExtractionError(errorMessage);
-          console.error('Failed to fetch logo colors:', errorMessage);
-
-          const defaultColors = ['#000000', '#ffffff', '#0066cc', '#dc2626', '#16a34a', '#ea580c', '#9333ea', '#eab308'];
-          setLogoColors(defaultColors);
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
-        setColorExtractionError(`Network error: ${errorMessage}`);
-        console.error('Error fetching logo colors:', error);
-
-        const defaultColors = ['#000000', '#ffffff', '#0066cc', '#dc2626', '#16a34a', '#ea580c', '#9333ea', '#eab308'];
-        setLogoColors(defaultColors);
-      } finally {
-        setIsLoadingColors(false);
-      }
-    };
-
-    fetchLogoColors();
-  }, [logoUrl]);
-
-  // Reset start time when daily challenge loads
-  useEffect(() => {
-    if (dailyChallenge) {
-      setStartTime(Date.now());
-      setTimeTaken(null);
-      setScoreSaved(false);
-    }
-  }, [dailyChallenge]);
-
-  const handleDrawingChange = (dataUrl: string) => {
-    setDrawingData(dataUrl);
-  };
-
-  const handleRevealLogo = () => {
-    setShowLogo(true);
-  };
-
-  const handleOverlayLogo = () => {
-    setOverlayLogoUrl(logoUrl);
-  };
-
-  const handleRemoveOverlay = () => {
-    setOverlayLogoUrl(null);
-  };
-
-  const handleClearCanvas = () => {
-    setDrawingData('');
-  };
-
-  const handleSubmitDrawing = async () => {
-    if (!drawingData) {
-      alert('Please draw something first!');
-      return;
-    }
-
-    console.log('=== SUBMIT DRAWING DEBUG START ===');
-    console.log('User object:', user);
-    console.log('User logged in:', !!user);
-    console.log('Drawing data exists:', !!drawingData);
-    console.log('Current challenge:', currentTeam);
-
-    // Calculate time taken
-    const endTime = Date.now();
-    const calculatedTimeTaken = Math.round((endTime - startTime) / 1000); // in seconds
-    setTimeTaken(calculatedTimeTaken);
-    console.log('Time calculation - Start:', startTime, 'End:', endTime, 'Duration (seconds):', calculatedTimeTaken);
-
-    setIsLoading(true);
-    try {
-      console.log('Starting API call to score drawing...');
-      const response = await fetch('/api/score-drawing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          drawingData,
-          targetLogoUrl: logoUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to score drawing');
-      }
-
-      const result = await response.json();
-      console.log('API response received:', result);
-      
-      // Calculate new scoring system
-      const accuracyScore = result.score; // Raw accuracy from drawing analysis
-      
-      console.log('Initial accuracy score:', accuracyScore);
-      console.log('Accuracy threshold:', ACCURACY_THRESHOLD);
-      
-      // Check if accuracy meets minimum threshold
-      if (accuracyScore < ACCURACY_THRESHOLD) {
-        console.log('Accuracy below threshold, showing feedback message');
-        setScore(null);
-        setScoreBreakdown(null);
-        setShowImprovementTicker(true);
-        
-        // Auto-hide the ticker after 4 seconds
-        setTimeout(() => {
-          setShowImprovementTicker(false);
-        }, 4000);
-        
-        // Don't save to database or calculate time score
-        return;
-      }
-      
-      // Accuracy meets threshold, proceed with full scoring
-      console.log('Accuracy meets threshold, calculating full score');
-      setShowImprovementTicker(false);
-      
-      const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
-      const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
-      const finalScore = Math.round(0.75 * accuracyScore + 0.25 * timeScore); // Combined score
-      
-      console.log('Full scoring breakdown:');
-      console.log('- Accuracy Score:', accuracyScore);
-      console.log('- Actual Time (seconds):', calculatedTimeTaken);
-      console.log('- Capped Time (seconds):', cappedTimeSeconds);
-      console.log('- Time Score:', timeScore.toFixed(2));
-      console.log('- Final Score:', finalScore);
-      
-      const newScoreBreakdown = {
-        accuracyScore: Math.round(accuracyScore * 100) / 100,
-        timeScore: Math.round(timeScore * 100) / 100,
-        finalScore: finalScore,
-        accuracyContribution: Math.round(0.75 * accuracyScore * 100) / 100,
-        timeContribution: Math.round(0.25 * timeScore * 100) / 100,
-        cappedTimeSeconds: cappedTimeSeconds,
-        actualTimeSeconds: calculatedTimeTaken,
-        drawingAnalysis: result.breakdown // Keep original drawing analysis
-      };
-      
-      setScore(finalScore);
-      setScoreBreakdown(newScoreBreakdown);
-
-      // Show win screen for successful scores
-      setShowWinScreen(true);
-
-      // Save score to database if user is logged in
-      if (user && finalScore !== null) {
-        console.log('User is logged in and score exists, calling saveScoreToFirestore...');
-        await saveScoreToFirestore(finalScore, calculatedTimeTaken, currentTeam, newScoreBreakdown);
-      } else {
-        console.log('Score not saved - User logged in:', !!user, 'Score exists:', finalScore !== null);
-      }
-    } catch (error) {
-      console.error('Error scoring drawing:', error);
-      alert('Failed to score drawing. Please try again.');
-    } finally {
-      setIsLoading(false);
-      console.log('=== SUBMIT DRAWING DEBUG END ===');
-    }
-  };
-
-  const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string, breakdown: any) => {
-    console.log('=== SAVE SCORE TO FIRESTORE DEBUG START ===');
-    console.log('Function called with parameters:');
-    console.log('- score:', score);
-    console.log('- timeTaken:', timeTaken);
-    console.log('- challengeName:', challengeName);
-    console.log('- breakdown:', breakdown);
-    
-    if (!user) {
-      console.log('ERROR: No user found, cannot save score');
-      return;
-    }
-
-    console.log('User details:');
-    console.log('- uid:', user.uid);
-    console.log('- displayName:', user.displayName);
-    console.log('- email:', user.email);
-
-    setIsSavingScore(true);
-    console.log('Set isSavingScore to true');
-    
-    try {
-      console.log('Creating Firestore reference to nfl-draw-logo collection...');
-      const scoresRef = collection(firestore, 'nfl-draw-logo');
-      console.log('Firestore collection reference created successfully');
-      
-      const scoreData = {
-        userId: user.uid,
-        displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
-        userEmail: user.email,
-        score: score,
-        accuracyScore: breakdown.accuracyScore,
-        timeScore: breakdown.timeScore,
-        totalTime: timeTaken * 1000, // convert to milliseconds for consistency
-        challengeName: challengeName,
-        puzzleDate: dailyChallenge?.date || new Date().toLocaleDateString('en-CA'), // Use challenge date
-        completedAt: new Date(), // Exact completion timestamp
-        timestamp: Date.now(),
-        gameMode: 'draw-memory',
-        moves: 0, // Placeholder for future move tracking
-        hintsUsed: 0, // Placeholder for future hint tracking
-        // Additional metadata
-        scoreBreakdown: breakdown
-      };
-
-      console.log('Score data object created:');
-      console.log(JSON.stringify(scoreData, null, 2));
-      console.log('accuracyScore being saved:', scoreData.accuracyScore);
-      console.log('breakdown.accuracyScore:', breakdown.accuracyScore);
-      
-      console.log('Attempting to add document to Firestore...');
-      await addDoc(scoresRef, scoreData);
-      console.log('Document successfully added to Firestore!');
-      
-      setScoreSaved(true);
-      console.log('Set scoreSaved state to true');
-      console.log('Score saved successfully to Firestore - COMPLETE');
-    } catch (error) {
-      console.error('=== FIRESTORE SAVE ERROR ===');
-      console.error('Error type:', error?.constructor?.name);
-      console.error('Error message:', error?.message);
-      console.error('Full error object:', error);
-      console.error('Error stack:', error?.stack);
-      console.error('=== END FIRESTORE SAVE ERROR ===');
-      // Don't show an alert for this error as it's not critical to the user experience
-    } finally {
-      setIsSavingScore(false);
-      console.log('Set isSavingScore to false');
-      console.log('=== SAVE SCORE TO FIRESTORE DEBUG END ===');
-    }
-  };
-
-  const handleRefreshChallenge = () => {
-    // Refresh the page to get the daily challenge again
-    window.location.reload();
-  };
 
   // Show loading state while fetching daily challenge
   if (isLoadingChallenge) {
@@ -418,63 +104,6 @@ export default function DrawMemoryPage() {
       </div>
     );
   }
-
-  const handleResetChallenge = () => {
-    setDrawingData('');
-    setScore(null);
-    setScoreBreakdown(null);
-    setShowLogo(false);
-    setColorExtractionError(null);
-    setOverlayLogoUrl(null);
-    setStartTime(Date.now());
-    setTimeTaken(null);
-    setScoreSaved(false);
-    setShowImprovementTicker(false);
-    setShowWinScreen(false);
-  };
-
-  const handleWinScreenClose = () => {
-    setShowWinScreen(false);
-    
-    // Smooth scroll to the win screen section below
-    setTimeout(() => {
-      const winScreenElement = document.getElementById('win-screen-section');
-      if (winScreenElement) {
-        winScreenElement.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }, 100);
-  };
-
-  const handleShare = async () => {
-    const shareText = `I just scored ${score}% drawing the ${currentTeam} logo! Can you beat my score?`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'NFL Logo Drawing Game',
-          text: shareText,
-          url: window.location.href
-        });
-      } catch (error) {
-        // User cancelled or error occurred, fallback to clipboard
-        navigator.clipboard.writeText(shareText);
-        alert('Score copied to clipboard!');
-      }
-    } else {
-      // Fallback to clipboard
-      navigator.clipboard.writeText(shareText);
-      alert('Score copied to clipboard!');
-    }
-  };
-
-  const handleArchive = () => {
-    // Placeholder for archive functionality
-    alert('Archive feature coming soon!');
-  };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
@@ -523,11 +152,11 @@ export default function DrawMemoryPage() {
                 {showLogo ? (
                     <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg p-4 bg-white flex items-center justify-center relative">
                       <img
-                        src={logoUrl}
+                        src={dailyChallenge?.memoryChallenge.logoUrl}
                         alt={`${currentTeam} logo`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          console.error('Failed to load logo:', logoUrl);
+                          console.error('Failed to load logo:', dailyChallenge?.memoryChallenge.logoUrl);
                           e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjMyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzM3NDE1MSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvZ28gTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
                         }}
                       />
@@ -637,7 +266,7 @@ export default function DrawMemoryPage() {
 
               {/* Primary Action - matches modal */}
               <div className="flex justify-center mb-3">
-                {user ? (
+                {gameState.dailyChallenge ? (
                   <button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
@@ -705,20 +334,15 @@ export default function DrawMemoryPage() {
       {/* Win Screen Modal */}
       {showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
         <WinScreen
-          stats={{
-            moves: 0, // Not applicable for drawing game
-            hints: 0, // Not applicable for drawing game
-            displayTime: formatTime(timeTaken),
-            calculation: `60% accuracy + 40% time = ${score}%`
-          }}
           score={score}
           accuracyScore={scoreBreakdown.accuracyScore}
           timeScore={scoreBreakdown.timeScore}
+          displayTime={formatTime(timeTaken)}
           onShare={handleShare}
           onArchive={handleArchive}
           onClose={handleWinScreenClose}
           show={showWinScreen}
-          user={user}
+          user={gameState.dailyChallenge ? null : null} // This will be handled by the context
           onLoginClick={() => setShowLoginModal(true)}
         />
       )}

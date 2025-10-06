@@ -10,6 +10,7 @@ import TopBar from '@/components/TopBar'
 import { useAuth } from '@/lib/useAuth';
 import Auth from '@/components/Auth'; // Assuming Auth is your login modal component
 import { AuthModalProvider, useAuthModal } from '@/context/AuthModalContext'
+import { GameStateProvider } from '@/context/GameStateContext'
 import { LeaderboardTab } from '@/components/LeaderboardTab'
 import { fetchLeaderboardEntries, getUserRank } from '@/utils/firestore'
 import { LeaderboardEntry } from '@/types/game'
@@ -161,9 +162,11 @@ function RootLayoutClient({
 }) {
   return (
     <AuthModalProvider>
-      <RootLayoutContent>
-        {children}
-      </RootLayoutContent>
+      <GameStateProvider>
+        <RootLayoutContent>
+          {children}
+        </RootLayoutContent>
+      </GameStateProvider>
     </AuthModalProvider>
   )
 }
