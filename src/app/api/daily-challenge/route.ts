@@ -24,7 +24,7 @@ function parseCSV(csvText: string): DailyChallengeData[] {
   
   const dateIndex = headers.indexOf('date');
   const memoryIndex = headers.indexOf('memory');
-  const freeDrawIndex = headers.indexOf('freedraw');
+  const freeDrawIndex = headers.indexOf('free draw'); // Adjusted to match common spreadsheet header "Free Draw"
   
   if (dateIndex === -1 || memoryIndex === -1 || freeDrawIndex === -1) {
     throw new Error('Required columns (date, memory, freeDraw) not found in CSV');
