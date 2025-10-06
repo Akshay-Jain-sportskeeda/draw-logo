@@ -227,9 +227,9 @@ export default function DrawMemoryPage() {
 
         {/* Win Screen Section - Shows below main container when modal is closed */}
         {!showWinScreen && score !== null && scoreBreakdown !== null && timeTaken !== null && (
-          <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8">
+          <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8 max-w-[350px] mx-auto">
             {/* Match WinScreen modal layout exactly */}
-            <div className="max-w-[350px] mx-auto text-center">
+            <div className="text-center">
               {/* Win Banner Container - matches modal styling */}
               <div className="relative -mx-8 -mt-8 mb-5 px-8 pt-11 pb-5 bg-gradient-to-r from-gray-800 to-black rounded-t-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/10 pointer-events-none rounded-t-xl"></div>
