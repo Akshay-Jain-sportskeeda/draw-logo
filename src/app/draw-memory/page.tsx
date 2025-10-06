@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { firestore } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import WinScreen from '@/components/WinScreen';
+import { WinStats } from '@/types/game';
 
 interface DailyChallenge {
   date: string;
@@ -47,6 +49,7 @@ export default function DrawMemoryPage() {
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [showImprovementTicker, setShowImprovementTicker] = useState(false);
+  const [showWinScreen, setShowWinScreen] = useState(false);
   
   const ACCURACY_THRESHOLD = 40; // Minimum accuracy required to show score
 
@@ -59,6 +62,16 @@ export default function DrawMemoryPage() {
     if (score >= 40) return "Good effort! Getting there!";
     if (score >= 20) return "Nice try! Keep practicing!";
     return "Keep going! Every artist starts somewhere!";
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
   };
 
   const formatTime = (seconds: number): string => {
@@ -276,6 +289,8 @@ export default function DrawMemoryPage() {
       setScore(finalScore);
       setScoreBreakdown(newScoreBreakdown);
 
+      // Show win screen for successful scores
+      setShowWinScreen(true);
 
       // Save score to database if user is logged in
       if (user && finalScore !== null) {
@@ -425,6 +440,39 @@ export default function DrawMemoryPage() {
     setTimeTaken(null);
     setScoreSaved(false);
     setShowImprovementTicker(false);
+    setShowWinScreen(false);
+    setShowWinScreen(false);
+  };
+
+  const handleWinScreenClose = () => {
+    setShowWinScreen(false);
+  };
+
+  const handleShare = async () => {
+    const shareText = `I just scored ${score}% drawing the ${currentTeam} logo! Can you beat my score?`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'NFL Logo Drawing Game',
+          text: shareText,
+          url: window.location.href
+        });
+      } catch (error) {
+        // User cancelled or error occurred, fallback to clipboard
+        navigator.clipboard.writeText(shareText);
+        alert('Score copied to clipboard!');
+      }
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(shareText);
+      alert('Score copied to clipboard!');
+    }
+  };
+
+  const handleArchive = () => {
+    // Placeholder for archive functionality
+    alert('Archive feature coming soon!');
   };
 
 
