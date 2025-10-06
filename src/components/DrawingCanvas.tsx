@@ -403,6 +403,5 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             Clear
           </button>
         </div>
-      </div>
   );
 }
