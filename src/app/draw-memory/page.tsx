@@ -41,6 +41,14 @@ export default function DrawMemoryPage() {
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
 
+  const getScoreMessage = (score: number) => {
+    if (score >= 80) return "Excellent! You're a logo master!";
+    if (score >= 60) return "Great job! Very recognizable!";
+    if (score >= 40) return "Good effort! Getting there!";
+    if (score >= 20) return "Nice try! Keep practicing!";
+    return "Keep going! Every artist starts somewhere!";
+  };
+
   // Fetch daily challenge on component mount
   useEffect(() => {
     const fetchDailyChallenge = async () => {
@@ -327,14 +335,6 @@ export default function DrawMemoryPage() {
     setOverlayLogoUrl(null);
     setTimeTaken(null);
     setScoreSaved(false);
-  };
-
-  const getScoreMessage = (score: number) => {
-    if (score >= 80) return "Excellent! You're a logo master!";
-    if (score >= 60) return "Great job! Very recognizable!";
-    if (score >= 40) return "Good effort! Getting there!";
-    if (score >= 20) return "Nice try! Keep practicing!";
-    return "Keep going! Every artist starts somewhere!";
   };
 
   return (
