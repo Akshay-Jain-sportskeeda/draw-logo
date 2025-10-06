@@ -160,4 +160,3 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
     throw error;
   }
 }
-        totalTime: data.totalTime || 0, // Already in milliseconds
