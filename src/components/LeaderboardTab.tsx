@@ -410,7 +410,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                           <div className="hidden md:flex items-center gap-4 mt-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
                               <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                              <span>{Math.round((userRankInfo.userEntry as any).accuracyScore || 0)}% accuracy</span>
+                              <span>{Math.round(userRankInfo.userEntry.accuracyScore || 0)}% accuracy</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
@@ -420,7 +420,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                           
                           {/* Mobile compact stats */}
                           <div className="md:hidden text-xs text-gray-600 mt-1">
-                            {Math.round((userRankInfo.userEntry as any).accuracyScore || 0)}% accuracy • {formatTime(userRankInfo.userEntry.totalTime)}
+                            {Math.round(userRankInfo.userEntry.accuracyScore || 0)}% accuracy • {formatTime(userRankInfo.userEntry.totalTime)}
                           </div>
                         </div>
                       </div>
@@ -428,7 +428,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                       <div className="text-right flex-shrink-0">
                         <div className="flex items-center gap-2 text-green-600 text-base md:text-lg font-bold">
                           <Target className="w-3 h-3 md:w-4 md:h-4" />
-                          <span>{Math.round((userRankInfo.userEntry as any).score || 0)}%</span>
+                          <span>{Math.round(userRankInfo.userEntry.score || 0)}%</span>
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           Final Score
