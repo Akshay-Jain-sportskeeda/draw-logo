@@ -732,6 +732,128 @@ export default function DrawMemoryPage() {
         </div>
       </div>
 
+      {/* Win Screen Section - Shows below main container when modal is closed */}
+      {!showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
+        <div id="win-screen-section" className="container mx-auto px-4 max-w-4xl mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                🎉 Congratulations!
+              </h2>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                Your Score: {score}%
+              </h3>
+              <p className="text-lg text-gray-600 mb-2">
+                Time taken: {formatTime(timeTaken)}
+              </p>
+              <p className="text-lg text-gray-700">
+                {getScoreMessage(score)}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <button
+                onClick={handleShare}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16,6 12,2 8,6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                Share
+              </button>
+              
+              <button
+                onClick={handleArchive}
+                className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="21,8 21,21 3,21 3,8"/>
+                  <rect x="1" y="3" width="22" height="5"/>
+                  <line x1="10" y1="12" x2="14" y2="12"/>
+                </svg>
+                Play Archive
+              </button>
+            </div>
+
+            {/* Leaderboard Button */}
+            <div className="text-center mb-6">
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setShowLoginModal(true);
+                  } else {
+                    // Navigate to leaderboard
+                    window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
+                  }
+                }}
+                className={`px-8 py-4 rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-2 mx-auto ${
+                  user 
+                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                }`}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                  <path d="M4 22h16"/>
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                </svg>
+                {user ? 'View Leaderboard' : 'Login to view your Rank'}
+              </button>
+            </div>
+
+            {/* Score Breakdown */}
+            {scoreBreakdown && (
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">Scoring Breakdown</h4>
+
+                {/* Main Score Components */}
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg text-center">
+                    <h5 className="font-medium text-green-800 mb-1">Accuracy Score</h5>
+                    <p className="text-2xl font-bold text-green-600">{scoreBreakdown.accuracyScore}%</p>
+                    <p className="text-xs text-green-600">Drawing similarity to target</p>
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg text-center">
+                    <h5 className="font-medium text-blue-800 mb-1">Time Score</h5>
+                    <p className="text-2xl font-bold text-blue-600">{scoreBreakdown.timeScore}%</p>
+                    <p className="text-xs text-blue-600">
+                      Based on {scoreBreakdown.cappedTimeSeconds}s 
+                      {scoreBreakdown.actualTimeSeconds > 600 && " (capped)"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Final Score Calculation */}
+                <div className="border-t pt-4 mb-4">
+                  <h5 className="font-medium text-gray-700 mb-3 text-center">Final Score Calculation</h5>
+                  <div className="text-sm text-gray-600 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span>Accuracy Score (60% weight):</span>
+                      <span className="font-medium">{scoreBreakdown.accuracyScore}% × 0.60 = {scoreBreakdown.accuracyContribution}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Time Score (40% weight):</span>
+                      <span className="font-medium">{scoreBreakdown.timeScore}% × 0.40 = {scoreBreakdown.timeContribution}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t pt-2 font-semibold text-base">
+                      <span>Final Score:</span>
+                      <span className="text-green-600">{scoreBreakdown.accuracyContribution} + {scoreBreakdown.timeContribution} = {scoreBreakdown.finalScore}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Win Screen Modal */}
       {showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
         <WinScreen
