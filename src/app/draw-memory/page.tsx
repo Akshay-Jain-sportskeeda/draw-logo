@@ -436,6 +436,17 @@ export default function DrawMemoryPage() {
 
   const handleWinScreenClose = () => {
     setShowWinScreen(false);
+    
+    // Smooth scroll to the win screen section below
+    setTimeout(() => {
+      const winScreenElement = document.getElementById('win-screen-section');
+      if (winScreenElement) {
+        winScreenElement.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
 
   const handleShare = async () => {
