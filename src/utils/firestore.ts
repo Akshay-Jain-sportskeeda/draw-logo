@@ -60,7 +60,7 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
       where('gameMode', '==', 'draw-memory'),
       where('puzzleDate', '==', date),
       orderBy('score', 'desc'),
-      orderBy('totalTime', 'asc'),
+      orderBy('timestamp', 'asc'),
       limit(20)
     );
     console.log('Firestore query created for leaderboard entries');
@@ -109,7 +109,7 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
       where('gameMode', '==', 'draw-memory'),
       where('puzzleDate', '==', puzzleDate),
       orderBy('score', 'desc'),
-      orderBy('totalTime', 'asc')
+      orderBy('timestamp', 'asc')
     );
     console.log('Firestore query created for user rank');
     console.log('Query filters: gameMode=draw-memory, puzzleDate=' + puzzleDate);

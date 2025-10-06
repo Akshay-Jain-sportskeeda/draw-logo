@@ -300,6 +300,8 @@ export default function DrawMemoryPage() {
         displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
         userEmail: user.email,
         score: score,
+        accuracyScore: breakdown.accuracyScore,
+        timeScore: breakdown.timeScore,
         totalTime: timeTaken * 1000, // convert to milliseconds for consistency
         challengeName: challengeName,
         puzzleDate: dailyChallenge?.date || new Date().toLocaleDateString('en-CA'), // Use challenge date

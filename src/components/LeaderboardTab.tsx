@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Trophy, Clock, Target, Lightbulb, LogIn } from 'lucide-react';
+import { Trophy, Clock, Target, LogIn } from 'lucide-react';
 import { LeaderboardEntry } from '@/types/game';
 import { trackLeaderboardView, trackLeaderboardRankView, trackCTAClick } from '../utils/analytics';
 
@@ -107,11 +107,8 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
   };
 
   const getTimeBreakdown = (entry: LeaderboardEntry): string | null => {
-    if (entry.hintsUsed === 0) return null;
-    
-    const baseTime = entry.totalTime - (entry.hintsUsed * 15 * 1000);
-    const baseTimeFormatted = formatTime(baseTime);
-    return `${baseTimeFormatted} + ${entry.hintsUsed}×15s`;
+    // No breakdown needed for draw-memory game mode
+    return null;
   };
 
   const getRankIcon = (rank: number) => {
@@ -350,18 +347,18 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                       {/* Stats */}
                       <div className="hidden md:flex items-center gap-4 mt-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
-                          <Target className="w-3 h-3" />
-                          <span>{entry.moves} moves</span>
+                          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                          <span>{Math.round((entry as any).accuracyScore || 0)}% accuracy</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Lightbulb className="w-3 h-3" />
-                          <span>{entry.hintsUsed} hints</span>
+                          <Clock className="w-3 h-3" />
+                          <span>{formatTime(entry.totalTime)}</span>
                         </div>
                       </div>
                       
                       {/* Mobile compact stats */}
                       <div className="md:hidden text-xs text-gray-600 mt-1">
-                        {entry.moves} moves • {entry.hintsUsed} hints
+                        {Math.round((entry as any).accuracyScore || 0)}% accuracy • {formatTime(entry.totalTime)}
                       </div>
                     </div>
                   </div>
@@ -372,14 +369,12 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                         ? 'text-yellow-700 text-lg md:text-xl font-bold' 
                         : 'text-green-600 text-base md:text-lg font-bold'
                     }`}>
-                      <Clock className="w-3 h-3 md:w-4 md:h-4" />
-                      {formatTime(entry.totalTime)}
+                      <Target className="w-3 h-3 md:w-4 md:h-4" />
+                      <span>{Math.round((entry as any).score || 0)}%</span>
                     </div>
-                    {getTimeBreakdown(entry) && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {getTimeBreakdown(entry)}
-                      </div>
-                    )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      Final Score
+                    </div>
                   </div>
                 </div>
               ))}
@@ -414,32 +409,30 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                           
                           <div className="hidden md:flex items-center gap-4 mt-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
-                              <Target className="w-3 h-3" />
-                              <span>{userRankInfo.userEntry.moves} moves</span>
+                              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                              <span>{Math.round((userRankInfo.userEntry as any).accuracyScore || 0)}% accuracy</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Lightbulb className="w-3 h-3" />
-                              <span>{userRankInfo.userEntry.hintsUsed} hints</span>
+                              <Clock className="w-3 h-3" />
+                              <span>{formatTime(userRankInfo.userEntry.totalTime)}</span>
                             </div>
                           </div>
                           
                           {/* Mobile compact stats */}
                           <div className="md:hidden text-xs text-gray-600 mt-1">
-                            {userRankInfo.userEntry.moves} moves • {userRankInfo.userEntry.hintsUsed} hints
+                            {Math.round((userRankInfo.userEntry as any).accuracyScore || 0)}% accuracy • {formatTime(userRankInfo.userEntry.totalTime)}
                           </div>
                         </div>
                       </div>
                       
                       <div className="text-right flex-shrink-0">
                         <div className="flex items-center gap-2 text-green-600 text-base md:text-lg font-bold">
-                          <Clock className="w-3 h-3 md:w-4 md:h-4" />
-                          {formatTime(userRankInfo.userEntry.totalTime)}
+                          <Target className="w-3 h-3 md:w-4 md:h-4" />
+                          <span>{Math.round((userRankInfo.userEntry as any).score || 0)}%</span>
                         </div>
-                        {getTimeBreakdown(userRankInfo.userEntry) && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {getTimeBreakdown(userRankInfo.userEntry)}
-                          </div>
-                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          Final Score
+                        </div>
                       </div>
                     </div>
                   )}
