@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
-import WinScreen from '@/components/WinScreen';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { firestore } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
-import { WinStats } from '@/types/game';
 
 interface DailyChallenge {
   date: string;
@@ -48,8 +46,7 @@ export default function DrawMemoryPage() {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
-  const [showAccuracyFeedback, setShowAccuracyFeedback] = useState(false);
-  const [showWinScreen, setShowWinScreen] = useState(false);
+  const [showImprovementTicker, setShowImprovementTicker] = useState(false);
   
   const ACCURACY_THRESHOLD = 40; // Minimum accuracy required to show score
 
@@ -239,15 +236,20 @@ export default function DrawMemoryPage() {
         console.log('Accuracy below threshold, showing feedback message');
         setScore(null);
         setScoreBreakdown(null);
-        setShowAccuracyFeedback(true);
+        setShowImprovementTicker(true);
+        
+        // Auto-hide the ticker after 4 seconds
+        setTimeout(() => {
+          setShowImprovementTicker(false);
+        }, 4000);
+        
         // Don't save to database or calculate time score
         return;
       }
       
       // Accuracy meets threshold, proceed with full scoring
       console.log('Accuracy meets threshold, calculating full score');
-      setShowAccuracyFeedback(false);
-      setShowWinScreen(false);
+      setShowImprovementTicker(false);
       
       const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
       const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
@@ -274,8 +276,6 @@ export default function DrawMemoryPage() {
       setScore(finalScore);
       setScoreBreakdown(newScoreBreakdown);
 
-      // Show win screen after successful scoring
-      setShowWinScreen(true);
 
       // Save score to database if user is logged in
       if (user && finalScore !== null) {
@@ -424,37 +424,9 @@ export default function DrawMemoryPage() {
     setStartTime(Date.now());
     setTimeTaken(null);
     setScoreSaved(false);
-    setShowAccuracyFeedback(false);
-    setShowWinScreen(false);
+    setShowImprovementTicker(false);
   };
 
-  const handleWinScreenClose = () => {
-    setShowWinScreen(false);
-  };
-
-  const handleShare = () => {
-    if (score !== null && timeTaken !== null) {
-      const shareText = `I just scored ${score}% on the ${currentTeam} logo drawing challenge! 🎨\n\nAccuracy: ${scoreBreakdown?.accuracyScore}%\nTime: ${formatTime(timeTaken)}\n\nTry it yourself!`;
-      
-      if (navigator.share) {
-        navigator.share({
-          title: 'NFL Logo Drawing Challenge',
-          text: shareText,
-          url: window.location.origin
-        });
-      } else {
-        navigator.clipboard.writeText(shareText + '\n' + window.location.origin);
-        alert('Score copied to clipboard!');
-      }
-    }
-  };
-
-  const handleArchive = () => {
-    // For now, just close the win screen
-    // In the future, this could navigate to an archive page
-    setShowWinScreen(false);
-    alert('Archive feature coming soon!');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
@@ -547,37 +519,31 @@ export default function DrawMemoryPage() {
           </div>
 
           <div className="flex justify-center mt-8">
-            <button
-              onClick={handleSubmitDrawing}
-              disabled={isLoading || isSavingScore}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Scoring...' : isSavingScore ? 'Saving Score...' : 'Submit Drawing'}
-            </button>
+            <div className="relative">
+              <button
+                onClick={handleSubmitDrawing}
+                disabled={isLoading || isSavingScore}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Scoring...' : isSavingScore ? 'Saving Score...' : 'Submit Drawing'}
+              </button>
+              
+              {/* Improvement Ticker */}
+              {showImprovementTicker && (
+                <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg animate-pulse whitespace-nowrap z-10">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <span className="text-sm font-medium">Try adding more details!</span>
+                  </div>
+                  {/* Arrow pointing down to button */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-orange-500"></div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Accuracy Feedback Message */}
-          {showAccuracyFeedback && score === null && (
-            <div className="mt-8 p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Not a match - improve it!
-                </h3>
-                <p className="text-lg text-gray-700 mb-4">
-                  Your drawing needs to be more recognizable to get a score.
-                </p>
-                <p className="text-sm text-gray-600">
-                  Try adding more details, shapes, or colors that match the {currentTeam} logo.
-                  You can reveal the logo for reference and even overlay it on your canvas!
-                </p>
-              </div>
-            </div>
-          )}
 
           {score !== null && (
             <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg border border-blue-200">
@@ -717,26 +683,6 @@ export default function DrawMemoryPage() {
         </div>
       </div>
 
-      {/* Win Screen */}
-      {showWinScreen && score !== null && timeTaken !== null && scoreBreakdown && (
-        <WinScreen
-          stats={{
-            moves: 0, // Not applicable for drawing game
-            hints: 0, // Not applicable for drawing game
-            displayTime: formatTime(timeTaken),
-            calculation: getCalculationText(scoreBreakdown.actualTimeSeconds, scoreBreakdown.cappedTimeSeconds)
-          }}
-          score={score}
-          accuracyScore={scoreBreakdown.accuracyScore}
-          timeScore={scoreBreakdown.timeScore}
-          onShare={handleShare}
-          onArchive={handleArchive}
-          onClose={handleWinScreenClose}
-          show={showWinScreen}
-          user={user}
-          onLoginClick={() => setShowLoginModal(true)}
-        />
-      )}
     </div>
   );
 }
