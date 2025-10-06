@@ -29,26 +29,47 @@ function RootLayoutContent({
   const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
 
   const fetchLeaderboard = useCallback(async (date: string) => {
+    console.log('=== FETCHLEADERBOARD DEBUG START ===');
+    console.log('fetchLeaderboard called with date:', date);
     setLeaderboardLoading(true);
     setLeaderboardError(null);
     try {
       const entries = await fetchLeaderboardEntries(date);
+      console.log('fetchLeaderboardEntries returned entries:', entries);
+      console.log('Number of entries received:', entries.length);
       setLeaderboardData(entries);
       setCurrentPuzzleDate(date);
+      console.log('Leaderboard state updated successfully');
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
+      console.log('fetchLeaderboard error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       setLeaderboardError('Failed to load leaderboard');
     } finally {
       setLeaderboardLoading(false);
+      console.log('fetchLeaderboard loading set to false');
     }
+    console.log('=== FETCHLEADERBOARD DEBUG END ===');
   }, []);
 
   const getUserRankInfo = useCallback(async (userId: string, puzzleDate: string) => {
+    console.log('=== GETUSERRANKINFO DEBUG START ===');
+    console.log('getUserRankInfo called with userId:', userId, 'puzzleDate:', puzzleDate);
     try {
-      return await getUserRank(userId, puzzleDate);
+      const rankInfo = await getUserRank(userId, puzzleDate);
+      console.log('getUserRank returned rankInfo:', rankInfo);
+      return rankInfo;
     } catch (error) {
       console.error('Error getting user rank:', error);
+      console.log('getUserRankInfo error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       return null;
+    } finally {
+      console.log('=== GETUSERRANKINFO DEBUG END ===');
     }
   }, []);
 

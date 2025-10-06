@@ -26,40 +26,69 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
   onFetchLeaderboard,
   onGetUserRank
 }) => {
+  console.log('=== LEADERBOARDTAB RENDER DEBUG ===');
+  console.log('LeaderboardTab props:', {
+    currentLeaderboard: currentLeaderboard,
+    currentLeaderboardLength: currentLeaderboard.length,
+    currentPuzzleDate,
+    loading,
+    error,
+    userId,
+    isLoggedIn
+  });
+
   const [userRankInfo, setUserRankInfo] = React.useState<{ rank: number; userEntry: LeaderboardEntry } | null>(null);
   const [userRankLoading, setUserRankLoading] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<string>(currentPuzzleDate || new Date().toISOString().split('T')[0]);
 
   // Update selected date when currentPuzzleDate changes
   React.useEffect(() => {
+    console.log('=== SELECTEDDATE UPDATE EFFECT ===');
+    console.log('currentPuzzleDate changed to:', currentPuzzleDate);
     if (currentPuzzleDate) {
       setSelectedDate(currentPuzzleDate);
+      console.log('selectedDate updated to:', currentPuzzleDate);
     }
   }, [currentPuzzleDate]);
 
   // Fetch leaderboard when tab is active
   React.useEffect(() => {
+    console.log('=== FETCH LEADERBOARD EFFECT ===');
+    console.log('Effect triggered with selectedDate:', selectedDate, 'isLoggedIn:', isLoggedIn);
+    console.log('onFetchLeaderboard function exists:', !!onFetchLeaderboard);
     if (selectedDate && onFetchLeaderboard) {
+      console.log('Calling trackLeaderboardView and onFetchLeaderboard');
       trackLeaderboardView(selectedDate, isLoggedIn);
       onFetchLeaderboard(selectedDate);
+    } else {
+      console.log('Skipping fetch - selectedDate:', selectedDate, 'onFetchLeaderboard:', !!onFetchLeaderboard);
     }
   }, [selectedDate, onFetchLeaderboard, isLoggedIn]);
 
   // Fetch user rank when we have user data
   React.useEffect(() => {
+    console.log('=== FETCH USER RANK EFFECT ===');
+    console.log('Effect triggered with userId:', userId, 'selectedDate:', selectedDate);
+    console.log('onGetUserRank function exists:', !!onGetUserRank);
+    console.log('currentLeaderboard length:', currentLeaderboard.length);
+    
     const fetchUserRank = async () => {
       if (userId && selectedDate && onGetUserRank) {
+        console.log('Starting user rank fetch...');
         setUserRankLoading(true);
         try {
           const rankInfo = await onGetUserRank(userId, selectedDate);
+          console.log('User rank fetch completed, rankInfo:', rankInfo);
           setUserRankInfo(rankInfo);
           if (rankInfo) {
             trackLeaderboardRankView(rankInfo.rank, currentLeaderboard.length);
           }
-          setUserRankInfo(rankInfo);
         } finally {
           setUserRankLoading(false);
+          console.log('User rank loading set to false');
         }
+      } else {
+        console.log('Skipping user rank fetch - userId:', userId, 'selectedDate:', selectedDate, 'onGetUserRank:', !!onGetUserRank);
       }
     };
     
