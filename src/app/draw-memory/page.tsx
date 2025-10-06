@@ -46,6 +46,9 @@ export default function DrawMemoryPage() {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [showAccuracyFeedback, setShowAccuracyFeedback] = useState(false);
+  
+  const ACCURACY_THRESHOLD = 55; // Minimum accuracy required to show score
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
@@ -207,11 +210,29 @@ export default function DrawMemoryPage() {
       
       // Calculate new scoring system
       const accuracyScore = result.score; // Raw accuracy from drawing analysis
+      
+      console.log('Initial accuracy score:', accuracyScore);
+      console.log('Accuracy threshold:', ACCURACY_THRESHOLD);
+      
+      // Check if accuracy meets minimum threshold
+      if (accuracyScore < ACCURACY_THRESHOLD) {
+        console.log('Accuracy below threshold, showing feedback message');
+        setScore(null);
+        setScoreBreakdown(null);
+        setShowAccuracyFeedback(true);
+        // Don't save to database or calculate time score
+        return;
+      }
+      
+      // Accuracy meets threshold, proceed with full scoring
+      console.log('Accuracy meets threshold, calculating full score');
+      setShowAccuracyFeedback(false);
+      
       const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
       const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
       const finalScore = Math.round(0.6 * accuracyScore + 0.4 * timeScore); // Combined score
       
-      console.log('Scoring breakdown:');
+      console.log('Full scoring breakdown:');
       console.log('- Accuracy Score:', accuracyScore);
       console.log('- Actual Time (seconds):', calculatedTimeTaken);
       console.log('- Capped Time (seconds):', cappedTimeSeconds);
@@ -374,6 +395,7 @@ export default function DrawMemoryPage() {
     setOverlayLogoUrl(null);
     setTimeTaken(null);
     setScoreSaved(false);
+    setShowAccuracyFeedback(false);
   };
 
   return (
@@ -475,6 +497,29 @@ export default function DrawMemoryPage() {
               {isLoading ? 'Scoring...' : isSavingScore ? 'Saving Score...' : 'Submit Drawing'}
             </button>
           </div>
+
+          {/* Accuracy Feedback Message */}
+          {showAccuracyFeedback && score === null && (
+            <div className="mt-8 p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                  Not a match - improve it!
+                </h3>
+                <p className="text-lg text-gray-700 mb-4">
+                  Your drawing needs to be more recognizable to get a score.
+                </p>
+                <p className="text-sm text-gray-600">
+                  Try adding more details, shapes, or colors that match the {currentTeam} logo.
+                  You can reveal the logo for reference and even overlay it on your canvas!
+                </p>
+              </div>
+            </div>
+          )}
 
           {score !== null && (
             <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-sky-50 rounded-lg border border-blue-200">
