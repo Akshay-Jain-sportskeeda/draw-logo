@@ -41,4 +41,7 @@ export interface LeaderboardEntry {
   totalTime: number;
   completedAt: Date;
   puzzleDate: string;
+  score?: number;
+  accuracyScore?: number;
+  timeScore?: number;
 }

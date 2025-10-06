@@ -81,7 +81,10 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.totalTime || 0, // Already in milliseconds
         completedAt: new Date(data.timestamp),
-        puzzleDate: data.puzzleDate || date
+        puzzleDate: data.puzzleDate || date,
+        score: data.score || 0,
+        accuracyScore: data.accuracyScore || 0,
+        timeScore: data.timeScore || 0
       });
     });
 
@@ -128,7 +131,10 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.totalTime || 0, // Already in milliseconds
         completedAt: new Date(data.timestamp),
-        puzzleDate: data.puzzleDate || puzzleDate
+        puzzleDate: data.puzzleDate || puzzleDate,
+        score: data.score || 0,
+        accuracyScore: data.accuracyScore || 0,
+        timeScore: data.timeScore || 0
       });
     });
 
