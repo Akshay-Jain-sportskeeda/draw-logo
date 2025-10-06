@@ -20,6 +20,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+  const [isOverlayReady, setIsOverlayReady] = useState(false);
   
   // Helper function to get a non-white default color
   const getDefaultColor = (colors: string[]): string => {
@@ -38,6 +39,35 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [lineThickness, setLineThickness] = useState(3);
   const [isErasing, setIsErasing] = useState(false);
+
+  // Function to get combined drawing data URL (template + user drawing)
+  const getCombinedDrawingDataUrl = useCallback(() => {
+    const overlayCanvas = overlayCanvasRef.current;
+    const userDrawingCanvas = userDrawingCanvasRef.current;
+    
+    // If not permanent template or overlay not ready, just return user drawing
+    if (!permanentTemplate || !isOverlayReady || !overlayCanvas || !userDrawingCanvas) {
+      return userDrawingCanvas?.toDataURL('image/png') || '';
+    }
+    
+    // Create temporary canvas for combining
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = overlayCanvas.width;
+    tempCanvas.height = overlayCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (!tempCtx) {
+      return userDrawingCanvas.toDataURL('image/png');
+    }
+    
+    // Draw template first (background)
+    tempCtx.drawImage(overlayCanvas, 0, 0);
+    
+    // Draw user drawing on top
+    tempCtx.drawImage(userDrawingCanvas, 0, 0);
+    
+    return tempCanvas.toDataURL('image/png');
+  }, [permanentTemplate, isOverlayReady]);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -105,21 +135,36 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         img.onload = () => {
           userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
           userDrawingCtx.drawImage(img, 0, 0);
+          
+          // Emit combined data if permanent template and overlay is ready
+          if (permanentTemplate && isOverlayReady) {
+            const combinedDataUrl = getCombinedDrawingDataUrl();
+            onDrawingChange(combinedDataUrl);
+          } else {
+            const dataUrl = userDrawingCanvas.toDataURL('image/png');
+            onDrawingChange(dataUrl);
+          }
         };
         img.src = drawingData;
       } else {
-        // Initialize with empty drawing
-        const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
-        onDrawingChange(initialDataUrl);
+        // Initialize with empty drawing - wait for overlay if permanent template
+        if (permanentTemplate && !isOverlayReady) {
+          // Will be handled when overlay becomes ready
+        } else {
+          const initialDataUrl = permanentTemplate ? getCombinedDrawingDataUrl() : userDrawingCanvas.toDataURL('image/png');
+          onDrawingChange(initialDataUrl);
+        }
       }
     }
-  }, [drawingData, internalSelectedColor, onDrawingChange]);
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
     if (!overlayCanvas || !overlayCtx) return;
+
+    // Reset overlay ready state
+    setIsOverlayReady(false);
 
     // Clear and fill with white background
     overlayCtx.fillStyle = '#ffffff';
@@ -149,14 +194,22 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
           overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           overlayCtx.globalAlpha = 1.0;
+          
+          // Mark overlay as ready
+          setIsOverlayReady(true);
         };
         img.onerror = () => {
           console.error('Failed to load overlay image:', imageUrl);
+          setIsOverlayReady(false);
         };
         img.src = imageUrl;
       } catch (error) {
         console.error('Error loading overlay image:', error);
+        setIsOverlayReady(false);
       }
+    } else {
+      // No image to load, mark as ready
+      setIsOverlayReady(true);
     }
   };
 
