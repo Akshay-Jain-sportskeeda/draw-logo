@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 interface DailyChallengeData {
   date: string;
-  memory: string;
-  freeDraw: string;
+  memoryTitle: string;
+  memoryImg: string;
+  freeDrawTitle: string;
+  freeDrawImg: string;
 }
 
 interface DailyChallengeResponse {
@@ -23,11 +25,13 @@ function parseCSV(csvText: string): DailyChallengeData[] {
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
   
   const dateIndex = headers.indexOf('date');
-  const memoryIndex = headers.indexOf('memory');
-  const freeDrawIndex = headers.indexOf('free draw'); // Adjusted to match common spreadsheet header "Free Draw"
+  const memoryTitleIndex = headers.indexOf('memorytitle');
+  const memoryImgIndex = headers.indexOf('memoryimg');
+  const freeDrawTitleIndex = headers.indexOf('freedrawtitle');
+  const freeDrawImgIndex = headers.indexOf('freedrawimg');
   
-  if (dateIndex === -1 || memoryIndex === -1 || freeDrawIndex === -1) {
-    throw new Error('Required columns (date, memory, freeDraw) not found in CSV');
+  if (dateIndex === -1 || memoryTitleIndex === -1 || memoryImgIndex === -1 || freeDrawTitleIndex === -1 || freeDrawImgIndex === -1) {
+    throw new Error('Required columns (date, memoryTitle, memoryImg, freeDrawTitle, freeDrawImg) not found in CSV');
   }
   
   const data: DailyChallengeData[] = [];
@@ -35,11 +39,13 @@ function parseCSV(csvText: string): DailyChallengeData[] {
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i].split(',').map(cell => cell.trim());
     
-    if (row.length > Math.max(dateIndex, memoryIndex, freeDrawIndex)) {
+    if (row.length > Math.max(dateIndex, memoryTitleIndex, memoryImgIndex, freeDrawTitleIndex, freeDrawImgIndex)) {
       data.push({
         date: row[dateIndex],
-        memory: row[memoryIndex],
-        freeDraw: row[freeDrawIndex]
+        memoryTitle: row[memoryTitleIndex],
+        memoryImg: row[memoryImgIndex],
+        freeDrawTitle: row[freeDrawTitleIndex],
+        freeDrawImg: row[freeDrawImgIndex]
       });
     }
   }
@@ -53,25 +59,6 @@ function getTodayDateString(): string {
   const day = today.getDate().toString().padStart(2, '0');
   const year = today.getFullYear();
   return `${month}/${day}/${year}`;
-}
-
-function extractTeamNameFromUrl(url: string): string {
-  // Try to extract team name from NFL logo URLs
-  const patterns = [
-    /\/([^\/]+)\.png$/i,
-    /\/([^\/]+)\.jpg$/i,
-    /\/([^\/]+)\.jpeg$/i,
-    /\/([^\/]+)\.svg$/i
-  ];
-  
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) {
-      return match[1].replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-  }
-  
-  return 'NFL Team';
 }
 
 export async function GET(request: NextRequest) {
@@ -111,12 +98,12 @@ export async function GET(request: NextRequest) {
         const challengeResponse: DailyChallengeResponse = {
           date: fallbackChallenge.date,
           memoryChallenge: {
-            name: extractTeamNameFromUrl(fallbackChallenge.memory),
-            logoUrl: fallbackChallenge.memory
+            name: fallbackChallenge.memoryTitle,
+            logoUrl: fallbackChallenge.memoryImg
           },
           freeDrawChallenge: {
-            name: 'Creative Template',
-            imageUrl: fallbackChallenge.freeDraw
+            name: fallbackChallenge.freeDrawTitle,
+            imageUrl: fallbackChallenge.freeDrawImg
           }
         };
         
@@ -134,12 +121,12 @@ export async function GET(request: NextRequest) {
     const challengeResponse: DailyChallengeResponse = {
       date: todayChallenge.date,
       memoryChallenge: {
-        name: extractTeamNameFromUrl(todayChallenge.memory),
-        logoUrl: todayChallenge.memory
+        name: todayChallenge.memoryTitle,
+        logoUrl: todayChallenge.memoryImg
       },
       freeDrawChallenge: {
-        name: 'Creative Template',
-        imageUrl: todayChallenge.freeDraw
+        name: todayChallenge.freeDrawTitle,
+        imageUrl: todayChallenge.freeDrawImg
       }
     };
     
