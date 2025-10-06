@@ -88,6 +88,11 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
     // Track archive puzzle selection
     trackArchivePuzzleLoad(date, true);
     onSelectDate(date);
+    
+    // Scroll to top after selecting archive game
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const isDateCompleted = (date: string) => completedDates.includes(date);
