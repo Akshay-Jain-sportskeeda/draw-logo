@@ -99,8 +99,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         onDrawingChange(initialDataUrl);
       }
     }
-
-  }, [drawingData]); // Re-run when drawingData changes
+  }, [drawingData, internalSelectedColor, onDrawingChange]);
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
