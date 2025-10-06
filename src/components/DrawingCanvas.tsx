@@ -222,11 +222,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     setIsDrawing(true);
     const position = getCanvasPosition(e);
     setLastPosition(position);
-    
-    // Re-render the permanent template if it exists to ensure it stays visible
-    if (permanentTemplate && templateImageUrl) {
-      renderOverlay(templateImageUrl);
-    }
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -257,24 +252,10 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     // Emit only the user's drawing data
     const dataUrl = canvas.toDataURL('image/png');
     onDrawingChange(dataUrl);
-    
-    // Re-render the permanent template after drawing to keep it visible
-    if (permanentTemplate && templateImageUrl) {
-      setTimeout(() => {
-        renderOverlay(templateImageUrl);
-      }, 0);
-    }
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
-    
-    // Ensure permanent template stays visible after drawing stops
-    if (permanentTemplate && templateImageUrl) {
-      setTimeout(() => {
-        renderOverlay(templateImageUrl);
-      }, 0);
-    }
   };
 
   const clearCanvas = () => {
