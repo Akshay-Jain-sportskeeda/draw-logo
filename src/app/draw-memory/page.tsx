@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
+import WinScreen from '@/components/WinScreen';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { firestore } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import { WinStats } from '@/types/game';
 
 interface DailyChallenge {
   date: string;
@@ -47,6 +49,7 @@ export default function DrawMemoryPage() {
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [showAccuracyFeedback, setShowAccuracyFeedback] = useState(false);
+  const [showWinScreen, setShowWinScreen] = useState(false);
   
   const ACCURACY_THRESHOLD = 40; // Minimum accuracy required to show score
 
@@ -59,6 +62,23 @@ export default function DrawMemoryPage() {
     if (score >= 40) return "Good effort! Getting there!";
     if (score >= 20) return "Nice try! Keep practicing!";
     return "Keep going! Every artist starts somewhere!";
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
+  };
+
+  const getCalculationText = (actualTime: number, cappedTime: number): string => {
+    if (actualTime > 600) {
+      return `${actualTime}s → ${cappedTime}s`;
+    }
+    return `${actualTime}s`;
   };
 
   // Fetch daily challenge on component mount
@@ -227,6 +247,7 @@ export default function DrawMemoryPage() {
       // Accuracy meets threshold, proceed with full scoring
       console.log('Accuracy meets threshold, calculating full score');
       setShowAccuracyFeedback(false);
+      setShowWinScreen(false);
       
       const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
       const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
@@ -400,6 +421,35 @@ export default function DrawMemoryPage() {
     setTimeTaken(null);
     setScoreSaved(false);
     setShowAccuracyFeedback(false);
+    setShowWinScreen(false);
+  };
+
+  const handleWinScreenClose = () => {
+    setShowWinScreen(false);
+  };
+
+  const handleShare = () => {
+    if (score !== null && timeTaken !== null) {
+      const shareText = `I just scored ${score}% on the ${currentTeam} logo drawing challenge! 🎨\n\nAccuracy: ${scoreBreakdown?.accuracyScore}%\nTime: ${formatTime(timeTaken)}\n\nTry it yourself!`;
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'NFL Logo Drawing Challenge',
+          text: shareText,
+          url: window.location.origin
+        });
+      } else {
+        navigator.clipboard.writeText(shareText + '\n' + window.location.origin);
+        alert('Score copied to clipboard!');
+      }
+    }
+  };
+
+  const handleArchive = () => {
+    // For now, just close the win screen
+    // In the future, this could navigate to an archive page
+    setShowWinScreen(false);
+    alert('Archive feature coming soon!');
   };
 
   return (
@@ -662,6 +712,24 @@ export default function DrawMemoryPage() {
           )}
         </div>
       </div>
+
+      {/* Win Screen */}
+      {showWinScreen && score !== null && timeTaken !== null && scoreBreakdown && (
+        <WinScreen
+          stats={{
+            moves: 0, // Not applicable for drawing game
+            hints: 0, // Not applicable for drawing game
+            displayTime: formatTime(timeTaken),
+            calculation: getCalculationText(scoreBreakdown.actualTimeSeconds, scoreBreakdown.cappedTimeSeconds)
+          }}
+          onShare={handleShare}
+          onArchive={handleArchive}
+          onClose={handleWinScreenClose}
+          show={showWinScreen}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+        />
+      )}
     </div>
   );
 }

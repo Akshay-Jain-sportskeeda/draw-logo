@@ -28,6 +28,18 @@ function RootLayoutContent({
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
 
+  // Handle navigation to leaderboard from WinScreen
+  React.useEffect(() => {
+    const handleNavigateToLeaderboard = () => {
+      setActiveTab('leaderboard');
+    };
+
+    window.addEventListener('navigateToLeaderboard', handleNavigateToLeaderboard);
+    return () => {
+      window.removeEventListener('navigateToLeaderboard', handleNavigateToLeaderboard);
+    };
+  }, []);
+
   const fetchLeaderboard = useCallback(async (date: string) => {
     console.log('=== FETCHLEADERBOARD DEBUG START ===');
     console.log('fetchLeaderboard called with date:', date);

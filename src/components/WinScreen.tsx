@@ -1,6 +1,6 @@
 import React from 'react'
-import { WinStats } from '../types/game'
-import styles from '../styles/WinScreen.module.css'
+import { WinStats } from '@/types/game'
+import styles from './WinScreen.module.css'
 import { User } from 'firebase/auth'
 
 interface WinScreenProps {

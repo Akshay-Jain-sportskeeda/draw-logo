@@ -45,3 +45,10 @@ export interface LeaderboardEntry {
   accuracyScore?: number;
   timeScore?: number;
 }
+
+export interface WinStats {
+  moves: number;
+  hints: number;
+  displayTime: string;
+  calculation: string;
+}
