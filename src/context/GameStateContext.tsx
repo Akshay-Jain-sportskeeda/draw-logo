@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/useAuth';
 import { firestore } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 
 interface DailyChallenge {
   date: string;
@@ -222,6 +222,30 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       const scoresRef = collection(firestore, 'nfl-draw-logo');
       console.log('Firestore collection reference created successfully');
       
+      // Check if user already has a score for this puzzle date
+      const currentPuzzleDate = dailyChallenge?.date || new Date().toLocaleDateString('en-CA');
+      console.log('Checking for existing score for puzzleDate:', currentPuzzleDate);
+      
+      const existingScoreQuery = query(
+        scoresRef,
+        where('userId', '==', user.uid),
+        where('puzzleDate', '==', currentPuzzleDate),
+        where('gameMode', '==', 'draw-memory')
+      );
+      
+      console.log('Executing query to check for existing scores...');
+      const existingScoreSnapshot = await getDocs(existingScoreQuery);
+      
+      if (!existingScoreSnapshot.empty) {
+        console.log('EXISTING SCORE FOUND - User already has a score for this puzzle date');
+        console.log('Number of existing scores:', existingScoreSnapshot.size);
+        console.log('Skipping database save to prevent duplicate entries');
+        setScoreSaved(true); // Still mark as saved for UI consistency
+        return;
+      }
+      
+      console.log('No existing score found, proceeding with save...');
+      
       const scoreData = {
         userId: user.uid,
         displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
@@ -231,7 +255,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         timeScore: breakdown.timeScore,
         totalTime: timeTaken * 1000, // convert to milliseconds for consistency
         challengeName: challengeName,
-        puzzleDate: dailyChallenge?.date || new Date().toLocaleDateString('en-CA'), // Use challenge date
+        puzzleDate: currentPuzzleDate, // Use challenge date
         completedAt: new Date(), // Exact completion timestamp
         timestamp: Date.now(),
         gameMode: 'draw-memory',
