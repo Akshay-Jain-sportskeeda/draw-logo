@@ -4,10 +4,12 @@ import React from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import Link from 'next/link';
 import { useAuthModal } from '@/context/AuthModalContext';
+import { useAuth } from '@/lib/useAuth';
 import { useGame } from '@/context/GameStateContext';
 import WinScreen from '@/components/WinScreen';
 
 export default function DrawMemoryPage() {
+  const { user } = useAuth();
   const gameState = useGame();
   const { setShowLoginModal } = useAuthModal();
   
@@ -326,7 +328,7 @@ export default function DrawMemoryPage() {
           onArchive={handleArchive}
           onClose={handleWinScreenClose}
           show={showWinScreen}
-          user={gameState.dailyChallenge ? null : null} // This will be handled by the context
+          user={user}
           onLoginClick={() => setShowLoginModal(true)}
         />
       )}
