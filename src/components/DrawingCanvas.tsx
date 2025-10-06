@@ -340,6 +340,129 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     setIsPaletteExpanded(false);
   };
 
+  // Update stroke color when color changes
+  useEffect(() => {
+    const ctx = userDrawingCtxRef.current;
+    if (ctx) {
+      if (isErasing) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = '#000000'; // Color doesn't matter when erasing
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = internalSelectedColor;
+      }
+    }
+  }, [internalSelectedColor, isErasing]);
+
+  // Update line thickness when thickness changes
+  useEffect(() => {
+    const ctx = userDrawingCtxRef.current;
+    if (ctx) {
+      ctx.lineWidth = lineThickness;
+    }
+  }, [lineThickness]);
+
+  const getCanvasPosition = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = userDrawingCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    if ('touches' in e) {
+      // Touch event
+      const touch = e.touches[0];
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+      };
+    } else {
+      // Mouse event
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    }
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    // Close the palette when starting to draw
+    setIsPaletteExpanded(false);
+    setIsDrawing(true);
+    const position = getCanvasPosition(e);
+    setLastPosition(position);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+
+    const canvas = userDrawingCanvasRef.current;
+    const ctx = userDrawingCtxRef.current;
+    if (!canvas || !ctx) return;
+
+    const currentPosition = getCanvasPosition(e);
+
+    ctx.beginPath();
+    if (isErasing) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = internalSelectedColor;
+    }
+    ctx.lineWidth = lineThickness;
+    ctx.moveTo(lastPosition.x, lastPosition.y);
+    ctx.lineTo(currentPosition.x, currentPosition.y);
+    ctx.stroke();
+
+    setLastPosition(currentPosition);
+
+    // Emit combined data for permanent template, otherwise just user drawing
+    if (permanentTemplate && isOverlayReady) {
+      const combinedDataUrl = getCombinedDrawingDataUrl();
+      onDrawingChange(combinedDataUrl);
+    } else {
+      const dataUrl = canvas.toDataURL('image/png');
+      onDrawingChange(dataUrl);
+    }
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = userDrawingCanvasRef.current;
+    const ctx = userDrawingCtxRef.current;
+    if (!canvas || !ctx) return;
+
+    // Clear only the user drawing layer
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Emit combined data for permanent template (empty drawing + template), otherwise just empty drawing
+    const dataUrl = permanentTemplate && isOverlayReady ? getCombinedDrawingDataUrl() : canvas.toDataURL('image/png');
+    onDrawingChange(dataUrl);
+  };
+
+  const handleColorSelect = (color: string) => {
+    setInternalSelectedColor(color);
+    setIsErasing(false);
+    setIsPaletteExpanded(false);
+  };
+
+  const handleEraserSelect = () => {
+    setIsErasing(true);
+    setIsPaletteExpanded(false);
+  };
+
+  const handleThicknessSelect = (thickness: number) => {
+    setLineThickness(thickness);
+    setIsPaletteExpanded(false);
+  };
+
   return (
     <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
         {/* Background/Overlay Canvas */}
