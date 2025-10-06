@@ -28,6 +28,20 @@ const WinScreen: React.FC<WinScreenProps> = ({
   user,
   onLoginClick
 }) => {
+  // Lock/unlock body scroll when modal opens/closes
+  React.useEffect(() => {
+    if (show) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup function to restore scroll when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [show]);
+
   const handleLeaderboardClick = () => {
     if (!user) {
       onLoginClick()
