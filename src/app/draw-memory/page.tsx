@@ -223,8 +223,18 @@ export default function DrawMemoryPage() {
           </div>
         </div>
 
+        {/* Reset Button */}
+        <div className="text-center mb-6">
+          <button
+            onClick={handleResetChallenge}
+            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+          >
+            Reset Game
+          </button>
+        </div>
+
         {/* Win Screen Section - Shows below main container when modal is closed */}
-        {!showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
+        {!showWinScreen && score !== null && scoreBreakdown !== null && timeTaken !== null && (
           <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8">
             {/* Match WinScreen modal layout exactly */}
             <div className="max-w-[350px] mx-auto text-center">

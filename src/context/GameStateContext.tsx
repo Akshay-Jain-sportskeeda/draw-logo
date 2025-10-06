@@ -412,11 +412,11 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     setDrawingData('');
     setScore(null);
     setScoreBreakdown(null);
+    setTimeTaken(null);
     setShowLogo(false);
     setColorExtractionError(null);
     setOverlayLogoUrl(null);
     setStartTime(Date.now());
-    setTimeTaken(null);
     setScoreSaved(false);
     setShowImprovementTicker(false);
     setShowWinScreen(false);
