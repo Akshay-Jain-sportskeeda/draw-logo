@@ -319,8 +319,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     // Clear only the user drawing layer
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Emit empty drawing
-    const dataUrl = canvas.toDataURL('image/png');
+    // Emit combined data for permanent template (empty drawing + template), otherwise just empty drawing
+    const dataUrl = permanentTemplate && isOverlayReady ? getCombinedDrawingDataUrl() : canvas.toDataURL('image/png');
     onDrawingChange(dataUrl);
   };
 
