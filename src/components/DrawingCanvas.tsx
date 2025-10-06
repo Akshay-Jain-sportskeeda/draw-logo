@@ -20,7 +20,21 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
-  const [internalSelectedColor, setInternalSelectedColor] = useState(availableColors[0] || '#000000');
+  
+  // Helper function to get a non-white default color
+  const getDefaultColor = (colors: string[]): string => {
+    // Find the first non-white color
+    const nonWhiteColor = colors.find(color => 
+      color.toLowerCase() !== '#ffffff' && 
+      color.toLowerCase() !== '#fff' && 
+      color.toLowerCase() !== 'white'
+    );
+    
+    // Return the first non-white color, or black if none found
+    return nonWhiteColor || '#000000';
+  };
+  
+  const [internalSelectedColor, setInternalSelectedColor] = useState(getDefaultColor(availableColors));
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [lineThickness, setLineThickness] = useState(3);
   const [isErasing, setIsErasing] = useState(false);
@@ -37,7 +51,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   // Update selected color when available colors change
   useEffect(() => {
     if (availableColors.length > 0 && !availableColors.includes(internalSelectedColor)) {
-      setInternalSelectedColor(availableColors[0]);
+      setInternalSelectedColor(getDefaultColor(availableColors));
     }
   }, [availableColors, internalSelectedColor]);
 
