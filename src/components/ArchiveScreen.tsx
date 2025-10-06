@@ -9,13 +9,15 @@ interface ArchiveScreenProps {
   onClose: () => void;
   onSelectDate: (date: string) => void;
   userId?: string;
+  availablePuzzles?: { date: string; name: string }[];
 }
 
 const ArchiveScreen: React.FC<ArchiveScreenProps> = ({ 
   show = true,
   onClose, 
   onSelectDate, 
-  userId 
+  userId,
+  availablePuzzles: propAvailablePuzzles
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
@@ -37,8 +39,14 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
     // Track archive popup view
     trackArchiveView();
     
-    // Fetch available puzzles
+    // Fetch available puzzles if not provided via props
     const fetchAvailablePuzzles = async () => {
+      if (propAvailablePuzzles) {
+        setAvailablePuzzles(propAvailablePuzzles);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         const response = await fetch('/api/daily-challenge?all=true');
         if (response.ok) {
@@ -55,7 +63,7 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
     };
     
     fetchAvailablePuzzles();
-  }, []);
+  }, [propAvailablePuzzles]);
 
   useEffect(() => {
     const fetchCompletedDates = async () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Clock, Target, Lightbulb, Calendar, TrendingUp, Award, LogIn, Archive } from 'lucide-react';
-import { useLeaderboard } from '../hooks/useLeaderboard';
+import { useLeaderboard } from '../lib/useLeaderboard';
 import ArchiveScreen from './ArchiveScreen';
 import { trackDashboardView, trackUserStatsView, trackPendingGamesClick, trackCTAClick } from '../utils/analytics';
 import { UserStats } from '../types/game';
@@ -10,7 +10,7 @@ interface DashboardTabProps {
   userId?: string;
   onShowLogin: () => void;
   onPlayArchive?: (date: string) => void;
-  availablePuzzles?: { date: string; difficulty: string }[];
+  availablePuzzles?: { date: string; name: string }[];
 }
 
 const DashboardTab: React.FC<DashboardTabProps> = ({

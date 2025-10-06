@@ -12,6 +12,7 @@ import Auth from '@/components/Auth'; // Assuming Auth is your login modal compo
 import { AuthModalProvider, useAuthModal } from '@/context/AuthModalContext'
 import { GameStateProvider, useGame } from '@/context/GameStateContext'
 import { LeaderboardTab } from '@/components/LeaderboardTab'
+import DashboardTab from '@/components/DashboardTab'
 import { fetchLeaderboardEntries, getUserRank } from '@/utils/firestore'
 import { LeaderboardEntry } from '@/types/game'
 
@@ -29,6 +30,8 @@ function RootLayoutContent({
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [availablePuzzles, setAvailablePuzzles] = useState<{ date: string; name: string }[]>([]);
+  const [availablePuzzlesLoading, setAvailablePuzzlesLoading] = useState(true);
   const currentPuzzleDate = gameState.currentPuzzleDate;
 
   // Handle navigation to leaderboard from WinScreen
@@ -45,6 +48,28 @@ function RootLayoutContent({
     return () => {
       window.removeEventListener('navigateToLeaderboard', handleNavigateToLeaderboard);
     };
+  }, []);
+
+  // Fetch available puzzles for dashboard
+  useEffect(() => {
+    const fetchAvailablePuzzles = async () => {
+      setAvailablePuzzlesLoading(true);
+      try {
+        const response = await fetch('/api/daily-challenge?all=true');
+        if (response.ok) {
+          const puzzles = await response.json();
+          setAvailablePuzzles(puzzles);
+        } else {
+          console.error('Failed to fetch available puzzles');
+        }
+      } catch (error) {
+        console.error('Error fetching available puzzles:', error);
+      } finally {
+        setAvailablePuzzlesLoading(false);
+      }
+    };
+    
+    fetchAvailablePuzzles();
   }, []);
 
   const fetchLeaderboard = useCallback(async (date: string) => {
@@ -91,6 +116,18 @@ function RootLayoutContent({
     }
   }, []);
 
+  const handlePlayArchiveFromDashboard = useCallback((date: string) => {
+    console.log('🎯 [RootLayoutClient] Archive game selected from dashboard:', date);
+    // Switch to game tab
+    setActiveTab('game');
+    // Set the daily challenge by date (this will update the game state)
+    gameState.setDailyChallengeByDate(date);
+    // Scroll to top after a brief delay to ensure tab switch completes
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  }, [gameState]);
+
   return (
     <div className={inter.className}>
       <div className="flex min-h-screen">
@@ -129,12 +166,13 @@ function RootLayoutContent({
               />
             )}
             {activeTab === 'dashboard' && (
-              <div className="container mx-auto px-4 py-8">
-                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Dashboard</h2>
-                  <p className="text-gray-600">Dashboard functionality coming soon!</p>
-                </div>
-              </div>
+              <DashboardTab
+                isLoggedIn={!!user}
+                userId={user?.uid}
+                onShowLogin={() => setShowLoginModal(true)}
+                onPlayArchive={handlePlayArchiveFromDashboard}
+                availablePuzzles={availablePuzzles}
+              />
             )}
           </main>
           
