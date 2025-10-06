@@ -40,8 +40,19 @@ function parseCSV(csvText: string): DailyChallengeData[] {
     const row = lines[i].split(',').map(cell => cell.trim());
     
     if (row.length > Math.max(dateIndex, memoryTitleIndex, memoryImgIndex, freeDrawTitleIndex, freeDrawImgIndex)) {
+      // Parse the date from MM-DD-YYYY format to YYYY-MM-DD format
+      const rawDate = row[dateIndex];
+      let formattedDate = rawDate;
+      
+      // Check if the date is in MM-DD-YYYY format and convert to YYYY-MM-DD
+      const mmddyyyyMatch = rawDate.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+      if (mmddyyyyMatch) {
+        const [, month, day, year] = mmddyyyyMatch;
+        formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      
       data.push({
-        date: row[dateIndex],
+        date: formattedDate,
         memoryTitle: row[memoryTitleIndex],
         memoryImg: row[memoryImgIndex],
         freeDrawTitle: row[freeDrawTitleIndex],
@@ -54,7 +65,8 @@ function parseCSV(csvText: string): DailyChallengeData[] {
 }
 
 function getTodayDateString(): string {
-  return new Date().toLocaleDateString('en-CA'); // Returns YYYY-MM-DD format
+  // Use toISOString and split to ensure consistent YYYY-MM-DD format across all environments
+  return new Date().toISOString().split('T')[0];
 }
 
 export async function GET(request: NextRequest) {
