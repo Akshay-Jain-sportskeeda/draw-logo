@@ -346,7 +346,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   return (
-    <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
+    <>
+      <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
         {/* Background/Overlay Canvas */}
         <canvas
           ref={overlayCanvasRef}
@@ -475,6 +476,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             Clear
           </button>
         </div>
-    </div>
+      </div>
+    </>
   );
 }
