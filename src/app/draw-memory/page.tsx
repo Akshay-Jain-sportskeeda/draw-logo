@@ -596,190 +596,105 @@ export default function DrawMemoryPage() {
         {/* Win Screen Section - Shows below main container when modal is closed */}
         {!showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
           <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-6">
-              <h3 className="text-3xl font-bold text-gray-800 mb-2">
-                Your Score: {score}%
-              </h3>
-              <p className="text-lg text-gray-600 mb-2">
-                Time taken: {formatTime(timeTaken)}
-              </p>
-              <p className="text-lg text-gray-700">
-                {getScoreMessage(score)}
-              </p>
+            {/* Match WinScreen modal layout exactly */}
+            <div className="max-w-[350px] mx-auto text-center">
+              {/* Win Banner Container - matches modal styling */}
+              <div className="relative -mx-8 -mt-8 mb-5 px-8 pt-11 pb-5 bg-gradient-to-r from-gray-800 to-black rounded-t-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/10 pointer-events-none rounded-t-xl"></div>
+                <div className="relative z-10">
+                  <div className="text-2xl font-bold text-white mb-2 text-shadow-lg">
+                    🎉 Congratulations!
+                  </div>
+                  <div className="text-white/90">
+                    Your Performance
+                  </div>
+                </div>
+              </div>
 
-              {/* User login/score saving status */}
-              <div className="mt-4">
-                {!user ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <p className="text-sm text-yellow-700 mb-2">
-                      Want to save your score to the leaderboard?
-                    </p>
-                    <button
-                      onClick={() => setShowLoginModal(true)}
-                      className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
-                    >
-                      Login to Save Score
-                    </button>
+              {/* Stats Grid - matches modal layout */}
+              <div className="flex flex-col gap-3 mb-6">
+                <div className="flex justify-between items-center p-4 rounded-lg border border-gray-200 bg-blue-50">
+                  <div className="text-gray-700 font-medium">Accuracy Score</div>
+                  <span className="text-xl font-bold text-blue-600">{Math.round(scoreBreakdown.accuracyScore)}%</span>
+                </div>
+                <div className="flex justify-between items-center p-4 rounded-lg border border-gray-200 bg-yellow-50">
+                  <div className="text-gray-700 font-medium">Time Score</div>
+                  <span className="text-xl font-bold text-orange-600">{Math.round(scoreBreakdown.timeScore)}%</span>
+                </div>
+                <div className="flex flex-col p-4 rounded-lg border border-gray-200 bg-green-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-gray-700 font-medium">Final Score</div>
+                    <span className="text-xl font-bold text-green-600">{score}%</span>
                   </div>
-                ) : scoreSaved ? (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">
-                      ✅ Score saved to leaderboard!
-                    </p>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <div>Time: {formatTime(timeTaken)}</div>
+                    <div>60% accuracy + 40% time</div>
                   </div>
-                ) : isSavingScore ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-700">
-                      💾 Saving score to leaderboard...
-                    </p>
-                  </div>
+                </div>
+              </div>
+
+              {/* Primary Action - matches modal */}
+              <div className="flex justify-center mb-3">
+                {user ? (
+                  <button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
+                    }}
+                    className="min-w-[120px] px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 transition-all transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                      <path d="M4 22h16"/>
+                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                    </svg>
+                    View Leaderboard
+                  </button>
                 ) : (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">
-                      Logged in as: {user.displayName || user.email?.split('@')[0] || 'User'}
-                    </p>
-                  </div>
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="min-w-[120px] px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                      <path d="M4 22h16"/>
+                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                    </svg>
+                    Login to view your Rank
+                  </button>
                 )}
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap justify-center gap-4 mb-6">
-              <button
-                onClick={handleShare}
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                  <polyline points="16,6 12,2 8,6"/>
-                  <line x1="12" y1="2" x2="12" y2="15"/>
-                </svg>
-                Share
-              </button>
-              
-              <button
-                onClick={handleArchive}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="21,8 21,21 3,21 3,8"/>
-                  <rect x="1" y="3" width="22" height="5"/>
-                  <line x1="10" y1="12" x2="14" y2="12"/>
-                </svg>
-                Play Archive
-              </button>
-
-              {user ? (
+              {/* Secondary Actions - matches modal */}
+              <div className="flex gap-2 justify-center">
                 <button
-                  onClick={() => {
-                    // Navigate to leaderboard
-                    window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
-                  }}
-                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
+                  onClick={handleShare}
+                  className="min-w-[100px] px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-1.5 text-sm"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                    <path d="M4 22h16"/>
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                    <polyline points="16,6 12,2 8,6"/>
+                    <line x1="12" y1="2" x2="12" y2="15"/>
                   </svg>
-                  View Leaderboard
+                  Share
                 </button>
-              ) : (
                 <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium flex items-center gap-2"
+                  onClick={handleArchive}
+                  className="min-w-[100px] px-4 py-2 bg-gradient-to-r from-gray-800 to-black text-white font-semibold rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-1.5 text-sm"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                    <path d="M4 22h16"/>
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                    <polyline points="21,8 21,21 3,21 3,8"/>
+                    <rect x="1" y="3" width="22" height="5"/>
+                    <line x1="10" y1="12" x2="14" y2="12"/>
                   </svg>
-                  Login to view Rank
+                  Play&nbsp;Archive
                 </button>
-              )}
-            </div>
-
-            {/* Scoring Breakdown */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h4 className="text-xl font-semibold text-gray-800 mb-4 text-center">Scoring Breakdown</h4>
-
-              {/* Main Score Components */}
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h5 className="font-medium text-green-800 mb-1">Accuracy Score</h5>
-                  <p className="text-2xl font-bold text-green-600">{scoreBreakdown.accuracyScore}%</p>
-                  <p className="text-xs text-green-600">Drawing similarity to target</p>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h5 className="font-medium text-blue-800 mb-1">Time Score</h5>
-                  <p className="text-2xl font-bold text-blue-600">{scoreBreakdown.timeScore}%</p>
-                  <p className="text-xs text-blue-600">
-                    Based on {scoreBreakdown.cappedTimeSeconds}s 
-                    {scoreBreakdown.actualTimeSeconds > 600 && " (capped)"}
-                  </p>
-                </div>
               </div>
-
-              {/* Final Score Calculation */}
-              <div className="border-t border-gray-300 pt-4 mb-4">
-                <h5 className="font-medium text-gray-700 mb-3">Final Score Calculation</h5>
-                <div className="text-sm text-gray-600 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span>Accuracy Score (60% weight):</span>
-                    <span className="font-medium">{scoreBreakdown.accuracyScore}% × 0.60 = {scoreBreakdown.accuracyContribution}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span>Time Score (40% weight):</span>
-                    <span className="font-medium">{scoreBreakdown.timeScore}% × 0.40 = {scoreBreakdown.timeContribution}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-t border-gray-300 pt-2 font-semibold text-base">
-                    <span>Final Score:</span>
-                    <span className="text-green-600">{scoreBreakdown.accuracyContribution} + {scoreBreakdown.timeContribution} = {scoreBreakdown.finalScore}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Drawing Analysis Details (Collapsible) */}
-              {scoreBreakdown.drawingAnalysis && (
-                <details className="border-t border-gray-300 pt-4">
-                  <summary className="font-medium text-gray-700 mb-3 cursor-pointer hover:text-gray-900">
-                    Drawing Analysis Details
-                  </summary>
-                  <div className="grid md:grid-cols-3 gap-3 mt-3">
-                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                      <h6 className="font-medium text-gray-700 mb-1">Pixel Similarity</h6>
-                      <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.pixelScore}%</p>
-                      <p className="text-xs text-gray-500">Raw pixel comparison</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                      <h6 className="font-medium text-gray-700 mb-1">SSIM Score</h6>
-                      <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.ssimScore}%</p>
-                      <p className="text-xs text-gray-500">Perceptual similarity</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-gray-200">
-                      <h6 className="font-medium text-gray-700 mb-1">Edge Matching</h6>
-                      <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.edgeScore}%</p>
-                      <p className="text-xs text-gray-500">Shape & outline similarity</p>
-                    </div>
-                  </div>
-                </details>
-              )}
-            </div>
-
-            <div className="flex justify-center mt-6">
-              <button
-                onClick={handleRefreshChallenge}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-              >
-                Refresh Challenge
-              </button>
             </div>
           </div>
         )}
