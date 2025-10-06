@@ -10,8 +10,7 @@ export async function fetchUserGameHistory(userId: string): Promise<GameResult[]
     const q = query(
       scoresRef,
       where('userId', '==', userId),
-      where('gameMode', '==', 'draw-memory'),
-      orderBy('timestamp', 'desc')
+      where('gameMode', '==', 'draw-memory')
     );
     console.log('Firestore query created for user game history');
 
