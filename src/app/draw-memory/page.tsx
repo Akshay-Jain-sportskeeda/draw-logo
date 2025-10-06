@@ -134,6 +134,7 @@ export default function DrawMemoryPage() {
                     availableColors={logoColors}
                     overlayImageUrl={overlayLogoUrl}
                     onClearCanvas={handleClearCanvas}
+                    drawingData={drawingData}
                   />
                 )}
                 {isLoadingColors && (

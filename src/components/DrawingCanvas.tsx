@@ -100,6 +100,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       }
     }
 
+  }, [drawingData]); // Re-run when drawingData changes
+
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
     const overlayCanvas = overlayCanvasRef.current;
