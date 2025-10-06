@@ -74,16 +74,6 @@ export default function DrawMemoryPage() {
     return `${remainingSeconds}s`;
   };
 
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    
-    if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`;
-    }
-    return `${remainingSeconds}s`;
-  };
-
   const getCalculationText = (actualTime: number, cappedTime: number): string => {
     if (actualTime > 600) {
       return `${actualTime}s → ${cappedTime}s`;
