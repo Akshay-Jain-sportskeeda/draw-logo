@@ -18,3 +18,21 @@ export function trackCTAClick(action: string, source: string, isLoggedIn: boolea
   // Replace with your analytics implementation
   // Example: gtag('event', 'cta_click', { action, source, is_logged_in: isLoggedIn });
 }
+
+export function trackModalOpen(modalType: string, source: string) {
+  console.log('Analytics: Modal opened', { modalType, source });
+  // Replace with your analytics implementation
+  // Example: gtag('event', 'modal_open', { modal_type: modalType, source });
+}
+
+export function trackArchiveView(date: string, totalPuzzles: number) {
+  console.log('Analytics: Archive viewed', { date, totalPuzzles });
+  // Replace with your analytics implementation
+  // Example: gtag('event', 'archive_view', { date, total_puzzles: totalPuzzles });
+}
+
+export function trackArchivePuzzleLoad(puzzleId: string, date: string) {
+  console.log('Analytics: Archive puzzle loaded', { puzzleId, date });
+  // Replace with your analytics implementation
+  // Example: gtag('event', 'archive_puzzle_load', { puzzle_id: puzzleId, date });
+}
