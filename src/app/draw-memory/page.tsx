@@ -731,6 +731,27 @@ export default function DrawMemoryPage() {
         </div>
       </div>
 
+      {/* Win Screen Modal */}
+      {showWinScreen && score !== null && scoreBreakdown && timeTaken !== null && (
+        <WinScreen
+          stats={{
+            moves: 0, // Not applicable for drawing game
+            hints: 0, // Not applicable for drawing game
+            displayTime: formatTime(timeTaken),
+            calculation: `60% accuracy + 40% time = ${score}%`
+          }}
+          score={score}
+          accuracyScore={scoreBreakdown.accuracyScore}
+          timeScore={scoreBreakdown.timeScore}
+          onShare={handleShare}
+          onArchive={handleArchive}
+          onClose={handleWinScreenClose}
+          show={showWinScreen}
+          user={user}
+          onLoginClick={() => setShowLoginModal(true)}
+        />
+      )}
+
     </div>
   );
 }
