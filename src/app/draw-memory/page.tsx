@@ -48,7 +48,7 @@ export default function DrawMemoryPage() {
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [showAccuracyFeedback, setShowAccuracyFeedback] = useState(false);
   
-  const ACCURACY_THRESHOLD = 55; // Minimum accuracy required to show score
+  const ACCURACY_THRESHOLD = 40; // Minimum accuracy required to show score
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
