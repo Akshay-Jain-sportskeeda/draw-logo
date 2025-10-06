@@ -236,17 +236,23 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   console.log('   - Measures overlap of edge pixels: TP / (TP + FP + FN)');
   console.log('   - Focuses on shapes and outlines (threshold: 15 for softer hand-drawn edges)');
 
+  // Apply leniency multiplier to pixel score
+  const pixelMultiplier = 1.5;
+  const adjustedPixelScore = Math.min(100, pixelScore * pixelMultiplier);
+  console.log(`4. ADJUSTED PIXEL SCORE: ${pixelScore.toFixed(2)}% × ${pixelMultiplier} = ${adjustedPixelScore.toFixed(2)}%`);
+  console.log('   - Applied leniency multiplier to make pixel matching more forgiving');
+
   // Calculate weighted contributions
-  const pixelContribution = 0.20 * pixelScore;
-  const ssimContribution = 0.65 * ssimVal;
+  const pixelContribution = 0.30 * adjustedPixelScore;
+  const ssimContribution = 0.55 * ssimVal;
   const edgeContribution = 0.15 * edgeScore;
   
   console.log('\n--- WEIGHTED CONTRIBUTIONS ---');
-  console.log(`Pixel Score (20% weight): ${pixelScore.toFixed(2)}% × 0.20 = ${pixelContribution.toFixed(2)}`);
-  console.log(`SSIM Score (65% weight): ${ssimVal.toFixed(2)}% × 0.65 = ${ssimContribution.toFixed(2)}`);
+  console.log(`Adjusted Pixel Score (30% weight): ${adjustedPixelScore.toFixed(2)}% × 0.30 = ${pixelContribution.toFixed(2)}`);
+  console.log(`SSIM Score (55% weight): ${ssimVal.toFixed(2)}% × 0.55 = ${ssimContribution.toFixed(2)}`);
   console.log(`Edge Score (15% weight): ${edgeScore.toFixed(2)}% × 0.15 = ${edgeContribution.toFixed(2)}`);
   
-  const finalScore = 0.20 * pixelScore + 0.65 * ssimVal + 0.15 * edgeScore;
+  const finalScore = 0.30 * adjustedPixelScore + 0.55 * ssimVal + 0.15 * edgeScore;
   
   console.log(`\n--- FINAL RESULT ---`);
   console.log(`Combined Score: ${pixelContribution.toFixed(2)} + ${ssimContribution.toFixed(2)} + ${edgeContribution.toFixed(2)} = ${finalScore.toFixed(2)}%`);
@@ -256,7 +262,7 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   return {
     totalScore: Math.round(finalScore),
     breakdown: {
-      pixelScore: Math.round(pixelScore * 100) / 100,
+      pixelScore: Math.round(adjustedPixelScore * 100) / 100,
       ssimScore: Math.round(ssimVal * 100) / 100,
       edgeScore: Math.round(edgeScore * 100) / 100,
       pixelContribution: Math.round(pixelContribution * 100) / 100,
