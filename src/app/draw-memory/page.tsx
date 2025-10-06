@@ -8,6 +8,18 @@ import { useAuthModal } from '@/context/AuthModalContext';
 import { firestore } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
+interface DailyChallenge {
+  date: string;
+  memoryChallenge: {
+    name: string;
+    logoUrl: string;
+  };
+  freeDrawChallenge: {
+    name: string;
+    imageUrl: string;
+  };
+}
+
 export default function DrawMemoryPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [showLogo, setShowLogo] = useState(false);
@@ -17,48 +29,49 @@ export default function DrawMemoryPage() {
   const [logoColors, setLogoColors] = useState<string[]>([]);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
   const [colorExtractionError, setColorExtractionError] = useState<string | null>(null);
-  const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
   const [overlayLogoUrl, setOverlayLogoUrl] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [timeTaken, setTimeTaken] = useState<number | null>(null);
   const [isSavingScore, setIsSavingScore] = useState(false);
   const [scoreSaved, setScoreSaved] = useState(false);
+  const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
+  const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
 
-  const challenges = [
-    {
-      name: 'Arizona Cardinals',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/ieid8hoygzdlmzo0tnf6'
-    },
-    {
-      name: 'Atlanta Falcons',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/gppfvr7n8gljgjaqux2x'
-    },
-    {
-      name: 'Baltimore Ravens',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/ayvwcmluj2ohkdlbiegi'
-    },
-    {
-      name: 'Buffalo Bills',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/grhjkahghjkk17v43hdx'
-    },
-    {
-      name: 'Carolina Panthers',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/xymxwrxtyj9fhaemhdyd'
-    },
-    {
-      name: 'Green Bay Packers',
-      logoUrl: 'https://static.www.nfl.com/image/private/f_auto/league/u9fltoslqdsyao8cpm0k'
-    }
-  ];
+  // Fetch daily challenge on component mount
+  useEffect(() => {
+    const fetchDailyChallenge = async () => {
+      setIsLoadingChallenge(true);
+      setChallengeError(null);
+      
+      try {
+        const response = await fetch('/api/daily-challenge');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch daily challenge: ${response.status}`);
+        }
+        
+        const challengeData: DailyChallenge = await response.json();
+        setDailyChallenge(challengeData);
+      } catch (error) {
+        console.error('Error fetching daily challenge:', error);
+        setChallengeError(error instanceof Error ? error.message : 'Failed to load daily challenge');
+      } finally {
+        setIsLoadingChallenge(false);
+      }
+    };
 
-  const currentChallenge = challenges[currentChallengeIndex];
-  const currentTeam = currentChallenge.name;
-  const logoUrl = currentChallenge.logoUrl;
+    fetchDailyChallenge();
+  }, []);
+
+  const currentTeam = dailyChallenge?.memoryChallenge.name || 'Loading...';
+  const logoUrl = dailyChallenge?.memoryChallenge.logoUrl || '';
 
   useEffect(() => {
+    if (!logoUrl) return;
+    
     const fetchLogoColors = async () => {
       setIsLoadingColors(true);
       setColorExtractionError(null);
@@ -107,12 +120,14 @@ export default function DrawMemoryPage() {
     fetchLogoColors();
   }, [logoUrl]);
 
-  // Reset start time when challenge changes
+  // Reset start time when daily challenge loads
   useEffect(() => {
-    setStartTime(Date.now());
-    setTimeTaken(null);
-    setScoreSaved(false);
-  }, [currentChallengeIndex]);
+    if (dailyChallenge) {
+      setStartTime(Date.now());
+      setTimeTaken(null);
+      setScoreSaved(false);
+    }
+  }, [dailyChallenge]);
 
   const handleDrawingChange = (dataUrl: string) => {
     setDrawingData(dataUrl);
@@ -254,9 +269,54 @@ export default function DrawMemoryPage() {
     }
   };
 
-  const handleNewChallenge = () => {
-    const nextIndex = (currentChallengeIndex + 1) % challenges.length;
-    setCurrentChallengeIndex(nextIndex);
+  const handleRefreshChallenge = () => {
+    // Refresh the page to get the daily challenge again
+    window.location.reload();
+  };
+
+  // Show loading state while fetching daily challenge
+  if (isLoadingChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading today's challenge...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if challenge failed to load
+  if (challengeError || !dailyChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to Load Challenge</h2>
+            <p className="text-gray-600 mb-4">{challengeError}</p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleRefreshChallenge}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              >
+                Try Again
+              </button>
+              <Link href="/" className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
+                Back to Menu
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
     setDrawingData('');
     setScore(null);
     setScoreBreakdown(null);
@@ -476,10 +536,10 @@ export default function DrawMemoryPage() {
 
               <div className="flex justify-center mt-6">
                 <button
-                  onClick={handleNewChallenge}
+                  onClick={handleRefreshChallenge}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
                 >
-                  New Challenge
+                  Refresh Challenge
                 </button>
               </div>
             </div>

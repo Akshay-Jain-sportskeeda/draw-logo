@@ -4,19 +4,56 @@ import React, { useState } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
-import { getDefaultTemplate } from '@/lib/templates';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
+
+interface DailyChallenge {
+  date: string;
+  memoryChallenge: {
+    name: string;
+    logoUrl: string;
+  };
+  freeDrawChallenge: {
+    name: string;
+    imageUrl: string;
+  };
+}
 
 export default function CreativeRemixPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState<string>('');
+  const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
+  const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
 
-  const template = getDefaultTemplate();
+  // Fetch daily challenge on component mount
+  React.useEffect(() => {
+    const fetchDailyChallenge = async () => {
+      setIsLoadingChallenge(true);
+      setChallengeError(null);
+      
+      try {
+        const response = await fetch('/api/daily-challenge');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch daily challenge: ${response.status}`);
+        }
+        
+        const challengeData: DailyChallenge = await response.json();
+        setDailyChallenge(challengeData);
+      } catch (error) {
+        console.error('Error fetching daily challenge:', error);
+        setChallengeError(error instanceof Error ? error.message : 'Failed to load daily challenge');
+      } finally {
+        setIsLoadingChallenge(false);
+      }
+    };
+
+    fetchDailyChallenge();
+  }, []);
 
   const defaultColors = [
     '#000000',
@@ -49,6 +86,55 @@ export default function CreativeRemixPage() {
     setSubmissionId('');
     setDrawingData('');
   };
+
+  const handleRefreshChallenge = () => {
+    // Refresh the page to get the daily challenge again
+    window.location.reload();
+  };
+
+  // Show loading state while fetching daily challenge
+  if (isLoadingChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading today's challenge...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if challenge failed to load
+  if (challengeError || !dailyChallenge) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to Load Challenge</h2>
+            <p className="text-gray-600 mb-4">{challengeError}</p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleRefreshChallenge}
+                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+              >
+                Try Again
+              </button>
+              <Link href="/" className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
+                Back to Menu
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -113,7 +199,7 @@ export default function CreativeRemixPage() {
                 ← Back
               </Link>
               <h2 className="text-2xl font-semibold text-gray-800 text-center md:text-left md:flex-1 md:text-center">
-                {template.name}
+                {dailyChallenge.freeDrawChallenge.name}
               </h2>
               {/* Spacer for desktop to keep h2 centered */}
               <div className="hidden md:block md:w-16"></div>
@@ -129,7 +215,7 @@ export default function CreativeRemixPage() {
                 onDrawingChange={handleDrawingChange}
                 availableColors={defaultColors}
                 permanentTemplate={true}
-                templateImageUrl={template.imageUrl}
+                templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
               />
             </div>
 
