@@ -24,7 +24,16 @@ export default function DrawMemoryPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [showLogo, setShowLogo] = useState(false);
   const [score, setScore] = useState<number | null>(null);
-  const [scoreBreakdown, setScoreBreakdown] = useState<any>(null);
+  const [scoreBreakdown, setScoreBreakdown] = useState<{
+    accuracyScore: number;
+    timeScore: number;
+    finalScore: number;
+    accuracyContribution: number;
+    timeContribution: number;
+    cappedTimeSeconds: number;
+    actualTimeSeconds: number;
+    drawingAnalysis?: any;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [logoColors, setLogoColors] = useState<string[]>([]);
   const [isLoadingColors, setIsLoadingColors] = useState(true);
@@ -195,15 +204,40 @@ export default function DrawMemoryPage() {
 
       const result = await response.json();
       console.log('API response received:', result);
-      setScore(result.score);
-      setScoreBreakdown(result.breakdown);
+      
+      // Calculate new scoring system
+      const accuracyScore = result.score; // Raw accuracy from drawing analysis
+      const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
+      const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
+      const finalScore = Math.round(0.6 * accuracyScore + 0.4 * timeScore); // Combined score
+      
+      console.log('Scoring breakdown:');
+      console.log('- Accuracy Score:', accuracyScore);
+      console.log('- Actual Time (seconds):', calculatedTimeTaken);
+      console.log('- Capped Time (seconds):', cappedTimeSeconds);
+      console.log('- Time Score:', timeScore.toFixed(2));
+      console.log('- Final Score:', finalScore);
+      
+      const newScoreBreakdown = {
+        accuracyScore: Math.round(accuracyScore * 100) / 100,
+        timeScore: Math.round(timeScore * 100) / 100,
+        finalScore: finalScore,
+        accuracyContribution: Math.round(0.6 * accuracyScore * 100) / 100,
+        timeContribution: Math.round(0.4 * timeScore * 100) / 100,
+        cappedTimeSeconds: cappedTimeSeconds,
+        actualTimeSeconds: calculatedTimeTaken,
+        drawingAnalysis: result.breakdown // Keep original drawing analysis
+      };
+      
+      setScore(finalScore);
+      setScoreBreakdown(newScoreBreakdown);
 
       // Save score to database if user is logged in
-      if (user && result.score !== null) {
+      if (user && finalScore !== null) {
         console.log('User is logged in and score exists, calling saveScoreToFirestore...');
-        await saveScoreToFirestore(result.score, calculatedTimeTaken, currentTeam);
+        await saveScoreToFirestore(finalScore, calculatedTimeTaken, currentTeam, newScoreBreakdown);
       } else {
-        console.log('Score not saved - User logged in:', !!user, 'Score exists:', result.score !== null);
+        console.log('Score not saved - User logged in:', !!user, 'Score exists:', finalScore !== null);
       }
     } catch (error) {
       console.error('Error scoring drawing:', error);
@@ -214,12 +248,13 @@ export default function DrawMemoryPage() {
     }
   };
 
-  const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string) => {
+  const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string, breakdown: any) => {
     console.log('=== SAVE SCORE TO FIRESTORE DEBUG START ===');
     console.log('Function called with parameters:');
     console.log('- score:', score);
     console.log('- timeTaken:', timeTaken);
     console.log('- challengeName:', challengeName);
+    console.log('- breakdown:', breakdown);
     
     if (!user) {
       console.log('ERROR: No user found, cannot save score');
@@ -253,7 +288,7 @@ export default function DrawMemoryPage() {
         moves: 0, // Placeholder for future move tracking
         hintsUsed: 0, // Placeholder for future hint tracking
         // Additional metadata
-        scoreBreakdown: scoreBreakdown
+        scoreBreakdown: breakdown
       };
 
       console.log('Score data object created:');
@@ -450,6 +485,11 @@ export default function DrawMemoryPage() {
                 {timeTaken !== null && (
                   <p className="text-lg text-gray-600 mb-2">
                     Time taken: {timeTaken} seconds
+                    {timeTaken > 600 && (
+                      <span className="text-sm text-orange-600 ml-2">
+                        (capped at 10 minutes for scoring)
+                      </span>
+                    )}
                   </p>
                 )}
                 <p className="text-lg text-gray-700">
@@ -495,47 +535,68 @@ export default function DrawMemoryPage() {
                   <div className="mt-6 bg-white rounded-lg p-4 shadow-md">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">Scoring Breakdown</h4>
 
-                    <div className="grid md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <h5 className="font-medium text-blue-800 mb-1">Pixel Similarity</h5>
-                        <p className="text-2xl font-bold text-blue-600">{scoreBreakdown.pixelScore}%</p>
-                        <p className="text-xs text-blue-600">Raw pixel comparison</p>
+                    {/* Main Score Components */}
+                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <h5 className="font-medium text-green-800 mb-1">Accuracy Score</h5>
+                        <p className="text-2xl font-bold text-green-600">{scoreBreakdown.accuracyScore}%</p>
+                        <p className="text-xs text-green-600">Drawing similarity to target</p>
                       </div>
 
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <h5 className="font-medium text-green-800 mb-1">SSIM Score</h5>
-                        <p className="text-2xl font-bold text-green-600">{scoreBreakdown.ssimScore}%</p>
-                        <p className="text-xs text-green-600">Perceptual similarity</p>
-                      </div>
-
-                      <div className="bg-orange-50 p-3 rounded-lg">
-                        <h5 className="font-medium text-orange-800 mb-1">Edge Matching</h5>
-                        <p className="text-2xl font-bold text-orange-600">{scoreBreakdown.edgeScore}%</p>
-                        <p className="text-xs text-orange-600">Shape & outline similarity</p>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h5 className="font-medium text-blue-800 mb-1">Time Score</h5>
+                        <p className="text-2xl font-bold text-blue-600">{scoreBreakdown.timeScore}%</p>
+                        <p className="text-xs text-blue-600">
+                          Based on {scoreBreakdown.cappedTimeSeconds}s 
+                          {scoreBreakdown.actualTimeSeconds > 600 && " (capped)"}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="border-t pt-4">
-                      <h5 className="font-medium text-gray-700 mb-2">Weighted Contributions</h5>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div className="flex justify-between">
-                          <span>Pixel Score (40% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.pixelScore}% × 0.40 = {scoreBreakdown.pixelContribution}</span>
+                    {/* Final Score Calculation */}
+                    <div className="border-t pt-4 mb-4">
+                      <h5 className="font-medium text-gray-700 mb-3">Final Score Calculation</h5>
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span>Accuracy Score (60% weight):</span>
+                          <span className="font-medium">{scoreBreakdown.accuracyScore}% × 0.60 = {scoreBreakdown.accuracyContribution}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>SSIM Score (40% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.ssimScore}% × 0.40 = {scoreBreakdown.ssimContribution}</span>
+                        <div className="flex justify-between items-center">
+                          <span>Time Score (40% weight):</span>
+                          <span className="font-medium">{scoreBreakdown.timeScore}% × 0.40 = {scoreBreakdown.timeContribution}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Edge Score (20% weight):</span>
-                          <span className="font-medium">{scoreBreakdown.edgeScore}% × 0.20 = {scoreBreakdown.edgeContribution}</span>
-                        </div>
-                        <div className="flex justify-between border-t pt-2 font-semibold">
+                        <div className="flex justify-between items-center border-t pt-2 font-semibold text-base">
                           <span>Final Score:</span>
-                          <span>{scoreBreakdown.pixelContribution} + {scoreBreakdown.ssimContribution} + {scoreBreakdown.edgeContribution} = {score}%</span>
+                          <span className="text-green-600">{scoreBreakdown.accuracyContribution} + {scoreBreakdown.timeContribution} = {scoreBreakdown.finalScore}%</span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Drawing Analysis Details (Collapsible) */}
+                    {scoreBreakdown.drawingAnalysis && (
+                      <details className="border-t pt-4">
+                        <summary className="font-medium text-gray-700 mb-3 cursor-pointer hover:text-gray-900">
+                          Drawing Analysis Details
+                        </summary>
+                        <div className="grid md:grid-cols-3 gap-3 mt-3">
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h6 className="font-medium text-gray-700 mb-1">Pixel Similarity</h6>
+                            <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.pixelScore}%</p>
+                            <p className="text-xs text-gray-500">Raw pixel comparison</p>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h6 className="font-medium text-gray-700 mb-1">SSIM Score</h6>
+                            <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.ssimScore}%</p>
+                            <p className="text-xs text-gray-500">Perceptual similarity</p>
+                          </div>
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <h6 className="font-medium text-gray-700 mb-1">Edge Matching</h6>
+                            <p className="text-lg font-bold text-gray-600">{scoreBreakdown.drawingAnalysis.edgeScore}%</p>
+                            <p className="text-xs text-gray-500">Shape & outline similarity</p>
+                          </div>
+                        </div>
+                      </details>
+                    )}
                   </div>
                 )}
               </div>
