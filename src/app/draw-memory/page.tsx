@@ -223,16 +223,6 @@ export default function DrawMemoryPage() {
           </div>
         </div>
 
-        {/* Reset Button */}
-        <div className="text-center mb-6">
-          <button
-            onClick={handleResetChallenge}
-            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
-          >
-            Reset Game
-          </button>
-        </div>
-
         {/* Win Screen Section - Shows below main container when modal is closed */}
         {!showWinScreen && score !== null && scoreBreakdown !== null && timeTaken !== null && (
           <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8">
@@ -277,39 +267,22 @@ export default function DrawMemoryPage() {
 
               {/* Primary Action - matches modal */}
               <div className="flex justify-center mb-3">
-                {gameState.dailyChallenge ? (
-                  <button
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
-                    }}
-                    className="min-w-[120px] px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 transition-all transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                      <path d="M4 22h16"/>
-                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-                    </svg>
-                    View Leaderboard
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    className="min-w-[120px] px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-                      <path d="M4 22h16"/>
-                      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-                      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-                      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-                    </svg>
-                    Login to view your Rank
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('navigateToLeaderboard'));
+                  }}
+                  className="min-w-[120px] px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 transition-all transform hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                    <path d="M4 22h16"/>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                  </svg>
+                  View Leaderboard
+                </button>
               </div>
 
               {/* Secondary Actions - matches modal */}

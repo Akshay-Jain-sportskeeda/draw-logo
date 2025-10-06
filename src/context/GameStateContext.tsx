@@ -292,11 +292,18 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleClearCanvas = useCallback(() => {
+    // Reset all game state (combining clear and reset functionality)
     setDrawingData('');
-    // Hide win screen when canvas is cleared
-    if (showWinScreen) {
-      setShowWinScreen(false);
-    }
+    setScore(null);
+    setScoreBreakdown(null);
+    setTimeTaken(null);
+    setShowLogo(false);
+    setColorExtractionError(null);
+    setOverlayLogoUrl(null);
+    setStartTime(Date.now());
+    setScoreSaved(false);
+    setShowImprovementTicker(false);
+    setShowWinScreen(false);
   }, []);
 
   const handleSubmitDrawing = useCallback(async () => {
