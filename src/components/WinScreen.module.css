@@ -1,0 +1,315 @@
+.winScreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.winScreen.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.winContent {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 25px;
+  max-width: 350px;
+  width: 90%;
+  text-align: center;
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+  transform: scale(1.1);
+}
+
+.winScreen.show .winContent {
+  transform: scale(1);
+}
+
+.winBannerContainer {
+  position: relative;
+  margin: -30px -25px 20px -25px;
+  padding: 45px 25px 20px 25px;
+  background: linear-gradient(to right, #1f2937, #000000);
+  border-radius: 20px 20px 0 0;
+}
+
+.winBannerContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+  pointer-events: none;
+}
+
+.winBanner {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  color: white;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.winSubtitle {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.statsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.statItem {
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statItem:nth-child(1) {
+  background: #f0f9ff;
+}
+
+.statItem:nth-child(2) {
+  background: #fefce8;
+}
+
+.statItem:nth-child(3) {
+  background: #f0fdf4;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.statValue {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.statItem:nth-child(1) .statValue {
+  color: #2563eb;
+}
+
+.statItem:nth-child(2) .statValue {
+  color: #d97706;
+}
+
+.statItem:nth-child(3) .statValue {
+  color: #16a34a;
+}
+
+.statLabel {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.timeBreakdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.penaltyText {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.calculationText {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.winActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.primaryAction {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.secondaryActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.winBtn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.winBtn.primary {
+  background: #28a745;
+  color: white;
+}
+
+.winBtn.primary:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.winBtn.share {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.winBtn.share:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.winBtn.leaderboard {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.winBtn.leaderboard:hover {
+  background: linear-gradient(to right, #1d4ed8, #1e40af);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.winBtn.leaderboard.loggedIn {
+  background: linear-gradient(to right, #059669, #047857);
+}
+
+.winBtn.leaderboard.loggedIn:hover {
+  background: linear-gradient(to right, #047857, #065f46);
+}
+
+.winBtn.archive {
+  background: linear-gradient(to right, #1f2937, #000000);
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.winBtn.archive:hover {
+  background: linear-gradient(to right, #374151, #1f2937);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.winBtn svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .winContent {
+    padding: 25px 20px;
+    max-width: 320px;
+  }
+  
+  .winBanner {
+    font-size: 1.8rem;
+  }
+  
+  .statsGrid {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .winActions {
+    gap: 8px;
+  }
+  
+  .secondaryActions {
+    margin-top: 10px;
+  }
+  
+  .winBtn {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    min-width: 100px;
+  }
+}
