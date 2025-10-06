@@ -53,7 +53,6 @@ function RootLayoutContent({
       console.log('fetchLeaderboardEntries returned entries:', entries);
       console.log('Number of entries received:', entries.length);
       setLeaderboardData(entries);
-      setCurrentPuzzleDate(date);
       console.log('Leaderboard state updated successfully');
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
