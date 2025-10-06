@@ -9,9 +9,10 @@ interface DrawingCanvasProps {
   onClearCanvas?: () => void;
   permanentTemplate?: boolean;
   templateImageUrl?: string;
+  drawingData?: string;
 }
 
-export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const userDrawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,11 +85,20 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       // Clear to transparent (no background fill for drawing layer)
       userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
       
-      // Initialize with empty drawing
-      const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
-      onDrawingChange(initialDataUrl);
+      // Restore drawing data if it exists
+      if (drawingData && drawingData !== '') {
+        const img = new Image();
+        img.onload = () => {
+          userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
+          userDrawingCtx.drawImage(img, 0, 0);
+        };
+        img.src = drawingData;
+      } else {
+        // Initialize with empty drawing
+        const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
+        onDrawingChange(initialDataUrl);
+      }
     }
-  }, []); // Only run once on mount
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
