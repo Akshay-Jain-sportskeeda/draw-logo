@@ -241,14 +241,17 @@ export default function DrawMemoryPage() {
       
       const scoreData = {
         userId: user.uid,
-        userName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
+        displayName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
         userEmail: user.email,
         score: score,
-        timeTaken: timeTaken, // in seconds
+        totalTime: timeTaken * 1000, // convert to milliseconds for consistency
         challengeName: challengeName,
-        puzzleDate: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD format
+        puzzleDate: dailyChallenge?.date || new Date().toLocaleDateString('en-CA'), // Use challenge date
+        completedAt: new Date(), // Exact completion timestamp
         timestamp: Date.now(),
         gameMode: 'draw-memory',
+        moves: 0, // Placeholder for future move tracking
+        hintsUsed: 0, // Placeholder for future hint tracking
         // Additional metadata
         scoreBreakdown: scoreBreakdown
       };
