@@ -51,7 +51,7 @@ export default function DrawMemoryPage() {
   const [showImprovementTicker, setShowImprovementTicker] = useState(false);
   const [showWinScreen, setShowWinScreen] = useState(false);
   
-  const ACCURACY_THRESHOLD = 40; // Minimum accuracy required to show score
+  const ACCURACY_THRESHOLD = 10; // Minimum accuracy required to show score
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
