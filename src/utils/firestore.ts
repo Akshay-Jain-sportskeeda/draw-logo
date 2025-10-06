@@ -24,7 +24,7 @@ export async function fetchUserGameHistory(userId: string): Promise<GameResult[]
       gameResults.push({
         id: doc.id,
         userId: data.userId,
-        displayName: data.userName || 'Anonymous',
+        displayName: data.displayName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.timeTaken ? data.timeTaken * 1000 : 0, // Convert seconds to milliseconds
@@ -76,7 +76,7 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
       leaderboardEntries.push({
         id: doc.id,
         userId: data.userId,
-        displayName: data.userName || 'Anonymous',
+        displayName: data.displayName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.totalTime || 0, // Already in milliseconds
@@ -123,7 +123,7 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
       allEntries.push({
         id: doc.id,
         userId: data.userId,
-        displayName: data.userName || 'Anonymous',
+        displayName: data.displayName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.totalTime || 0, // Already in milliseconds
