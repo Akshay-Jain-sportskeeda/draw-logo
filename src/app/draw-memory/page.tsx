@@ -227,7 +227,8 @@ export default function DrawMemoryPage() {
 
         {/* Win Screen Section - Shows below main container when modal is closed */}
         {!showWinScreen && score !== null && scoreBreakdown !== null && timeTaken !== null && (
-          <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8 max-w-[350px] mx-auto">
+          <div className="flex justify-center">
+            <div id="win-screen-section" className="bg-white rounded-xl shadow-lg p-8 w-[350px]">
             {/* Match WinScreen modal layout exactly */}
             <div className="text-center">
               {/* Win Banner Container - matches modal styling */}
@@ -312,6 +313,7 @@ export default function DrawMemoryPage() {
                   Play&nbsp;Archive
                 </button>
               </div>
+            </div>
             </div>
           </div>
         )}
