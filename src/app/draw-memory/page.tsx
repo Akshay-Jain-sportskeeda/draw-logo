@@ -274,6 +274,9 @@ export default function DrawMemoryPage() {
       setScore(finalScore);
       setScoreBreakdown(newScoreBreakdown);
 
+      // Show win screen after successful scoring
+      setShowWinScreen(true);
+
       // Save score to database if user is logged in
       if (user && finalScore !== null) {
         console.log('User is logged in and score exists, calling saveScoreToFirestore...');
@@ -418,6 +421,7 @@ export default function DrawMemoryPage() {
     setShowLogo(false);
     setColorExtractionError(null);
     setOverlayLogoUrl(null);
+    setStartTime(Date.now());
     setTimeTaken(null);
     setScoreSaved(false);
     setShowAccuracyFeedback(false);
@@ -722,6 +726,9 @@ export default function DrawMemoryPage() {
             displayTime: formatTime(timeTaken),
             calculation: getCalculationText(scoreBreakdown.actualTimeSeconds, scoreBreakdown.cappedTimeSeconds)
           }}
+          score={score}
+          accuracyScore={scoreBreakdown.accuracyScore}
+          timeScore={scoreBreakdown.timeScore}
           onShare={handleShare}
           onArchive={handleArchive}
           onClose={handleWinScreenClose}

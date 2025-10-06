@@ -5,6 +5,9 @@ import { User } from 'firebase/auth'
 
 interface WinScreenProps {
   stats: WinStats
+  score: number
+  accuracyScore: number
+  timeScore: number
   onShare: () => void
   onArchive: () => void
   onClose: () => void
@@ -15,6 +18,9 @@ interface WinScreenProps {
 
 const WinScreen: React.FC<WinScreenProps> = ({
   stats,
+  score,
+  accuracyScore,
+  timeScore,
   onShare,
   onArchive,
   onClose,
@@ -56,21 +62,21 @@ const WinScreen: React.FC<WinScreenProps> = ({
         
         <div className={styles.statsGrid}>
           <div className={styles.statItem}>
-            <div className={styles.statLabel}>Moves</div>
-            <span className={styles.statValue}>{stats.moves}</span>
+            <div className={styles.statLabel}>Accuracy Score</div>
+            <span className={styles.statValue}>{Math.round(accuracyScore)}%</span>
           </div>
           <div className={styles.statItem}>
-            <div className={styles.statLabel}>Hints Used</div>
-            <span className={styles.statValue}>{stats.hints}</span>
+            <div className={styles.statLabel}>Time Score</div>
+            <span className={styles.statValue}>{Math.round(timeScore)}%</span>
           </div>
           <div className={styles.statItem}>
             <div className={styles.statRow}>
-              <div className={styles.statLabel}>Time</div>
-              <span className={styles.statValue}>{stats.displayTime}</span>
+              <div className={styles.statLabel}>Final Score</div>
+              <span className={styles.statValue}>{score}%</span>
             </div>
             <div className={styles.timeBreakdown}>
-              <div className={styles.penaltyText}>+15s per hint</div>
-              <div className={styles.calculationText}>{stats.calculation}</div>
+              <div className={styles.penaltyText}>Time: {stats.displayTime}</div>
+              <div className={styles.calculationText}>60% accuracy + 40% time</div>
             </div>
           </div>
         </div>
