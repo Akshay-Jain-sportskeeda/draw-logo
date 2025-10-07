@@ -43,8 +43,7 @@ export function getTransformHandles(obj: DrawableObject): TransformHandles {
 
 export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12): HandleType {
   const handles = getTransformHandles(obj);
-  const hitArea = handleSize * 1.5;
-  const halfHitArea = hitArea / 2;
+  const hitRadius = handleSize;
 
   const handleEntries: [HandleType, Point][] = [
     ['rotation', handles.rotation],
@@ -63,7 +62,7 @@ export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: 
       Math.pow(point.x - handlePoint.x, 2) + Math.pow(point.y - handlePoint.y, 2)
     );
 
-    if (distance <= halfHitArea) {
+    if (distance <= hitRadius) {
       console.log('Handle detected:', type, 'at distance:', distance, 'from point:', point, 'handle pos:', handlePoint);
       return type as HandleType;
     }
@@ -263,22 +262,26 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
   const handleSize = 12;
 
   ctx.save();
-  ctx.fillStyle = '#2563eb';
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-  ctx.shadowBlur = 4;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
 
   Object.entries(handles).forEach(([key, point]) => {
     if (key === 'rotation') {
+      ctx.fillStyle = '#2563eb';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+
       ctx.beginPath();
       ctx.arc(point.x, point.y, handleSize / 2, 0, 2 * Math.PI);
       ctx.fill();
       ctx.stroke();
 
       ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
       ctx.beginPath();
       ctx.moveTo(handles.top.x, handles.top.y);
       ctx.lineTo(point.x, point.y);
@@ -286,6 +289,14 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.lineWidth = 2;
       ctx.stroke();
     } else {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+      ctx.fillStyle = '#2563eb';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+
       ctx.fillRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
       ctx.strokeRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
     }
