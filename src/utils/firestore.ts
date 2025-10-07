@@ -4,16 +4,25 @@ import { GameResult, LeaderboardEntry } from '@/types/game';
 
 export type { GameResult };
 
-export async function fetchUserGameHistory(userId: string): Promise<GameResult[]> {
+export async function fetchUserGameHistory(userId: string, gameMode?: string): Promise<GameResult[]> {
   console.log('=== FETCHUSERGAMEHISTORY DEBUG START ===');
-  console.log('fetchUserGameHistory called with userId:', userId);
+  console.log('fetchUserGameHistory called with userId:', userId, 'gameMode:', gameMode);
   try {
     const scoresRef = collection(firestore, 'nfl-draw-logo');
-    const q = query(
-      scoresRef,
-      where('userId', '==', userId),
-      where('gameMode', '==', 'draw-memory')
-    );
+
+    let q;
+    if (gameMode) {
+      q = query(
+        scoresRef,
+        where('userId', '==', userId),
+        where('gameMode', '==', gameMode)
+      );
+    } else {
+      q = query(
+        scoresRef,
+        where('userId', '==', userId)
+      );
+    }
     console.log('Firestore query created for user game history');
 
     const querySnapshot = await getDocs(q);
@@ -28,7 +37,7 @@ export async function fetchUserGameHistory(userId: string): Promise<GameResult[]
         displayName: data.displayName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
-        totalTime: data.timeTaken ? data.timeTaken * 1000 : 0, // Convert seconds to milliseconds
+        totalTime: data.timeTaken ? data.timeTaken * 1000 : 0,
         completedAt: new Date(data.timestamp),
         puzzleDate: data.puzzleDate || new Date(data.timestamp).toLocaleDateString('en-CA'),
         challengeName: data.challengeName || 'Unknown Challenge',

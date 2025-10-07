@@ -13,119 +13,113 @@ export function useLeaderboard() {
     setError(null);
 
     try {
-      // Fetch all game results for the user
       const gameResults = await fetchUserGameHistory(userId);
-      
+
       if (gameResults.length === 0) {
         return null;
       }
 
-      // Calculate basic stats
       const totalGames = gameResults.length;
-      const totalMoves = gameResults.reduce((sum, game) => sum + game.moves, 0);
       const totalHints = gameResults.reduce((sum, game) => sum + game.hintsUsed, 0);
       const totalTimeSpent = gameResults.reduce((sum, game) => sum + game.totalTime, 0);
 
-      // Calculate unassisted games (0 hints)
-      const unassistedGames = gameResults.filter(game => game.hintsUsed === 0);
-      const unassistedGamesCount = unassistedGames.length;
-      
-      // Find best unassisted time
+      const drawMemoryGames = gameResults.filter(game => game.gameMode === 'draw-memory');
+      const creativeRemixGames = gameResults.filter(game => game.gameMode === 'creative-remix');
+
+      const freeDrawsSubmitted = creativeRemixGames.filter(game => game.hintsUsed === 0);
+      const unassistedGamesCount = freeDrawsSubmitted.length;
+
       let bestUnassistedTime: number | null = null;
       let bestUnassistedTimeDate: string | undefined;
-      if (unassistedGames.length > 0) {
-        const bestUnassisted = unassistedGames.reduce((best, game) => 
+      if (freeDrawsSubmitted.length > 0) {
+        const bestUnassisted = freeDrawsSubmitted.reduce((best, game) =>
           game.totalTime < best.totalTime ? game : best
         );
         bestUnassistedTime = bestUnassisted.totalTime;
         bestUnassistedTimeDate = bestUnassisted.puzzleDate;
       }
 
-      // Find best overall time
-      const bestTimeGame = gameResults.reduce((best, game) => 
+      const bestTimeGame = gameResults.reduce((best, game) =>
         game.totalTime < best.totalTime ? game : best
       );
       const bestTime = bestTimeGame.totalTime;
       const bestTimeDate = bestTimeGame.puzzleDate;
 
-      // Calculate averages
-      const averageMoves = totalMoves / totalGames;
-      const averageHints = totalHints / totalGames;
+      const gamesWithAccuracy = gameResults.filter(game => game.score !== undefined && game.score !== null);
+      const averageAccuracy = gamesWithAccuracy.length > 0
+        ? gamesWithAccuracy.reduce((sum, game) => sum + (game.score || 0), 0) / gamesWithAccuracy.length
+        : 0;
+
+      const averageScore = totalGames > 0
+        ? gameResults.reduce((sum, game) => sum + (game.score || 0), 0) / totalGames
+        : 0;
+
       const averageTime = totalTimeSpent / totalGames;
 
-      // Calculate games this week
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const gamesThisWeek = gameResults.filter(game => 
+      const gamesThisWeek = gameResults.filter(game =>
         game.completedAt >= oneWeekAgo
       ).length;
 
-      // Calculate current streak (consecutive days with games)
-      const sortedByDate = gameResults
-        .sort((a, b) => new Date(b.puzzleDate).getTime() - new Date(a.puzzleDate).getTime());
-      
-      // Calculate current streak (consecutive days from today backwards)
-      let currentStreak = 0;
-      // Get today's date in YYYY-MM-DD format
-      const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
-      
-      // Start from today and go backwards
-      let checkDateStr = todayStr;
-      while (true) {
-        // Find entry where puzzle date matches check date AND completion date matches puzzle date
-        const validEntryForThisDate = gameResults.find(entry => {
-          const completionDateStr = entry.completedAt.toLocaleDateString('en-CA');
-          const puzzleDateMatches = entry.puzzleDate === checkDateStr;
-          const completionDateMatches = completionDateStr === checkDateStr;
-          return puzzleDateMatches && completionDateMatches;
-        });
-        
-        if (validEntryForThisDate) {
-          currentStreak++;
-        } else {
-          // If this is today and no valid entry exists, that's normal (they might not have played yet)
-          if (checkDateStr === todayStr) {
-            // Don't increment streak for today if no valid entry exists yet, but don't break it either
+      const calculateStreak = (games: typeof gameResults) => {
+        if (games.length === 0) return 0;
+
+        let streak = 0;
+        const todayStr = new Date().toLocaleDateString('en-CA');
+        let checkDateStr = todayStr;
+
+        while (true) {
+          const validEntryForThisDate = games.find(entry => {
+            const completionDateStr = entry.completedAt.toLocaleDateString('en-CA');
+            const puzzleDateMatches = entry.puzzleDate === checkDateStr;
+            const completionDateMatches = completionDateStr === checkDateStr;
+            return puzzleDateMatches && completionDateMatches;
+          });
+
+          if (validEntryForThisDate) {
+            streak++;
           } else {
+            if (checkDateStr !== todayStr) {
+              break;
+            }
+          }
+
+          const currentDate = new Date(checkDateStr);
+          currentDate.setDate(currentDate.getDate() - 1);
+          checkDateStr = currentDate.toLocaleDateString('en-CA');
+
+          const daysDiff = Math.floor((Date.now() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysDiff > 365) {
             break;
           }
         }
-        
-        // Move to previous day
-        const currentDate = new Date(checkDateStr);
-        currentDate.setDate(currentDate.getDate() - 1);
-        checkDateStr = currentDate.toLocaleDateString('en-CA');
-        
-        // Safety check: don't go back more than 365 days
-        const daysDiff = Math.floor((Date.now() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysDiff > 365) {
-          break;
-        }
-      }
 
-      // Get completed dates for pending games calculation
+        return streak;
+      };
+
+      const currentStreakDrawMemory = calculateStreak(drawMemoryGames);
+      const currentStreakCreativeRemix = calculateStreak(creativeRemixGames);
+
       const completedDates = gameResults.map(game => game.puzzleDate);
 
-      // For best rank, we would need to calculate rank for each game
-      // For now, we'll set it to 1 as a placeholder since calculating historical ranks
-      // would require fetching all players' data for each puzzle date
       const bestRank = 1;
       const bestRankDate = bestTimeDate;
 
       const userStats: UserStats = {
         totalGames,
-        totalMoves,
         totalHints,
         totalTimeSpent,
         unassistedGamesCount,
         bestUnassistedTime,
         bestTime,
         bestRank,
-        averageMoves,
-        averageHints,
+        averageAccuracy,
+        averageScore,
         averageTime,
         gamesThisWeek,
-        currentStreak,
+        currentStreakDrawMemory,
+        currentStreakCreativeRemix,
         bestUnassistedTimeDate,
         bestTimeDate,
         bestRankDate,

@@ -14,18 +14,18 @@ export interface GameResult {
 
 export interface UserStats {
   totalGames: number;
-  totalMoves: number;
   totalHints: number;
   totalTimeSpent: number;
   unassistedGamesCount: number;
   bestUnassistedTime: number | null;
   bestTime: number;
   bestRank: number;
-  averageMoves: number;
-  averageHints: number;
+  averageAccuracy: number;
+  averageScore: number;
   averageTime: number;
   gamesThisWeek: number;
-  currentStreak: number;
+  currentStreakDrawMemory: number;
+  currentStreakCreativeRemix: number;
   bestUnassistedTimeDate?: string;
   bestTimeDate: string;
   bestRankDate: string;
