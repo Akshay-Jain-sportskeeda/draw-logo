@@ -130,9 +130,6 @@ export default function DrawMemoryPage() {
 
           <div className="grid md:grid-cols-2 gap-8 items-start">
             <div className="flex flex-col items-center space-y-4 w-full">
-              <h3 className="text-lg font-medium text-gray-700 text-center">
-                Your Drawing
-              </h3>
               <div className="w-full flex flex-col items-center space-y-4">
                 {!isLoadingColors && (
                   <DrawingCanvas
@@ -152,9 +149,6 @@ export default function DrawMemoryPage() {
             </div>
 
             <div className="flex flex-col items-center space-y-4">
-              <h3 className="text-lg font-medium text-gray-700 text-center">
-                Actual Logo
-              </h3>
               <div className="flex justify-center w-full">
                 {showLogo ? (
                     <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg p-4 bg-white flex items-center justify-center relative">
