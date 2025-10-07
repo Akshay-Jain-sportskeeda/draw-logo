@@ -12,6 +12,14 @@ interface DrawingCanvasProps {
   drawingData?: string;
 }
 
+interface TemplateTransform {
+  x: number;
+  y: number;
+  scale: number;
+  width: number;
+  height: number;
+}
+
 export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -39,6 +47,20 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const [lineThickness, setLineThickness] = useState(3);
   const [isErasing, setIsErasing] = useState(false);
   const isInitializedRef = useRef(false);
+
+  const [isResizeMode, setIsResizeMode] = useState(false);
+  const [templateTransform, setTemplateTransform] = useState<TemplateTransform>({
+    x: 0,
+    y: 0,
+    scale: 1,
+    width: 0,
+    height: 0
+  });
+  const [isDraggingTemplate, setIsDraggingTemplate] = useState(false);
+  const [isResizingTemplate, setIsResizingTemplate] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [dragStartTransform, setDragStartTransform] = useState<TemplateTransform | null>(null);
+  const templateImageRef = useRef<HTMLImageElement | null>(null);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -148,26 +170,48 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       img.crossOrigin = 'anonymous';
 
       img.onload = () => {
-        const padding = 16;
-        const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-        const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+        templateImageRef.current = img;
 
-        const scaleX = effectiveCanvasWidth / img.width;
-        const scaleY = effectiveCanvasHeight / img.height;
-        const scale = Math.min(scaleX, scaleY);
+        if (permanentTemplate && templateTransform.scale > 0) {
+          const drawWidth = templateTransform.width;
+          const drawHeight = templateTransform.height;
+          const offsetX = templateTransform.x;
+          const offsetY = templateTransform.y;
 
-        const drawWidth = img.width * scale;
-        const drawHeight = img.height * scale;
+          overlayCtx.globalAlpha = 1.0;
+          overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        } else {
+          const padding = 16;
+          const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
+          const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
 
-        const centerX = overlayCanvas.width / 2;
-        const centerY = overlayCanvas.height / 2;
+          const scaleX = effectiveCanvasWidth / img.width;
+          const scaleY = effectiveCanvasHeight / img.height;
+          const scale = Math.min(scaleX, scaleY);
 
-        const offsetX = centerX - drawWidth / 2;
-        const offsetY = centerY - drawHeight / 2;
+          const drawWidth = img.width * scale;
+          const drawHeight = img.height * scale;
 
-        overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
-        overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        overlayCtx.globalAlpha = 1.0;
+          const centerX = overlayCanvas.width / 2;
+          const centerY = overlayCanvas.height / 2;
+
+          const offsetX = centerX - drawWidth / 2;
+          const offsetY = centerY - drawHeight / 2;
+
+          if (permanentTemplate && templateTransform.width === 0) {
+            setTemplateTransform({
+              x: offsetX,
+              y: offsetY,
+              scale: 1,
+              width: drawWidth,
+              height: drawHeight
+            });
+          }
+
+          overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
+          overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          overlayCtx.globalAlpha = 1.0;
+        }
       };
 
       img.onerror = (error) => {
@@ -176,7 +220,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
       img.src = imageUrl;
     }
-  }, [permanentTemplate]);
+  }, [permanentTemplate, templateTransform]);
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
@@ -254,6 +298,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (isResizeMode) return;
     e.preventDefault();
     setIsPaletteExpanded(false);
     setIsDrawing(true);
@@ -323,6 +368,100 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     setIsPaletteExpanded(false);
   };
 
+  const isPointInTemplate = (x: number, y: number): boolean => {
+    if (!templateTransform.width || !templateTransform.height) return false;
+    return (
+      x >= templateTransform.x &&
+      x <= templateTransform.x + templateTransform.width &&
+      y >= templateTransform.y &&
+      y <= templateTransform.y + templateTransform.height
+    );
+  };
+
+  const isPointInResizeHandle = (x: number, y: number): boolean => {
+    if (!templateTransform.width || !templateTransform.height) return false;
+    const handleX = templateTransform.x + templateTransform.width;
+    const handleY = templateTransform.y + templateTransform.height;
+    const handleSize = 12;
+    return (
+      x >= handleX - handleSize &&
+      x <= handleX + handleSize &&
+      y >= handleY - handleSize &&
+      y <= handleY + handleSize
+    );
+  };
+
+  const handleTemplateInteractionStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isResizeMode) return;
+    e.preventDefault();
+
+    const position = getCanvasPosition(e);
+
+    if (isPointInResizeHandle(position.x, position.y)) {
+      setIsResizingTemplate(true);
+      setDragStartPos(position);
+      setDragStartTransform({ ...templateTransform });
+    } else if (isPointInTemplate(position.x, position.y)) {
+      setIsDraggingTemplate(true);
+      setDragStartPos(position);
+      setDragStartTransform({ ...templateTransform });
+    }
+  };
+
+  const handleTemplateInteractionMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isResizeMode || (!isDraggingTemplate && !isResizingTemplate)) return;
+    e.preventDefault();
+
+    const canvas = overlayCanvasRef.current;
+    if (!canvas || !dragStartTransform) return;
+
+    const position = getCanvasPosition(e);
+    const deltaX = position.x - dragStartPos.x;
+    const deltaY = position.y - dragStartPos.y;
+
+    if (isResizingTemplate) {
+      const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const direction = (deltaX + deltaY) > 0 ? 1 : -1;
+      const scaleChange = (diagonal * direction) / 200;
+      let newScale = Math.max(0.2, dragStartTransform.scale + scaleChange);
+
+      const newWidth = (dragStartTransform.width / dragStartTransform.scale) * newScale;
+      const newHeight = (dragStartTransform.height / dragStartTransform.scale) * newScale;
+
+      if (dragStartTransform.x + newWidth > canvas.width) {
+        newScale = (canvas.width - dragStartTransform.x) / (dragStartTransform.width / dragStartTransform.scale);
+      }
+      if (dragStartTransform.y + newHeight > canvas.height) {
+        newScale = Math.min(newScale, (canvas.height - dragStartTransform.y) / (dragStartTransform.height / dragStartTransform.scale));
+      }
+
+      setTemplateTransform({
+        ...dragStartTransform,
+        scale: newScale,
+        width: (dragStartTransform.width / dragStartTransform.scale) * newScale,
+        height: (dragStartTransform.height / dragStartTransform.scale) * newScale
+      });
+    } else if (isDraggingTemplate) {
+      let newX = dragStartTransform.x + deltaX;
+      let newY = dragStartTransform.y + deltaY;
+
+      newX = Math.max(0, Math.min(newX, canvas.width - dragStartTransform.width));
+      newY = Math.max(0, Math.min(newY, canvas.height - dragStartTransform.height));
+
+      setTemplateTransform({
+        ...dragStartTransform,
+        x: newX,
+        y: newY
+      });
+    }
+  };
+
+  const handleTemplateInteractionEnd = () => {
+    setIsDraggingTemplate(false);
+    setIsResizingTemplate(false);
+    setDragStartTransform(null);
+  };
+
   return (
     <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
         {/* Background/Overlay Canvas */}
@@ -335,15 +474,57 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* User Drawing Canvas (transparent, on top) */}
         <canvas
           ref={userDrawingCanvasRef}
-          className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
+          className={`absolute inset-0 w-full h-full touch-none ${isResizeMode ? 'cursor-move' : 'cursor-crosshair'}`}
           style={{ zIndex: 2 }}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+          onMouseDown={(e) => {
+            if (isResizeMode) {
+              handleTemplateInteractionStart(e);
+            } else {
+              startDrawing(e);
+            }
+          }}
+          onMouseMove={(e) => {
+            if (isResizeMode) {
+              handleTemplateInteractionMove(e);
+            } else {
+              draw(e);
+            }
+          }}
+          onMouseUp={() => {
+            if (isResizeMode) {
+              handleTemplateInteractionEnd();
+            } else {
+              stopDrawing();
+            }
+          }}
+          onMouseLeave={() => {
+            if (isResizeMode) {
+              handleTemplateInteractionEnd();
+            } else {
+              stopDrawing();
+            }
+          }}
+          onTouchStart={(e) => {
+            if (isResizeMode) {
+              handleTemplateInteractionStart(e);
+            } else {
+              startDrawing(e);
+            }
+          }}
+          onTouchMove={(e) => {
+            if (isResizeMode) {
+              handleTemplateInteractionMove(e);
+            } else {
+              draw(e);
+            }
+          }}
+          onTouchEnd={() => {
+            if (isResizeMode) {
+              handleTemplateInteractionEnd();
+            } else {
+              stopDrawing();
+            }
+          }}
         />
 
         {/* Combined Drawing Controls */}
@@ -443,6 +624,22 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         )}
         </div>
 
+        {/* Resize/Done button (only for permanent template) */}
+        {permanentTemplate && (
+          <div className="absolute top-4 right-4" style={{ zIndex: 10 }}>
+            <button
+              onClick={() => setIsResizeMode(!isResizeMode)}
+              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                isResizeMode
+                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              {isResizeMode ? 'Done' : 'Resize'}
+            </button>
+          </div>
+        )}
+
         {/* Clear Canvas button */}
         <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
           <button
@@ -455,6 +652,37 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             Clear
           </button>
         </div>
+
+        {/* Template resize overlay - only shown in resize mode */}
+        {isResizeMode && permanentTemplate && templateTransform.width > 0 && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: `${(templateTransform.x / (overlayCanvasRef.current?.width || 1)) * 100}%`,
+              top: `${(templateTransform.y / (overlayCanvasRef.current?.height || 1)) * 100}%`,
+              width: `${(templateTransform.width / (overlayCanvasRef.current?.width || 1)) * 100}%`,
+              height: `${(templateTransform.height / (overlayCanvasRef.current?.height || 1)) * 100}%`,
+              zIndex: 5,
+              border: '2px dashed #3b82f6',
+              boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
+            }}
+          >
+            {/* Resize handle at bottom-right corner */}
+            <div
+              className="absolute pointer-events-auto cursor-nwse-resize"
+              style={{
+                right: '-6px',
+                bottom: '-6px',
+                width: '12px',
+                height: '12px',
+                backgroundColor: '#3b82f6',
+                border: '2px solid white',
+                borderRadius: '50%',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              }}
+            />
+          </div>
+        )}
     </div>
   );
 }
