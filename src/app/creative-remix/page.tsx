@@ -35,14 +35,19 @@ export default function CreativeRemixPage() {
     const fetchDailyChallenge = async () => {
       setIsLoadingChallenge(true);
       setChallengeError(null);
-      
+
       try {
+        console.log('=== CREATIVE REMIX: Fetching daily challenge ===');
         const response = await fetch('/api/daily-challenge');
         if (!response.ok) {
           throw new Error(`Failed to fetch daily challenge: ${response.status}`);
         }
-        
+
         const challengeData: DailyChallenge = await response.json();
+        console.log('=== CREATIVE REMIX: Challenge data received ===');
+        console.log('Free Draw Challenge:', challengeData.freeDrawChallenge);
+        console.log('Template Name:', challengeData.freeDrawChallenge.name);
+        console.log('Template Image URL:', challengeData.freeDrawChallenge.imageUrl);
         setDailyChallenge(challengeData);
       } catch (error) {
         console.error('Error fetching daily challenge:', error);
