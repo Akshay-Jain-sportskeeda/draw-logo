@@ -37,7 +37,7 @@ export async function fetchUserGameHistory(userId: string, gameMode?: string): P
         displayName: data.displayName || 'Anonymous',
         moves: data.moves || 0,
         hintsUsed: data.hintsUsed || 0,
-        totalTime: data.timeTaken ? data.timeTaken * 1000 : 0,
+        totalTime: data.totalTime || 0,
         completedAt: new Date(data.timestamp),
         puzzleDate: data.puzzleDate || new Date(data.timestamp).toLocaleDateString('en-CA'),
         challengeName: data.challengeName || 'Unknown Challenge',
