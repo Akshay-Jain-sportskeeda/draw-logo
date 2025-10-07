@@ -158,15 +158,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
 
-    console.log('renderOverlay called:', { imageUrl, hasCanvas: !!overlayCanvas, hasCtx: !!overlayCtx, canvasWidth: overlayCanvas?.width, canvasHeight: overlayCanvas?.height });
-
     if (!overlayCanvas || !overlayCtx) {
-      console.log('No canvas or context');
       return;
     }
 
     if (overlayCanvas.width === 0 || overlayCanvas.height === 0) {
-      console.log('Canvas has zero dimensions');
       return;
     }
 
@@ -175,11 +171,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
     if (imageUrl) {
-      console.log('Loading image:', imageUrl);
-
       // Function to draw the image with current transforms
       const drawImage = (img: HTMLImageElement) => {
-        console.log('Drawing image with transform:', templateTransform, 'imgSize:', img.width, img.height);
         overlayCtx.save();
 
         const padding = 16;
@@ -200,8 +193,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         const offsetX = centerX - drawWidth / 2 + templateTransform.positionX;
         const offsetY = centerY - drawHeight / 2 + templateTransform.positionY;
 
-        console.log('Drawing at:', { offsetX, offsetY, drawWidth, drawHeight, opacity: permanentTemplate ? 1.0 : 0.3 });
-
         overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
         overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
         overlayCtx.globalAlpha = 1.0;
@@ -210,17 +201,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       };
 
       // If image is already loaded, draw it immediately
-      if (templateImageRef.current && templateImageRef.current.complete) {
-        console.log('Using cached image');
+      if (templateImageRef.current && templateImageRef.current.complete && templateImageRef.current.src === imageUrl) {
         drawImage(templateImageRef.current);
       } else {
-        console.log('Loading new image');
         // Load the image
         const img = new Image();
         img.crossOrigin = 'anonymous';
 
         img.onload = () => {
-          console.log('Image loaded successfully');
           templateImageRef.current = img;
           drawImage(img);
         };
@@ -271,7 +259,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     } else {
       renderOverlay(null);
     }
-  }, [overlayImageUrl, permanentTemplate, templateImageUrl, renderOverlay]);
+  }, [overlayImageUrl, permanentTemplate, templateImageUrl, renderOverlay, templateTransform]);
 
   // Render resize canvas overlay
   const renderResizeCanvas = useCallback(() => {
