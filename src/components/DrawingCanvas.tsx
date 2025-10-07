@@ -498,7 +498,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     if (!templateTransform.width || !templateTransform.height) return false;
     const handleX = templateTransform.x + templateTransform.width;
     const handleY = templateTransform.y + templateTransform.height;
-    const handleSize = 12;
+    const handleSize = 20;
     return (
       x >= handleX - handleSize &&
       x <= handleX + handleSize &&
@@ -510,14 +510,17 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const handleTemplateInteractionStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isResizeMode) return;
     e.preventDefault();
+    e.stopPropagation();
 
     const position = getCanvasPosition(e);
 
     if (isPointInResizeHandle(position.x, position.y)) {
+      console.log('Resize handle clicked at:', position);
       setIsResizingTemplate(true);
       setDragStartPos(position);
       setDragStartTransform({ ...templateTransform });
     } else if (isPointInTemplate(position.x, position.y)) {
+      console.log('Template body clicked at:', position);
       setIsDraggingTemplate(true);
       setDragStartPos(position);
       setDragStartTransform({ ...templateTransform });
@@ -527,6 +530,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const handleTemplateInteractionMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isResizeMode || (!isDraggingTemplate && !isResizingTemplate)) return;
     e.preventDefault();
+    e.stopPropagation();
 
     const canvas = overlayCanvasRef.current;
     if (!canvas || !dragStartTransform) return;
@@ -591,7 +595,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         <canvas
           ref={userDrawingCanvasRef}
           className={`absolute inset-0 w-full h-full touch-none ${isResizeMode ? 'cursor-move' : 'cursor-crosshair'}`}
-          style={{ zIndex: 2 }}
+          style={{ zIndex: isResizeMode ? 1 : 2 }}
           onMouseDown={(e) => {
             if (isResizeMode) {
               handleTemplateInteractionStart(e);
@@ -772,7 +776,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* Template resize overlay - only shown in resize mode */}
         {isResizeMode && permanentTemplate && templateTransform.width > 0 && (
           <div
-            className="absolute pointer-events-none"
+            className="absolute"
             style={{
               left: `${(templateTransform.x / (overlayCanvasRef.current?.width || 1)) * 100}%`,
               top: `${(templateTransform.y / (overlayCanvasRef.current?.height || 1)) * 100}%`,
@@ -781,20 +785,22 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               zIndex: 5,
               border: '2px dashed #3b82f6',
               boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
+              pointerEvents: 'none',
             }}
           >
             {/* Resize handle at bottom-right corner */}
             <div
-              className="absolute pointer-events-auto cursor-nwse-resize"
+              className="absolute cursor-nwse-resize"
               style={{
-                right: '-6px',
-                bottom: '-6px',
-                width: '12px',
-                height: '12px',
+                right: '-8px',
+                bottom: '-8px',
+                width: '20px',
+                height: '20px',
                 backgroundColor: '#3b82f6',
                 border: '2px solid white',
                 borderRadius: '50%',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                pointerEvents: 'auto',
               }}
             />
           </div>
