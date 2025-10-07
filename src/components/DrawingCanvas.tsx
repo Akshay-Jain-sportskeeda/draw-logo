@@ -415,11 +415,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         />
         
         {/* Combined Drawing Controls */}
-        <div className="absolute bottom-4 left-4">
+        <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
           {/* Main pencil icon button */}
           <button
             onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
-            className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 z-10 relative flex items-center justify-center"
+            className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
             title="Drawing Tools"
           >
             {/* Pencil icon */}
@@ -512,7 +512,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         </div>
         
         {/* Clear Canvas button */}
-        <div className="absolute bottom-4 right-4">
+        <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
           <button
             onClick={() => {
               clearCanvas();
