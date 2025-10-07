@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
@@ -73,9 +73,9 @@ export default function CreativeRemixPage() {
     '#ec4899'
   ];
 
-  const handleDrawingChange = (dataUrl: string) => {
+  const handleDrawingChange = useCallback((dataUrl: string) => {
     setDrawingData(dataUrl);
-  };
+  }, []);
 
   const handleSubmitSuccess = (id: string) => {
     setSubmissionId(id);

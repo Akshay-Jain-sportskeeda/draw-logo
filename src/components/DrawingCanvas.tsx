@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 
 interface DrawingCanvasProps {
   onDrawingChange: (dataUrl: string) => void;
@@ -38,6 +38,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [lineThickness, setLineThickness] = useState(3);
   const [isErasing, setIsErasing] = useState(false);
+  const isInitializedRef = useRef(false);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -63,6 +64,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
   // Initialize both canvases once on mount
   useEffect(() => {
+    if (isInitializedRef.current) return;
+
     const overlayCanvas = overlayCanvasRef.current;
     const userDrawingCanvas = userDrawingCanvasRef.current;
 
@@ -108,21 +111,31 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       // Clear to transparent (no background fill for drawing layer)
       userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
 
-      // Restore drawing data if it exists
-      if (drawingData && drawingData !== '') {
-        const img = new Image();
-        img.onload = () => {
-          userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
-          userDrawingCtx.drawImage(img, 0, 0);
-        };
-        img.src = drawingData;
-      } else {
-        // Initialize with empty drawing
-        const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
-        onDrawingChange(initialDataUrl);
-      }
+      isInitializedRef.current = true;
+
+      // Initialize with empty drawing only once
+      const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
+      onDrawingChange(initialDataUrl);
     }
-  }, [drawingData, internalSelectedColor, onDrawingChange]);
+  }, []);
+
+  // Separate effect for restoring drawing data
+  useEffect(() => {
+    if (!isInitializedRef.current) return;
+    if (!drawingData || drawingData === '') return;
+
+    const userDrawingCanvas = userDrawingCanvasRef.current;
+    const userDrawingCtx = userDrawingCtxRef.current;
+
+    if (!userDrawingCanvas || !userDrawingCtx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
+      userDrawingCtx.drawImage(img, 0, 0);
+    };
+    img.src = drawingData;
+  }, [drawingData]);
 
   // Render overlay function
   const renderOverlay = async (imageUrl: string | null) => {
