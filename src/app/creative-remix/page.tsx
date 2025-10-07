@@ -208,6 +208,9 @@ export default function CreativeRemixPage() {
 
           <div className="flex flex-col items-center space-y-8">
             <div className="w-full flex flex-col items-center">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+                {dailyChallenge.freeDrawChallenge.name}
+              </h2>
               {dailyChallenge.freeDrawChallenge.imageUrl ? (
                 <>
                   <DrawingCanvas
@@ -231,9 +234,6 @@ export default function CreativeRemixPage() {
             </div>
 
             <div className="w-full max-w-md">
-              <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">
-                Submit Your Artwork
-              </h3>
               <SubmissionForm
                 drawingData={drawingData}
                 user={user}

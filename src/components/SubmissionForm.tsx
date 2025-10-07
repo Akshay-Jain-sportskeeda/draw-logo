@@ -163,12 +163,6 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <p className="text-sm text-blue-700">
-          <strong>Submitting as:</strong> {user.displayName || user.email?.split('@')[0] || 'Anonymous'}
-        </p>
-      </div>
-
       {validationError && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-sm text-red-600">{validationError}</p>
