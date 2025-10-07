@@ -10,43 +10,30 @@ interface DrawingCanvasProps {
   permanentTemplate?: boolean;
   templateImageUrl?: string;
   drawingData?: string;
-  isResizeMode?: boolean;
-  onResizeModeChange?: (isResizeMode: boolean) => void;
 }
 
-export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData, isResizeMode = false, onResizeModeChange }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const userDrawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const userDrawingCtxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const resizeCanvasRef = useRef<HTMLCanvasElement>(null);
-  const resizeCtxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const templateImageRef = useRef<HTMLImageElement | null>(null);
-  
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
 
-  // Resize mode state
-  const [templateTransform, setTemplateTransform] = useState({ scale: 1.0, positionX: 0, positionY: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, scale: 1.0 });
-  const [showInstructions, setShowInstructions] = useState(true);
-  
   // Helper function to get a non-white default color
   const getDefaultColor = (colors: string[]): string => {
     // Find the first non-white color
-    const nonWhiteColor = colors.find(color => 
-      color.toLowerCase() !== '#ffffff' && 
-      color.toLowerCase() !== '#fff' && 
+    const nonWhiteColor = colors.find(color =>
+      color.toLowerCase() !== '#ffffff' &&
+      color.toLowerCase() !== '#fff' &&
       color.toLowerCase() !== 'white'
     );
-    
+
     // Return the first non-white color, or black if none found
     return nonWhiteColor || '#000000';
   };
-  
+
   const [internalSelectedColor, setInternalSelectedColor] = useState(getDefaultColor(availableColors));
   const [isPaletteExpanded, setIsPaletteExpanded] = useState(false);
   const [lineThickness, setLineThickness] = useState(3);
@@ -61,11 +48,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     { name: 'Extra Thick', value: 10 },
     { name: 'Bold', value: 15 }
   ];
-
-  // Resize constraints
-  const MIN_SCALE = 0.4;
-  const MAX_SCALE = 2.0;
-  const RESIZE_HANDLE_SIZE = 20;
 
   // Update selected color when available colors change
   useEffect(() => {
@@ -86,9 +68,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     const overlayCanvas = overlayCanvasRef.current;
     const userDrawingCanvas = userDrawingCanvasRef.current;
-    const resizeCanvas = resizeCanvasRef.current;
 
-    if (!overlayCanvas || !userDrawingCanvas || !resizeCanvas) return;
+    if (!overlayCanvas || !userDrawingCanvas) return;
 
     // Initialize overlay canvas
     const overlayCtx = overlayCanvas.getContext('2d');
@@ -125,14 +106,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
       onDrawingChange(initialDataUrl);
     }
-
-    // Initialize resize canvas
-    const resizeCtx = resizeCanvas.getContext('2d');
-    if (resizeCtx) {
-      resizeCtxRef.current = resizeCtx;
-      resizeCanvas.width = overlayCanvas.width;
-      resizeCanvas.height = overlayCanvas.height;
-    }
   }, [onDrawingChange, internalSelectedColor]);
 
   // Separate effect for restoring drawing data
@@ -153,8 +126,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     img.src = drawingData;
   }, [drawingData]);
 
-  // Render overlay function with transform support
-  const renderOverlay = useCallback((imageUrl: string | null, forceRedraw: boolean = false) => {
+  // Render overlay function
+  const renderOverlay = useCallback((imageUrl: string | null) => {
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
 
@@ -171,64 +144,39 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
     if (imageUrl) {
-      // Function to draw the image with current transforms
-      const drawImage = (img: HTMLImageElement) => {
-        overlayCtx.save();
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
 
+      img.onload = () => {
         const padding = 16;
         const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
         const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
 
         const scaleX = effectiveCanvasWidth / img.width;
         const scaleY = effectiveCanvasHeight / img.height;
-        const baseScale = Math.min(scaleX, scaleY);
+        const scale = Math.min(scaleX, scaleY);
 
-        const finalScale = baseScale * templateTransform.scale;
-        const drawWidth = img.width * finalScale;
-        const drawHeight = img.height * finalScale;
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
 
         const centerX = overlayCanvas.width / 2;
         const centerY = overlayCanvas.height / 2;
 
-        const offsetX = centerX - drawWidth / 2 + templateTransform.positionX;
-        const offsetY = centerY - drawHeight / 2 + templateTransform.positionY;
+        const offsetX = centerX - drawWidth / 2;
+        const offsetY = centerY - drawHeight / 2;
 
         overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
         overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
         overlayCtx.globalAlpha = 1.0;
-
-        overlayCtx.restore();
       };
 
-      // If image is already loaded, draw it immediately
-      if (templateImageRef.current && templateImageRef.current.complete && templateImageRef.current.src === imageUrl) {
-        drawImage(templateImageRef.current);
-      } else {
-        // Load the image
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
+      img.onerror = (error) => {
+        console.error('Failed to load overlay image:', imageUrl, error);
+      };
 
-        img.onload = () => {
-          templateImageRef.current = img;
-          drawImage(img);
-        };
-
-        img.onerror = (error) => {
-          console.error('Failed to load overlay image:', imageUrl, error);
-          overlayCtx.fillStyle = '#ff0000';
-          overlayCtx.font = '16px Arial';
-          overlayCtx.fillText('Failed to load template image', 20, 40);
-        };
-
-        img.src = imageUrl;
-      }
+      img.src = imageUrl;
     }
-  }, [permanentTemplate, templateTransform]);
-
-  // Reset template image when URL changes
-  useEffect(() => {
-    templateImageRef.current = null;
-  }, [overlayImageUrl, templateImageUrl]);
+  }, [permanentTemplate]);
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
@@ -259,75 +207,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     } else {
       renderOverlay(null);
     }
-  }, [overlayImageUrl, permanentTemplate, templateImageUrl, renderOverlay, templateTransform]);
-
-  // Render resize canvas overlay
-  const renderResizeCanvas = useCallback(() => {
-    const resizeCanvas = resizeCanvasRef.current;
-    const resizeCtx = resizeCtxRef.current;
-    const overlayCanvas = overlayCanvasRef.current;
-
-    if (!resizeCanvas || !resizeCtx || !overlayCanvas || !templateImageRef.current) {
-      return;
-    }
-
-    const img = templateImageRef.current;
-
-    // Clear resize canvas
-    resizeCtx.clearRect(0, 0, resizeCanvas.width, resizeCanvas.height);
-
-    // Calculate template bounds
-    const padding = 16;
-    const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-    const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
-
-    const scaleX = effectiveCanvasWidth / img.width;
-    const scaleY = effectiveCanvasHeight / img.height;
-    const baseScale = Math.min(scaleX, scaleY);
-
-    const finalScale = baseScale * templateTransform.scale;
-    const drawWidth = img.width * finalScale;
-    const drawHeight = img.height * finalScale;
-
-    const centerX = overlayCanvas.width / 2;
-    const centerY = overlayCanvas.height / 2;
-
-    const boxX = centerX - drawWidth / 2 + templateTransform.positionX;
-    const boxY = centerY - drawHeight / 2 + templateTransform.positionY;
-
-    // Draw bounding box
-    resizeCtx.strokeStyle = '#3b82f6';
-    resizeCtx.lineWidth = 3;
-    resizeCtx.setLineDash([8, 4]);
-    resizeCtx.strokeRect(boxX, boxY, drawWidth, drawHeight);
-    resizeCtx.setLineDash([]);
-
-    // Draw resize handle at bottom-right corner
-    const handleX = boxX + drawWidth - RESIZE_HANDLE_SIZE / 2;
-    const handleY = boxY + drawHeight - RESIZE_HANDLE_SIZE / 2;
-
-    resizeCtx.fillStyle = '#3b82f6';
-    resizeCtx.fillRect(handleX, handleY, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
-
-    resizeCtx.strokeStyle = '#ffffff';
-    resizeCtx.lineWidth = 2;
-    resizeCtx.strokeRect(handleX, handleY, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
-
-    // Draw resize icon in handle
-    resizeCtx.strokeStyle = '#ffffff';
-    resizeCtx.lineWidth = 2;
-    resizeCtx.beginPath();
-    resizeCtx.moveTo(handleX + 5, handleY + RESIZE_HANDLE_SIZE - 5);
-    resizeCtx.lineTo(handleX + RESIZE_HANDLE_SIZE - 5, handleY + 5);
-    resizeCtx.stroke();
-  }, [templateTransform, RESIZE_HANDLE_SIZE]);
-
-  // Update resize canvas when in resize mode
-  useEffect(() => {
-    if (isResizeMode && templateImageRef.current) {
-      renderResizeCanvas();
-    }
-  }, [isResizeMode, templateTransform, renderResizeCanvas]);
+  }, [overlayImageUrl, permanentTemplate, templateImageUrl, renderOverlay]);
 
   // Update stroke color when color changes
   useEffect(() => {
@@ -373,146 +253,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
   };
 
-  // Get template bounds
-  const getTemplateBounds = useCallback(() => {
-    const overlayCanvas = overlayCanvasRef.current;
-    const img = templateImageRef.current;
-
-    if (!overlayCanvas || !img) {
-      return null;
-    }
-
-    const padding = 16;
-    const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-    const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
-
-    const scaleX = effectiveCanvasWidth / img.width;
-    const scaleY = effectiveCanvasHeight / img.height;
-    const baseScale = Math.min(scaleX, scaleY);
-
-    const finalScale = baseScale * templateTransform.scale;
-    const drawWidth = img.width * finalScale;
-    const drawHeight = img.height * finalScale;
-
-    const centerX = overlayCanvas.width / 2;
-    const centerY = overlayCanvas.height / 2;
-
-    const boxX = centerX - drawWidth / 2 + templateTransform.positionX;
-    const boxY = centerY - drawHeight / 2 + templateTransform.positionY;
-
-    return { x: boxX, y: boxY, width: drawWidth, height: drawHeight };
-  }, [templateTransform]);
-
-  // Check if point is in resize handle
-  const isInResizeHandle = useCallback((x: number, y: number) => {
-    const bounds = getTemplateBounds();
-    if (!bounds) return false;
-
-    const handleX = bounds.x + bounds.width - RESIZE_HANDLE_SIZE / 2;
-    const handleY = bounds.y + bounds.height - RESIZE_HANDLE_SIZE / 2;
-
-    return x >= handleX && x <= handleX + RESIZE_HANDLE_SIZE &&
-           y >= handleY && y <= handleY + RESIZE_HANDLE_SIZE;
-  }, [getTemplateBounds, RESIZE_HANDLE_SIZE]);
-
-  // Check if point is in bounding box
-  const isInBoundingBox = useCallback((x: number, y: number) => {
-    const bounds = getTemplateBounds();
-    if (!bounds) return false;
-
-    return x >= bounds.x && x <= bounds.x + bounds.width &&
-           y >= bounds.y && y <= bounds.y + bounds.height;
-  }, [getTemplateBounds]);
-
-  // Handle resize mode interactions
-  const handleResizeMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isResizeMode) return;
-
-    e.preventDefault();
-    const position = getCanvasPosition(e);
-
-    if (isInResizeHandle(position.x, position.y)) {
-      setIsResizing(true);
-      setResizeStart({ x: position.x, y: position.y, scale: templateTransform.scale });
-      setShowInstructions(false);
-    } else if (isInBoundingBox(position.x, position.y)) {
-      setIsDragging(true);
-      setDragStart({ x: position.x - templateTransform.positionX, y: position.y - templateTransform.positionY });
-      setShowInstructions(false);
-    }
-  }, [isResizeMode, templateTransform, isInResizeHandle, isInBoundingBox, getCanvasPosition]);
-
-  const handleResizeMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isResizeMode) return;
-
-    e.preventDefault();
-    const position = getCanvasPosition(e);
-
-    if (isResizing) {
-      const bounds = getTemplateBounds();
-      if (!bounds) return;
-
-      const centerX = bounds.x + bounds.width / 2;
-      const centerY = bounds.y + bounds.height / 2;
-
-      const startDist = Math.sqrt(
-        Math.pow(resizeStart.x - centerX, 2) + Math.pow(resizeStart.y - centerY, 2)
-      );
-      const currentDist = Math.sqrt(
-        Math.pow(position.x - centerX, 2) + Math.pow(position.y - centerY, 2)
-      );
-
-      const scaleDelta = currentDist / startDist;
-      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, resizeStart.scale * scaleDelta));
-
-      setTemplateTransform(prev => ({ ...prev, scale: newScale }));
-    } else if (isDragging) {
-      const newX = position.x - dragStart.x;
-      const newY = position.y - dragStart.y;
-
-      const overlayCanvas = overlayCanvasRef.current;
-      if (!overlayCanvas) return;
-
-      const bounds = getTemplateBounds();
-      if (!bounds) return;
-
-      const maxX = overlayCanvas.width / 2;
-      const maxY = overlayCanvas.height / 2;
-      const minX = -overlayCanvas.width / 2;
-      const minY = -overlayCanvas.height / 2;
-
-      const clampedX = Math.max(minX, Math.min(maxX, newX));
-      const clampedY = Math.max(minY, Math.min(maxY, newY));
-
-      setTemplateTransform(prev => ({ ...prev, positionX: clampedX, positionY: clampedY }));
-    }
-  }, [isResizeMode, isResizing, isDragging, resizeStart, dragStart, getTemplateBounds, getCanvasPosition, MIN_SCALE, MAX_SCALE]);
-
-  const handleResizeMouseUp = useCallback(() => {
-    setIsResizing(false);
-    setIsDragging(false);
-  }, []);
-
-  // Auto-hide instructions after 3 seconds
-  useEffect(() => {
-    if (isResizeMode && showInstructions) {
-      const timer = setTimeout(() => {
-        setShowInstructions(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isResizeMode, showInstructions]);
-
-  // Show instructions when entering resize mode
-  useEffect(() => {
-    if (isResizeMode) {
-      setShowInstructions(true);
-    }
-  }, [isResizeMode]);
-
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (isResizeMode) return;
-
     e.preventDefault();
     setIsPaletteExpanded(false);
     setIsDrawing(true);
@@ -521,8 +262,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (isResizeMode) return;
-
     e.preventDefault();
     if (!isDrawing) return;
 
@@ -596,7 +335,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* User Drawing Canvas (transparent, on top) */}
         <canvas
           ref={userDrawingCanvasRef}
-          className={`absolute inset-0 w-full h-full touch-none ${isResizeMode ? 'pointer-events-none' : 'cursor-crosshair'}`}
+          className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
           style={{ zIndex: 2 }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
@@ -607,147 +346,115 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           onTouchEnd={stopDrawing}
         />
 
-        {/* Resize Canvas (for bounding box and resize handle) */}
-        {isResizeMode && (
-          <canvas
-            ref={resizeCanvasRef}
-            className="absolute inset-0 w-full h-full cursor-move touch-none"
-            style={{ zIndex: 3 }}
-            onMouseDown={handleResizeMouseDown}
-            onMouseMove={handleResizeMouseMove}
-            onMouseUp={handleResizeMouseUp}
-            onMouseLeave={handleResizeMouseUp}
-            onTouchStart={handleResizeMouseDown}
-            onTouchMove={handleResizeMouseMove}
-            onTouchEnd={handleResizeMouseUp}
-          />
-        )}
-
-        {/* Instructions overlay for resize mode */}
-        {isResizeMode && showInstructions && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium" style={{ zIndex: 4 }}>
-            Drag box to move, use corner handle to resize
-          </div>
-        )}
-
-        {/* Mode indicator overlay */}
-        {isResizeMode && (
-          <div className="absolute inset-0 bg-blue-50 bg-opacity-10 pointer-events-none rounded-lg" style={{ zIndex: 0 }} />
-        )}
-        
         {/* Combined Drawing Controls */}
-        {!isResizeMode && (
-          <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
-            {/* Main pencil icon button */}
-            <button
-              onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
-              className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
-              title="Drawing Tools"
-            >
-            {/* Pencil icon */}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-              <path d="M15 5l4 4"/>
-            </svg>
-            {/* Color indicator */}
-            <div 
-              className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-gray-600"
-              style={{ backgroundColor: internalSelectedColor }}
-            />
-          </button>
-          
-          {/* Expanded controls */}
-          {isPaletteExpanded && (
-            <div className="absolute bottom-12 left-0 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
-              {/* Colors section */}
-              <div className="mb-3">
-                <h4 className="text-xs font-medium text-gray-600 mb-2">Colors</h4>
-                <div className="flex flex-wrap gap-1 max-w-[120px]">
-                  {colorOptions.map((color, index) => (
-                    <button
-                      key={color.value}
-                      onClick={() => handleColorSelect(color.value)}
-                      className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 ${
-                        internalSelectedColor === color.value && !isErasing
-                          ? 'border-2 border-gray-800'
-                          : 'border border-gray-400 hover:border-gray-600'
-                      } ${color.value === '#FFFFFF' ? 'border-gray-400' : ''}`}
-                      style={{ 
-                        backgroundColor: color.value,
-                        animationDelay: `${index * 30}ms`
-                      }}
-                      title={color.name}
-                    />
-                  ))}
-                  
-                  {/* Eraser button */}
+        <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
+          {/* Main pencil icon button */}
+          <button
+            onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+            className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
+            title="Drawing Tools"
+          >
+          {/* Pencil icon */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            <path d="M15 5l4 4"/>
+          </svg>
+          {/* Color indicator */}
+          <div
+            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-gray-600"
+            style={{ backgroundColor: internalSelectedColor }}
+          />
+        </button>
+
+        {/* Expanded controls */}
+        {isPaletteExpanded && (
+          <div className="absolute bottom-12 left-0 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+            {/* Colors section */}
+            <div className="mb-3">
+              <h4 className="text-xs font-medium text-gray-600 mb-2">Colors</h4>
+              <div className="flex flex-wrap gap-1 max-w-[120px]">
+                {colorOptions.map((color, index) => (
                   <button
-                    onClick={handleEraserSelect}
-                    className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 flex items-center justify-center ${
-                      isErasing
-                        ? 'border-2 border-gray-800 bg-gray-100'
-                        : 'border border-gray-400 hover:border-gray-600 bg-white'
-                    }`}
-                    title="Eraser"
-                  >
-                    {/* Eraser icon */}
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
-                      <path d="M22 21H7"/>
-                      <path d="m5 11 9 9"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Thickness section */}
-              <div>
-                <h4 className="text-xs font-medium text-gray-600 mb-2">Thickness</h4>
-                <div className="flex flex-wrap gap-1 max-w-[120px]">
-                  {thicknessOptions.map((thickness, index) => (
-                    <button
-                      key={thickness.value}
-                      onClick={() => handleThicknessSelect(thickness.value)}
-                      className={`w-6 h-6 rounded-full border bg-white transition-all duration-200 hover:scale-110 flex items-center justify-center ${
-                        lineThickness === thickness.value
-                          ? 'border-2 border-gray-800'
-                          : 'border border-gray-400 hover:border-gray-600'
-                      }`}
-                      style={{ 
-                        animationDelay: `${index * 30}ms`
-                      }}
-                      title={thickness.name}
-                    >
-                      <div 
-                        className="bg-gray-800 rounded-full"
-                        style={{ 
-                          width: `${Math.min(thickness.value * 1.2 + 2, 16)}px`, 
-                          height: `${Math.min(thickness.value * 1.2 + 2, 16)}px` 
-                        }}
-                      />
-                    </button>
-                  ))}
-                </div>
+                    key={color.value}
+                    onClick={() => handleColorSelect(color.value)}
+                    className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 ${
+                      internalSelectedColor === color.value && !isErasing
+                        ? 'border-2 border-gray-800'
+                        : 'border border-gray-400 hover:border-gray-600'
+                    } ${color.value === '#FFFFFF' ? 'border-gray-400' : ''}`}
+                    style={{
+                      backgroundColor: color.value,
+                      animationDelay: `${index * 30}ms`
+                    }}
+                    title={color.name}
+                  />
+                ))}
+
+                {/* Eraser button */}
+                <button
+                  onClick={handleEraserSelect}
+                  className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 flex items-center justify-center ${
+                    isErasing
+                      ? 'border-2 border-gray-800 bg-gray-100'
+                      : 'border border-gray-400 hover:border-gray-600 bg-white'
+                  }`}
+                  title="Eraser"
+                >
+                  {/* Eraser icon */}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
+                    <path d="M22 21H7"/>
+                    <path d="m5 11 9 9"/>
+                  </svg>
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Thickness section */}
+            <div>
+              <h4 className="text-xs font-medium text-gray-600 mb-2">Thickness</h4>
+              <div className="flex flex-wrap gap-1 max-w-[120px]">
+                {thicknessOptions.map((thickness, index) => (
+                  <button
+                    key={thickness.value}
+                    onClick={() => handleThicknessSelect(thickness.value)}
+                    className={`w-6 h-6 rounded-full border bg-white transition-all duration-200 hover:scale-110 flex items-center justify-center ${
+                      lineThickness === thickness.value
+                        ? 'border-2 border-gray-800'
+                        : 'border border-gray-400 hover:border-gray-600'
+                    }`}
+                    style={{
+                      animationDelay: `${index * 30}ms`
+                    }}
+                    title={thickness.name}
+                  >
+                    <div
+                      className="bg-gray-800 rounded-full"
+                      style={{
+                        width: `${Math.min(thickness.value * 1.2 + 2, 16)}px`,
+                        height: `${Math.min(thickness.value * 1.2 + 2, 16)}px`
+                      }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
+        </div>
 
         {/* Clear Canvas button */}
-        {!isResizeMode && (
-          <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
-            <button
-              onClick={() => {
-                clearCanvas();
-                onClearCanvas?.();
-              }}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-            >
-              Clear
-            </button>
-          </div>
-        )}
+        <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
+          <button
+            onClick={() => {
+              clearCanvas();
+              onClearCanvas?.();
+            }}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+          >
+            Clear
+          </button>
+        </div>
     </div>
   );
 }
