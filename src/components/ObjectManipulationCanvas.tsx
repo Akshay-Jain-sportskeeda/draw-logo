@@ -347,7 +347,13 @@ export default function ObjectManipulationCanvas({
       />
       <canvas ref={compositeCanvasRef} className="hidden" />
 
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-2" style={{ zIndex: 10 }}>
+      <div
+        className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-2"
+        style={{
+          zIndex: 10,
+          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto'
+        }}
+      >
         <div className="flex flex-col gap-2">
           <div className="text-xs font-semibold text-gray-600 mb-1">Tools</div>
           <div className="grid grid-cols-3 gap-1">
@@ -458,7 +464,13 @@ export default function ObjectManipulationCanvas({
         </div>
       </div>
 
-      <div className="absolute bottom-4 right-4 flex gap-2" style={{ zIndex: 10 }}>
+      <div
+        className="absolute bottom-4 right-4 flex gap-2"
+        style={{
+          zIndex: 10,
+          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto'
+        }}
+      >
         {selectedObjectId && (
           <button
             onClick={handleDeleteSelected}
