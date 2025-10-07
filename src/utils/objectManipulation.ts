@@ -44,7 +44,9 @@ export function getTransformHandles(obj: DrawableObject): TransformHandles {
 export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12): HandleType {
   const handles = getTransformHandles(obj);
   const strokeWidth = 2;
-  const hitRadius = handleSize + strokeWidth;
+  const shadowOffset = 2;
+  const touchTolerance = 8;
+  const hitRadius = (handleSize / 2) + strokeWidth + shadowOffset + touchTolerance;
 
   const handleEntries: [HandleType, Point][] = [
     ['rotation', handles.rotation],
@@ -260,7 +262,7 @@ export function drawSelectionBorder(ctx: CanvasRenderingContext2D, obj: Drawable
 
 export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
   const handles = getTransformHandles(obj);
-  const handleSize = 12;
+  const handleSize = 14;
 
   ctx.save();
 
@@ -269,8 +271,8 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.fillStyle = '#2563eb';
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 1;
 
@@ -290,8 +292,8 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.lineWidth = 2;
       ctx.stroke();
     } else {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 1;
       ctx.fillStyle = '#2563eb';

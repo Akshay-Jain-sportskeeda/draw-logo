@@ -232,13 +232,15 @@ export default function ObjectManipulationCanvas({
     console.log('Mouse down at:', point);
 
     if (currentTool === 'select') {
+      let handleFound = false;
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
       if (selectedObject) {
-        const handle = getHandleAtPoint(point, selectedObject, 12);
+        const handle = getHandleAtPoint(point, selectedObject, 14);
         console.log('Checking for handle at point:', point, 'result:', handle);
         if (handle) {
           console.log('Handle detected:', handle, 'at point:', point);
+          handleFound = true;
           setIsResizing(true);
           isResizingRef.current = true;
           setResizeHandle(handle);
@@ -248,6 +250,25 @@ export default function ObjectManipulationCanvas({
           setCursorStyle(getCursorForHandle(handle));
           console.log('Set resize state - isResizing: true, handle:', handle);
           return;
+        }
+      }
+
+      if (!handleFound) {
+        for (const obj of [...objects].reverse()) {
+          const handle = getHandleAtPoint(point, obj, 14);
+          if (handle) {
+            console.log('Handle on unselected object detected:', handle, 'object:', obj.id);
+            setSelectedObjectId(obj.id);
+            handleFound = true;
+            setIsResizing(true);
+            isResizingRef.current = true;
+            setResizeHandle(handle);
+            resizeHandleRef.current = handle;
+            setDragStartPoint(point);
+            dragStartPointRef.current = point;
+            setCursorStyle(getCursorForHandle(handle));
+            return;
+          }
         }
       }
 
@@ -279,22 +300,30 @@ export default function ObjectManipulationCanvas({
     const point = getCanvasPosition(e);
 
     if (currentTool === 'select' && !isResizingRef.current && !isDraggingRef.current && !isDrawing) {
-      const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
-      if (selectedObject) {
-        const handle = getHandleAtPoint(point, selectedObject, 12);
-        if (handle) {
-          setCursorStyle(getCursorForHandle(handle));
-        } else if (isPointInObject(point, selectedObject)) {
+      let cursorSet = false;
+
+      for (const obj of objects) {
+        if (obj.id === selectedObjectId || !selectedObjectId) {
+          const handle = getHandleAtPoint(point, obj, 14);
+          if (handle) {
+            setCursorStyle(getCursorForHandle(handle));
+            cursorSet = true;
+            break;
+          }
+        }
+      }
+
+      if (!cursorSet) {
+        const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
+        if (selectedObject && isPointInObject(point, selectedObject)) {
           setCursorStyle('move');
         } else {
-          setCursorStyle('default');
-        }
-      } else {
-        const hoveredObject = [...objects].reverse().find((obj) => isPointInObject(point, obj));
-        if (hoveredObject) {
-          setCursorStyle('pointer');
-        } else {
-          setCursorStyle('default');
+          const hoveredObject = [...objects].reverse().find((obj) => isPointInObject(point, obj));
+          if (hoveredObject) {
+            setCursorStyle('pointer');
+          } else {
+            setCursorStyle('default');
+          }
         }
       }
     } else if (currentTool !== 'select') {
