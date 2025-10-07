@@ -45,6 +45,10 @@ export default function ObjectManipulationCanvas({
   const [tempObject, setTempObject] = useState<DrawableObject | null>(null);
 
   const isInitializedRef = useRef(false);
+  const isResizingRef = useRef(false);
+  const resizeHandleRef = useRef<HandleType>(null);
+  const dragStartPointRef = useRef<Point | null>(null);
+  const isDraggingRef = useRef(false);
 
   const defaultColors = [
     '#000000',
@@ -208,9 +212,14 @@ export default function ObjectManipulationCanvas({
       if (selectedObject) {
         const handle = getHandleAtPoint(point, selectedObject);
         if (handle) {
+          console.log('Handle detected:', handle, 'at point:', point);
           setIsResizing(true);
+          isResizingRef.current = true;
           setResizeHandle(handle);
+          resizeHandleRef.current = handle;
           setDragStartPoint(point);
+          dragStartPointRef.current = point;
+          console.log('Set resize state - isResizing: true, handle:', handle);
           return;
         }
       }
@@ -220,7 +229,9 @@ export default function ObjectManipulationCanvas({
       if (clickedObject) {
         setSelectedObjectId(clickedObject.id);
         setIsDragging(true);
+        isDraggingRef.current = true;
         setDragStartPoint(point);
+        dragStartPointRef.current = point;
       } else {
         setSelectedObjectId(null);
       }
@@ -237,21 +248,27 @@ export default function ObjectManipulationCanvas({
     e.preventDefault();
     const point = getCanvasPosition(e);
 
-    if (isResizing && resizeHandle && dragStartPoint) {
+    console.log('Mouse move - isResizing:', isResizingRef.current, 'resizeHandle:', resizeHandleRef.current, 'dragStartPoint:', dragStartPointRef.current);
+
+    if (isResizingRef.current && resizeHandleRef.current && dragStartPointRef.current) {
+      console.log('Executing resize logic');
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
       if (selectedObject) {
         const maintainAspect = e.shiftKey || ('touches' in e && e.touches.length > 1);
-        const resized = resizeObject(selectedObject, resizeHandle, point, maintainAspect);
+        console.log('Calling resizeObject with handle:', resizeHandleRef.current, 'point:', point);
+        const resized = resizeObject(selectedObject, resizeHandleRef.current, point, maintainAspect);
+        console.log('Resized object:', resized);
         setObjects(objects.map((obj) => (obj.id === selectedObjectId ? resized : obj)));
       }
-    } else if (isDragging && dragStartPoint && selectedObjectId) {
-      const deltaX = point.x - dragStartPoint.x;
-      const deltaY = point.y - dragStartPoint.y;
+    } else if (isDraggingRef.current && dragStartPointRef.current && selectedObjectId) {
+      const deltaX = point.x - dragStartPointRef.current.x;
+      const deltaY = point.y - dragStartPointRef.current.y;
 
       setObjects(
         objects.map((obj) => (obj.id === selectedObjectId ? moveObject(obj, deltaX, deltaY) : obj))
       );
       setDragStartPoint(point);
+      dragStartPointRef.current = point;
     } else if (isDrawing && dragStartPoint) {
       if (currentTool === 'freehand') {
         setTempPoints([...tempPoints, point]);
@@ -312,9 +329,13 @@ export default function ObjectManipulationCanvas({
 
     setIsDrawing(false);
     setIsDragging(false);
+    isDraggingRef.current = false;
     setIsResizing(false);
+    isResizingRef.current = false;
     setDragStartPoint(null);
+    dragStartPointRef.current = null;
     setResizeHandle(null);
+    resizeHandleRef.current = null;
   };
 
   const handleDeleteSelected = () => {

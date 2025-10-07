@@ -77,10 +77,12 @@ export function resizeObject(
   newPoint: Point,
   maintainAspect: boolean = false
 ): DrawableObject {
+  console.log('resizeObject called with handle:', handle, 'newPoint:', newPoint, 'maintainAspect:', maintainAspect);
   if (!handle || handle === 'rotation') return obj;
 
   let { x, y, width, height } = obj;
   const originalAspect = width / height;
+  console.log('Original object:', { x, y, width, height });
 
   switch (handle) {
     case 'topLeft':
