@@ -210,29 +210,49 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
+    const overlayCanvas = overlayCanvasRef.current;
+    const overlayCtx = overlayCtxRef.current;
+
     console.log('Overlay useEffect triggered:', {
       permanentTemplate,
       templateImageUrl,
       overlayImageUrl,
-      hasOverlayCanvas: !!overlayCanvasRef.current,
-      hasOverlayCtx: !!overlayCtxRef.current
+      hasOverlayCanvas: !!overlayCanvas,
+      hasOverlayCtx: !!overlayCtx,
+      canvasWidth: overlayCanvas?.width,
+      canvasHeight: overlayCanvas?.height
     });
 
-    // Wait a tick to ensure canvas is fully initialized
-    const timeoutId = setTimeout(() => {
-      if (permanentTemplate && templateImageUrl) {
-        console.log('Rendering permanent template:', templateImageUrl);
-        renderOverlay(templateImageUrl);
-      } else if (overlayImageUrl) {
-        console.log('Rendering overlay image:', overlayImageUrl);
-        renderOverlay(overlayImageUrl);
-      } else {
-        console.log('Rendering empty overlay (white background)');
-        renderOverlay(null);
-      }
-    }, 0);
+    // Check if canvas has valid dimensions before rendering
+    if (!overlayCanvas || !overlayCtx || overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+      console.warn('Canvas not ready for rendering, waiting...');
+      // Retry after a longer delay to ensure canvas is initialized
+      const timeoutId = setTimeout(() => {
+        if (permanentTemplate && templateImageUrl) {
+          console.log('Retry: Rendering permanent template:', templateImageUrl);
+          renderOverlay(templateImageUrl);
+        } else if (overlayImageUrl) {
+          console.log('Retry: Rendering overlay image:', overlayImageUrl);
+          renderOverlay(overlayImageUrl);
+        } else {
+          console.log('Retry: Rendering empty overlay (white background)');
+          renderOverlay(null);
+        }
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
 
-    return () => clearTimeout(timeoutId);
+    // Canvas is ready, render immediately
+    if (permanentTemplate && templateImageUrl) {
+      console.log('Rendering permanent template:', templateImageUrl);
+      renderOverlay(templateImageUrl);
+    } else if (overlayImageUrl) {
+      console.log('Rendering overlay image:', overlayImageUrl);
+      renderOverlay(overlayImageUrl);
+    } else {
+      console.log('Rendering empty overlay (white background)');
+      renderOverlay(null);
+    }
   }, [overlayImageUrl, permanentTemplate, templateImageUrl]);
 
   // Update stroke color when color changes
