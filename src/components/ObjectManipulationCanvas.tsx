@@ -11,6 +11,7 @@ import {
   drawObject,
   drawSelectionBorder,
   drawTransformHandles,
+  getTransformHandles,
 } from '@/utils/objectManipulation';
 
 interface ObjectManipulationCanvasProps {
@@ -43,6 +44,7 @@ export default function ObjectManipulationCanvas({
   const [resizeHandle, setResizeHandle] = useState<HandleType>(null);
   const [tempPoints, setTempPoints] = useState<Point[]>([]);
   const [tempObject, setTempObject] = useState<DrawableObject | null>(null);
+  const [cursorStyle, setCursorStyle] = useState<string>('crosshair');
 
   const isInitializedRef = useRef(false);
   const isResizingRef = useRef(false);
@@ -202,15 +204,39 @@ export default function ObjectManipulationCanvas({
     }
   };
 
+  const getCursorForHandle = (handle: HandleType): string => {
+    if (!handle) return 'default';
+    switch (handle) {
+      case 'topLeft':
+      case 'bottomRight':
+        return 'nwse-resize';
+      case 'topRight':
+      case 'bottomLeft':
+        return 'nesw-resize';
+      case 'top':
+      case 'bottom':
+        return 'ns-resize';
+      case 'left':
+      case 'right':
+        return 'ew-resize';
+      case 'rotation':
+        return 'grab';
+      default:
+        return 'default';
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const point = getCanvasPosition(e);
+    console.log('Mouse down at:', point);
 
     if (currentTool === 'select') {
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
       if (selectedObject) {
-        const handle = getHandleAtPoint(point, selectedObject);
+        const handle = getHandleAtPoint(point, selectedObject, 12);
+        console.log('Checking for handle at point:', point, 'result:', handle);
         if (handle) {
           console.log('Handle detected:', handle, 'at point:', point);
           setIsResizing(true);
@@ -219,6 +245,7 @@ export default function ObjectManipulationCanvas({
           resizeHandleRef.current = handle;
           setDragStartPoint(point);
           dragStartPointRef.current = point;
+          setCursorStyle(getCursorForHandle(handle));
           console.log('Set resize state - isResizing: true, handle:', handle);
           return;
         }
@@ -227,6 +254,9 @@ export default function ObjectManipulationCanvas({
       const clickedObject = [...objects].reverse().find((obj) => isPointInObject(point, obj));
 
       if (clickedObject) {
+        console.log('Selected object:', clickedObject);
+        const handles = getTransformHandles(clickedObject);
+        console.log('Object handles:', handles);
         setSelectedObjectId(clickedObject.id);
         setIsDragging(true);
         isDraggingRef.current = true;
@@ -248,14 +278,34 @@ export default function ObjectManipulationCanvas({
     e.preventDefault();
     const point = getCanvasPosition(e);
 
-    console.log('Mouse move - isResizing:', isResizingRef.current, 'resizeHandle:', resizeHandleRef.current, 'dragStartPoint:', dragStartPointRef.current);
+    if (currentTool === 'select' && !isResizingRef.current && !isDraggingRef.current && !isDrawing) {
+      const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
+      if (selectedObject) {
+        const handle = getHandleAtPoint(point, selectedObject, 12);
+        if (handle) {
+          setCursorStyle(getCursorForHandle(handle));
+        } else if (isPointInObject(point, selectedObject)) {
+          setCursorStyle('move');
+        } else {
+          setCursorStyle('default');
+        }
+      } else {
+        const hoveredObject = [...objects].reverse().find((obj) => isPointInObject(point, obj));
+        if (hoveredObject) {
+          setCursorStyle('pointer');
+        } else {
+          setCursorStyle('default');
+        }
+      }
+    } else if (currentTool !== 'select') {
+      setCursorStyle('crosshair');
+    }
 
-    if (isResizingRef.current && resizeHandleRef.current && dragStartPointRef.current) {
-      console.log('Executing resize logic');
+    if (isResizingRef.current && resizeHandleRef.current) {
+      console.log('Executing resize logic - handle:', resizeHandleRef.current, 'point:', point);
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
       if (selectedObject) {
         const maintainAspect = e.shiftKey || ('touches' in e && e.touches.length > 1);
-        console.log('Calling resizeObject with handle:', resizeHandleRef.current, 'point:', point);
         const resized = resizeObject(selectedObject, resizeHandleRef.current, point, maintainAspect);
         console.log('Resized object:', resized);
         setObjects(objects.map((obj) => (obj.id === selectedObjectId ? resized : obj)));
@@ -320,6 +370,7 @@ export default function ObjectManipulationCanvas({
   };
 
   const handleMouseUp = () => {
+    console.log('Mouse up - resetting states');
     if (isDrawing && tempObject) {
       const newObject = { ...tempObject, id: generateObjectId() };
       setObjects([...objects, newObject]);
@@ -336,6 +387,12 @@ export default function ObjectManipulationCanvas({
     dragStartPointRef.current = null;
     setResizeHandle(null);
     resizeHandleRef.current = null;
+
+    if (currentTool === 'select') {
+      setCursorStyle('default');
+    } else {
+      setCursorStyle('crosshair');
+    }
   };
 
   const handleDeleteSelected = () => {
@@ -356,8 +413,8 @@ export default function ObjectManipulationCanvas({
       <canvas ref={templateCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }} />
       <canvas
         ref={objectCanvasRef}
-        className="absolute inset-0 w-full h-full border-2 border-gray-300 rounded-lg touch-none cursor-crosshair"
-        style={{ zIndex: 2 }}
+        className="absolute inset-0 w-full h-full border-2 border-gray-300 rounded-lg touch-none"
+        style={{ zIndex: 2, cursor: cursorStyle }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

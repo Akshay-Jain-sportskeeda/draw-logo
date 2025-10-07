@@ -41,9 +41,10 @@ export function getTransformHandles(obj: DrawableObject): TransformHandles {
   };
 }
 
-export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 8): HandleType {
+export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12): HandleType {
   const handles = getTransformHandles(obj);
-  const halfSize = handleSize / 2;
+  const hitArea = handleSize * 1.5;
+  const halfHitArea = hitArea / 2;
 
   const handleEntries: [HandleType, Point][] = [
     ['rotation', handles.rotation],
@@ -58,12 +59,12 @@ export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: 
   ];
 
   for (const [type, handlePoint] of handleEntries) {
-    if (
-      point.x >= handlePoint.x - halfSize &&
-      point.x <= handlePoint.x + halfSize &&
-      point.y >= handlePoint.y - halfSize &&
-      point.y <= handlePoint.y + halfSize
-    ) {
+    const distance = Math.sqrt(
+      Math.pow(point.x - handlePoint.x, 2) + Math.pow(point.y - handlePoint.y, 2)
+    );
+
+    if (distance <= halfHitArea) {
+      console.log('Handle detected:', type, 'at distance:', distance, 'from point:', point, 'handle pos:', handlePoint);
       return type as HandleType;
     }
   }
@@ -259,12 +260,16 @@ export function drawSelectionBorder(ctx: CanvasRenderingContext2D, obj: Drawable
 
 export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
   const handles = getTransformHandles(obj);
-  const handleSize = 8;
+  const handleSize = 12;
 
   ctx.save();
   ctx.fillStyle = '#2563eb';
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+  ctx.shadowBlur = 4;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
 
   Object.entries(handles).forEach(([key, point]) => {
     if (key === 'rotation') {
@@ -273,6 +278,7 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.fill();
       ctx.stroke();
 
+      ctx.shadowColor = 'transparent';
       ctx.beginPath();
       ctx.moveTo(handles.top.x, handles.top.y);
       ctx.lineTo(point.x, point.y);
