@@ -286,12 +286,12 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       setScoreSaved(true);
       console.log('Set scoreSaved state to true');
       console.log('Score saved successfully to Firestore - COMPLETE');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('=== FIRESTORE SAVE ERROR ===');
-      console.error('Error type:', error?.constructor?.name);
-      console.error('Error message:', error?.message);
+      console.error('Error type:', (error as any)?.constructor?.name);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
       console.error('Full error object:', error);
-      console.error('Error stack:', error?.stack);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
       console.error('=== END FIRESTORE SAVE ERROR ===');
       // Don't show an alert for this error as it's not critical to the user experience
     } finally {

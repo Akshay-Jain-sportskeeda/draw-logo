@@ -2,6 +2,8 @@ import { firestore } from '@/lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { GameResult, LeaderboardEntry } from '@/types/game';
 
+export type { GameResult };
+
 export async function fetchUserGameHistory(userId: string): Promise<GameResult[]> {
   console.log('=== FETCHUSERGAMEHISTORY DEBUG START ===');
   console.log('fetchUserGameHistory called with userId:', userId);

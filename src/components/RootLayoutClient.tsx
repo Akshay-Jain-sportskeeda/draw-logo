@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import GamesPageSidebar from '@/components/GamesPageSidebar'

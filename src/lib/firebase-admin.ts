@@ -102,18 +102,18 @@ function getAdminApp() {
   } else {
     console.log('Using existing Firebase Admin app');
     const existingApp = admin.apps[0];
-    if (existingApp) {
-      adminApp = existingApp;
-      
+    if (existingApp && existingApp !== null) {
+      adminApp = existingApp as admin.app.App;
+
       // Log details about the existing app's credentials
       console.log('=== EXISTING APP CREDENTIAL DEBUG ===');
       try {
         // Try to access the credential information
-        const credential = existingApp.options.credential;
-        if (credential) {
+        const credential = adminApp?.options?.credential;
+        if (credential && typeof credential === 'object') {
           console.log('Existing app has credential:', !!credential);
           // Try to get service account info if available
-          if ('getAccessToken' in credential) {
+          if ('getAccessToken' in (credential as object)) {
             console.log('Credential type: Service Account');
           } else {
             console.log('Credential type: Unknown');
@@ -127,22 +127,22 @@ function getAdminApp() {
       console.log('=== END EXISTING APP CREDENTIAL DEBUG ===');
       
       console.log('=== EXISTING FIREBASE ADMIN APP DEBUG ===');
-      console.log('Raw adminApp.options.projectId:', adminApp.options.projectId);
-      console.log('Raw adminApp.options.databaseURL:', adminApp.options.databaseURL);
-      console.log('Raw adminApp.options.storageBucket:', adminApp.options.storageBucket);
-      
+      console.log('Raw adminApp.options.projectId:', adminApp?.options?.projectId);
+      console.log('Raw adminApp.options.databaseURL:', adminApp?.options?.databaseURL);
+      console.log('Raw adminApp.options.storageBucket:', adminApp?.options?.storageBucket);
+
       // Try to infer project ID from database URL if not directly available
-      let existingProjectId = adminApp.options.projectId;
-      if (!existingProjectId && adminApp.options.databaseURL) {
+      let existingProjectId = adminApp?.options?.projectId;
+      if (!existingProjectId && adminApp?.options?.databaseURL) {
         console.log('Project ID not found in options, attempting to extract from database URL...');
-        const dbUrl = adminApp.options.databaseURL;
+        const dbUrl = adminApp?.options?.databaseURL;
         console.log('Database URL for extraction:', dbUrl);
-        
-        const match = dbUrl.match(/https:\/\/([^-]+(?:-[^-]+)*)-default-rtdb\.firebaseio\.com/);
+
+        const match = dbUrl?.match(/https:\/\/([^-]+(?:-[^-]+)*)-default-rtdb\.firebaseio\.com/);
         console.log('Regex match result:', match);
-        
-        if (match && match[1]) {
-          existingProjectId = match[1];
+
+        if (match?.[1]) {
+          existingProjectId = match?.[1];
           console.log('Successfully extracted project ID from database URL:', existingProjectId);
         } else {
           console.log('Failed to extract project ID from database URL');
@@ -151,10 +151,10 @@ function getAdminApp() {
       
       console.log('Final resolved project ID:', existingProjectId || 'COULD NOT DETERMINE');
       console.log('=== END EXISTING FIREBASE ADMIN APP DEBUG ===');
-      
+
       console.log('Existing app project ID:', existingProjectId || 'undefined');
-      console.log('Existing app database URL:', adminApp.options.databaseURL);
-      console.log('Existing app storage bucket:', adminApp.options.storageBucket);
+      console.log('Existing app database URL:', adminApp?.options?.databaseURL);
+      console.log('Existing app storage bucket:', adminApp?.options?.storageBucket);
     }
   }
 

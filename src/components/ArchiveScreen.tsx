@@ -26,7 +26,7 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
 
   // Lock/unlock body scroll when modal opens/closes
   React.useEffect(() => {
-    trackModalOpen('archive');
+    trackModalOpen('archive', 'game_screen');
     document.body.style.overflow = 'hidden';
 
     // Cleanup function to restore scroll when component unmounts
@@ -37,7 +37,8 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
 
   useEffect(() => {
     // Track archive popup view
-    trackArchiveView();
+    const today = new Date().toISOString().split('T')[0];
+    trackArchiveView(today, availablePuzzles.length);
     
     // Fetch available puzzles if not provided via props
     const fetchAvailablePuzzles = async () => {
@@ -94,7 +95,7 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
 
   const handleDateSelect = (date: string) => {
     // Track archive puzzle selection
-    trackArchivePuzzleLoad(date, true);
+    trackArchivePuzzleLoad(date, date);
     onSelectDate(date);
     
     // Scroll to top after selecting archive game
