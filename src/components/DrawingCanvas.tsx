@@ -648,12 +648,26 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         />
 
         {/* Combined Drawing Controls */}
-        <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
+        <div
+          className="absolute bottom-4 left-4"
+          style={{
+            zIndex: 10,
+            pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none'
+          }}
+        >
           {/* Main pencil icon button */}
           <button
             onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
             className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
             title="Drawing Tools"
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
           >
           {/* Pencil icon */}
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -746,7 +760,16 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
         {/* Resize/Done button (only for permanent template) */}
         {permanentTemplate && (
-          <div className="absolute top-4 right-4" style={{ zIndex: 10 }}>
+          <div
+            className="absolute top-4 right-4"
+            style={{
+              zIndex: 10,
+              pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
+          >
             <button
               onClick={() => setIsResizeMode(!isResizeMode)}
               className={`px-4 py-2 rounded-lg transition-colors font-medium ${
@@ -754,6 +777,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                   ? 'bg-green-500 text-white hover:bg-green-600'
                   : 'bg-blue-500 text-white hover:bg-blue-600'
               }`}
+              style={{
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none'
+              }}
             >
               {isResizeMode ? 'Done' : 'Resize'}
             </button>
@@ -761,13 +789,27 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         )}
 
         {/* Clear Canvas button */}
-        <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
+        <div
+          className="absolute bottom-4 right-4"
+          style={{
+            zIndex: 10,
+            pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none'
+          }}
+        >
           <button
             onClick={() => {
               clearCanvas();
               onClearCanvas?.();
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
           >
             Clear
           </button>

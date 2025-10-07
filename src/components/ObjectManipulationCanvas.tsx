@@ -351,7 +351,10 @@ export default function ObjectManipulationCanvas({
         className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-2"
         style={{
           zIndex: 10,
-          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto'
+          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none'
         }}
       >
         <div className="flex flex-col gap-2">
@@ -468,13 +471,21 @@ export default function ObjectManipulationCanvas({
         className="absolute bottom-4 right-4 flex gap-2"
         style={{
           zIndex: 10,
-          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto'
+          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none'
         }}
       >
         {selectedObjectId && (
           <button
             onClick={handleDeleteSelected}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+            style={{
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
           >
             Delete
           </button>
@@ -482,6 +493,11 @@ export default function ObjectManipulationCanvas({
         <button
           onClick={handleClear}
           className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+          style={{
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none'
+          }}
         >
           Clear All
         </button>
