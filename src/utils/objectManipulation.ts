@@ -43,7 +43,7 @@ export function getTransformHandles(obj: DrawableObject): TransformHandles {
 
 export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12): HandleType {
   const handles = getTransformHandles(obj);
-  const hitRadius = handleSize;
+  const hitRadius = handleSize / 2;
 
   const handleEntries: [HandleType, Point][] = [
     ['rotation', handles.rotation],
