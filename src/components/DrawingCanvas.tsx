@@ -65,7 +65,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   useEffect(() => {
     const overlayCanvas = overlayCanvasRef.current;
     const userDrawingCanvas = userDrawingCanvasRef.current;
-    
+
     if (!overlayCanvas || !userDrawingCanvas) return;
 
     // Initialize overlay canvas
@@ -74,9 +74,16 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       overlayCtxRef.current = overlayCtx;
       // Set canvas size based on current display size
       const rect = overlayCanvas.getBoundingClientRect();
-      overlayCanvas.width = rect.width;
-      overlayCanvas.height = rect.height;
-      
+
+      // Ensure we have valid dimensions
+      const width = rect.width > 0 ? rect.width : 400;
+      const height = rect.height > 0 ? rect.height : 400;
+
+      overlayCanvas.width = width;
+      overlayCanvas.height = height;
+
+      console.log('Overlay canvas initialized:', { width, height });
+
       // Fill with white background
       overlayCtx.fillStyle = '#ffffff';
       overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
@@ -89,16 +96,18 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       // Set canvas size to match overlay canvas
       userDrawingCanvas.width = overlayCanvas.width;
       userDrawingCanvas.height = overlayCanvas.height;
-      
+
+      console.log('User drawing canvas initialized:', { width: userDrawingCanvas.width, height: userDrawingCanvas.height });
+
       // Set drawing styles
       userDrawingCtx.lineWidth = 3;
       userDrawingCtx.lineCap = 'round';
       userDrawingCtx.lineJoin = 'round';
       userDrawingCtx.strokeStyle = internalSelectedColor;
-      
+
       // Clear to transparent (no background fill for drawing layer)
       userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
-      
+
       // Restore drawing data if it exists
       if (drawingData && drawingData !== '') {
         const img = new Image();
@@ -119,7 +128,25 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const renderOverlay = async (imageUrl: string | null) => {
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
-    if (!overlayCanvas || !overlayCtx) return;
+
+    console.log('renderOverlay called:', {
+      imageUrl,
+      hasCanvas: !!overlayCanvas,
+      hasCtx: !!overlayCtx,
+      canvasWidth: overlayCanvas?.width,
+      canvasHeight: overlayCanvas?.height
+    });
+
+    if (!overlayCanvas || !overlayCtx) {
+      console.warn('Canvas or context not available for rendering overlay');
+      return;
+    }
+
+    // Ensure canvas has valid dimensions
+    if (overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+      console.warn('Canvas has zero dimensions, cannot render overlay');
+      return;
+    }
 
     // Clear and fill with white background
     overlayCtx.fillStyle = '#ffffff';
@@ -127,9 +154,18 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     if (imageUrl) {
       try {
+        console.log('Loading template image from:', imageUrl);
         const img = new Image();
         img.crossOrigin = 'anonymous';
+
         img.onload = () => {
+          console.log('Template image loaded successfully:', {
+            imageWidth: img.width,
+            imageHeight: img.height,
+            canvasWidth: overlayCanvas.width,
+            canvasHeight: overlayCanvas.height
+          });
+
           // Account for padding to match logo container (p-4 = 16px padding)
           const padding = 16;
           const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
@@ -145,28 +181,58 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           const offsetX = padding + (effectiveCanvasWidth - drawWidth) / 2;
           const offsetY = padding + (effectiveCanvasHeight - drawHeight) / 2;
 
+          console.log('Drawing template at:', { offsetX, offsetY, drawWidth, drawHeight, scale });
+
           // For permanent templates, use full opacity, otherwise use transparency
           overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
           overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           overlayCtx.globalAlpha = 1.0;
+
+          console.log('Template image rendered successfully with opacity:', permanentTemplate ? 1.0 : 0.3);
         };
-        img.onerror = () => {
-          console.error('Failed to load overlay image:', imageUrl);
+
+        img.onerror = (error) => {
+          console.error('Failed to load overlay image:', imageUrl, error);
+          // Draw error message on canvas
+          overlayCtx.fillStyle = '#ff0000';
+          overlayCtx.font = '16px Arial';
+          overlayCtx.fillText('Failed to load template image', 20, 40);
         };
+
         img.src = imageUrl;
       } catch (error) {
         console.error('Error loading overlay image:', error);
       }
+    } else {
+      console.log('No image URL provided, showing white background only');
     }
   };
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
-    if (permanentTemplate && templateImageUrl) {
-      renderOverlay(templateImageUrl);
-    } else {
-      renderOverlay(overlayImageUrl || null);
-    }
+    console.log('Overlay useEffect triggered:', {
+      permanentTemplate,
+      templateImageUrl,
+      overlayImageUrl,
+      hasOverlayCanvas: !!overlayCanvasRef.current,
+      hasOverlayCtx: !!overlayCtxRef.current
+    });
+
+    // Wait a tick to ensure canvas is fully initialized
+    const timeoutId = setTimeout(() => {
+      if (permanentTemplate && templateImageUrl) {
+        console.log('Rendering permanent template:', templateImageUrl);
+        renderOverlay(templateImageUrl);
+      } else if (overlayImageUrl) {
+        console.log('Rendering overlay image:', overlayImageUrl);
+        renderOverlay(overlayImageUrl);
+      } else {
+        console.log('Rendering empty overlay (white background)');
+        renderOverlay(null);
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [overlayImageUrl, permanentTemplate, templateImageUrl]);
 
   // Update stroke color when color changes
@@ -292,13 +358,15 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* Background/Overlay Canvas */}
         <canvas
           ref={overlayCanvasRef}
-          className="w-full h-full border-2 border-gray-300 rounded-lg pointer-events-none"
+          className="absolute inset-0 w-full h-full border-2 border-gray-300 rounded-lg pointer-events-none"
+          style={{ zIndex: 1 }}
         />
-        
+
         {/* User Drawing Canvas (transparent, on top) */}
         <canvas
           ref={userDrawingCanvasRef}
           className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+          style={{ zIndex: 2 }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}

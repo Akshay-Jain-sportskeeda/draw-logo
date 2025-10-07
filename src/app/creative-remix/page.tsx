@@ -211,12 +211,28 @@ export default function CreativeRemixPage() {
               <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">
                 Draw around this image
               </h3>
-              <DrawingCanvas
-                onDrawingChange={handleDrawingChange}
-                availableColors={defaultColors}
-                permanentTemplate={true}
-                templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
-              />
+              {dailyChallenge.freeDrawChallenge.imageUrl ? (
+                <>
+                  <DrawingCanvas
+                    onDrawingChange={handleDrawingChange}
+                    availableColors={defaultColors}
+                    permanentTemplate={true}
+                    templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Template: {dailyChallenge.freeDrawChallenge.name}
+                  </p>
+                </>
+              ) : (
+                <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                  <div className="text-center p-4">
+                    <p className="text-gray-600 font-medium mb-2">No template available</p>
+                    <p className="text-gray-500 text-sm">
+                      The template image for today's challenge is not yet available.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="w-full max-w-md">
