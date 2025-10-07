@@ -203,11 +203,6 @@ export default function CreativeRemixPage() {
               <Link href="/" className="inline-block text-green-600 hover:text-green-700 font-medium mb-4 md:mb-0">
                 ← Back
               </Link>
-              <h2 className="text-2xl font-semibold text-gray-800 text-center md:text-left md:flex-1 md:text-center">
-                {dailyChallenge.freeDrawChallenge.name}
-              </h2>
-              {/* Spacer for desktop to keep h2 centered */}
-              <div className="hidden md:block md:w-16"></div>
             </div>
           </div>
 
