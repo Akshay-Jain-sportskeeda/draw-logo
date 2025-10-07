@@ -213,9 +213,6 @@ export default function CreativeRemixPage() {
 
           <div className="flex flex-col items-center space-y-8">
             <div className="w-full flex flex-col items-center">
-              <h3 className="text-lg font-medium text-gray-700 mb-4 text-center">
-                Draw around this image
-              </h3>
               {dailyChallenge.freeDrawChallenge.imageUrl ? (
                 <>
                   <DrawingCanvas
@@ -225,9 +222,6 @@ export default function CreativeRemixPage() {
                     permanentTemplate={true}
                     templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
                   />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Template: {dailyChallenge.freeDrawChallenge.name}
-                  </p>
                 </>
               ) : (
                 <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
