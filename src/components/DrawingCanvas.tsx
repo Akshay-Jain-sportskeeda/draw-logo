@@ -64,6 +64,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const templateInitializedRef = useRef(false);
   const currentTransformRef = useRef<TemplateTransform>(templateTransform);
   const canvasDimensionsRef = useRef({ width: 0, height: 0 });
+  const [templateInitRetry, setTemplateInitRetry] = useState(0);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -172,18 +173,31 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     if (permanentTemplate && templateImageUrl) {
       console.log('=== Template URL changed, resetting initialization ===');
       templateInitializedRef.current = false;
+      setTemplateInitRetry(0);
     }
   }, [permanentTemplate, templateImageUrl]);
 
   // Initialize template dimensions when image first loads
   useEffect(() => {
-    if (!permanentTemplate || !templateImageUrl || templateInitializedRef.current) {
+    if (!permanentTemplate || !templateImageUrl) {
+      return;
+    }
+
+    // If template is already initialized and URL hasn't changed, skip
+    if (templateInitializedRef.current) {
       return;
     }
 
     if (!isInitializedRef.current) {
       console.log('=== Waiting for canvas initialization ===');
-      return;
+      // Schedule a retry
+      const retryTimer = setTimeout(() => {
+        if (isInitializedRef.current && !templateInitializedRef.current) {
+          console.log('=== Retrying template initialization after canvas ready ===');
+          setTemplateInitRetry(prev => prev + 1);
+        }
+      }, 100);
+      return () => clearTimeout(retryTimer);
     }
 
     const overlayCanvas = overlayCanvasRef.current;
@@ -193,7 +207,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         width: overlayCanvas?.width,
         height: overlayCanvas?.height
       });
-      return;
+      // Schedule a retry
+      const retryTimer = setTimeout(() => {
+        if (!templateInitializedRef.current && templateInitRetry < 10) {
+          console.log('=== Retrying template initialization after delay ===');
+          setTemplateInitRetry(prev => prev + 1);
+        }
+      }, 100);
+      return () => clearTimeout(retryTimer);
     }
 
     console.log('=== Starting template initialization ===', {
@@ -208,7 +229,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     img.onload = () => {
       // Use requestAnimationFrame to ensure we have the latest canvas dimensions
       requestAnimationFrame(() => {
-        if (!overlayCanvas || overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+        const currentCanvas = overlayCanvasRef.current;
+        if (!currentCanvas || currentCanvas.width === 0 || currentCanvas.height === 0) {
           console.error('=== Canvas lost dimensions after image load ===');
           return;
         }
@@ -216,15 +238,15 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         console.log('=== Template image loaded for initialization ===', {
           imageWidth: img.width,
           imageHeight: img.height,
-          canvasWidth: overlayCanvas.width,
-          canvasHeight: overlayCanvas.height
+          canvasWidth: currentCanvas.width,
+          canvasHeight: currentCanvas.height
         });
 
         templateImageRef.current = img;
 
         const padding = 16;
-        const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-        const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+        const effectiveCanvasWidth = currentCanvas.width - (padding * 2);
+        const effectiveCanvasHeight = currentCanvas.height - (padding * 2);
 
         const scaleX = effectiveCanvasWidth / img.width;
         const scaleY = effectiveCanvasHeight / img.height;
@@ -233,8 +255,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         const drawWidth = img.width * scale;
         const drawHeight = img.height * scale;
 
-        const centerX = overlayCanvas.width / 2;
-        const centerY = overlayCanvas.height / 2;
+        const centerX = currentCanvas.width / 2;
+        const centerY = currentCanvas.height / 2;
 
         const offsetX = centerX - drawWidth / 2;
         const offsetY = centerY - drawHeight / 2;
@@ -250,7 +272,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         });
 
         // Validation: ensure offsets are reasonable
-        if (offsetX < 0 || offsetY < 0 || offsetX > overlayCanvas.width || offsetY > overlayCanvas.height) {
+        if (offsetX < 0 || offsetY < 0 || offsetX > currentCanvas.width || offsetY > currentCanvas.height) {
           console.error('=== Invalid template offsets calculated ===', { offsetX, offsetY });
           return;
         }
@@ -273,7 +295,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     };
 
     img.src = templateImageUrl;
-  }, [permanentTemplate, templateImageUrl]);
+  }, [permanentTemplate, templateImageUrl, templateInitRetry]);
 
   // Render overlay function - simplified to only draw, no state updates
   const renderOverlay = useCallback((imageUrl: string | null) => {
