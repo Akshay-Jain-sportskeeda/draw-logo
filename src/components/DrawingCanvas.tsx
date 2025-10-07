@@ -154,15 +154,19 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   }, [drawingData]);
 
   // Render overlay function with transform support
-  const renderOverlay = useCallback((imageUrl: string | null) => {
+  const renderOverlay = useCallback((imageUrl: string | null, forceRedraw: boolean = false) => {
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
 
+    console.log('renderOverlay called:', { imageUrl, hasCanvas: !!overlayCanvas, hasCtx: !!overlayCtx, canvasWidth: overlayCanvas?.width, canvasHeight: overlayCanvas?.height });
+
     if (!overlayCanvas || !overlayCtx) {
+      console.log('No canvas or context');
       return;
     }
 
     if (overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+      console.log('Canvas has zero dimensions');
       return;
     }
 
@@ -171,47 +175,54 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
     if (imageUrl) {
-      try {
-        const img = templateImageRef.current || new Image();
+      console.log('Loading image:', imageUrl);
+
+      // Function to draw the image with current transforms
+      const drawImage = (img: HTMLImageElement) => {
+        console.log('Drawing image with transform:', templateTransform, 'imgSize:', img.width, img.height);
+        overlayCtx.save();
+
+        const padding = 16;
+        const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
+        const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+
+        const scaleX = effectiveCanvasWidth / img.width;
+        const scaleY = effectiveCanvasHeight / img.height;
+        const baseScale = Math.min(scaleX, scaleY);
+
+        const finalScale = baseScale * templateTransform.scale;
+        const drawWidth = img.width * finalScale;
+        const drawHeight = img.height * finalScale;
+
+        const centerX = overlayCanvas.width / 2;
+        const centerY = overlayCanvas.height / 2;
+
+        const offsetX = centerX - drawWidth / 2 + templateTransform.positionX;
+        const offsetY = centerY - drawHeight / 2 + templateTransform.positionY;
+
+        console.log('Drawing at:', { offsetX, offsetY, drawWidth, drawHeight, opacity: permanentTemplate ? 1.0 : 0.3 });
+
+        overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
+        overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        overlayCtx.globalAlpha = 1.0;
+
+        overlayCtx.restore();
+      };
+
+      // If image is already loaded, draw it immediately
+      if (templateImageRef.current && templateImageRef.current.complete) {
+        console.log('Using cached image');
+        drawImage(templateImageRef.current);
+      } else {
+        console.log('Loading new image');
+        // Load the image
+        const img = new Image();
         img.crossOrigin = 'anonymous';
 
         img.onload = () => {
+          console.log('Image loaded successfully');
           templateImageRef.current = img;
-
-          // Save context state
-          overlayCtx.save();
-
-          // Account for padding
-          const padding = 16;
-          const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-          const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
-
-          // Calculate base scale to fit image
-          const scaleX = effectiveCanvasWidth / img.width;
-          const scaleY = effectiveCanvasHeight / img.height;
-          const baseScale = Math.min(scaleX, scaleY);
-
-          // Apply user's scale transform
-          const finalScale = baseScale * templateTransform.scale;
-
-          const drawWidth = img.width * finalScale;
-          const drawHeight = img.height * finalScale;
-
-          // Calculate center position
-          const centerX = overlayCanvas.width / 2;
-          const centerY = overlayCanvas.height / 2;
-
-          // Apply user's position offset
-          const offsetX = centerX - drawWidth / 2 + templateTransform.positionX;
-          const offsetY = centerY - drawHeight / 2 + templateTransform.positionY;
-
-          // For permanent templates, use full opacity, otherwise use transparency
-          overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
-          overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-          overlayCtx.globalAlpha = 1.0;
-
-          // Restore context state
-          overlayCtx.restore();
+          drawImage(img);
         };
 
         img.onerror = (error) => {
@@ -221,14 +232,15 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           overlayCtx.fillText('Failed to load template image', 20, 40);
         };
 
-        if (!templateImageRef.current) {
-          img.src = imageUrl;
-        }
-      } catch (error) {
-        console.error('Error loading overlay image:', error);
+        img.src = imageUrl;
       }
     }
   }, [permanentTemplate, templateTransform]);
+
+  // Reset template image when URL changes
+  useEffect(() => {
+    templateImageRef.current = null;
+  }, [overlayImageUrl, templateImageUrl]);
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
