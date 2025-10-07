@@ -63,6 +63,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const templateImageRef = useRef<HTMLImageElement | null>(null);
   const templateInitializedRef = useRef(false);
   const currentTransformRef = useRef<TemplateTransform>(templateTransform);
+  const canvasDimensionsRef = useRef({ width: 0, height: 0 });
 
   // Available line thickness options
   const thicknessOptions = [
@@ -95,41 +96,52 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     if (!overlayCanvas || !userDrawingCanvas) return;
 
-    // Initialize overlay canvas
-    const overlayCtx = overlayCanvas.getContext('2d');
-    if (overlayCtx) {
-      overlayCtxRef.current = overlayCtx;
-      const rect = overlayCanvas.getBoundingClientRect();
+    // Use requestAnimationFrame to ensure DOM layout is complete
+    requestAnimationFrame(() => {
+      // Initialize overlay canvas
+      const overlayCtx = overlayCanvas.getContext('2d');
+      if (overlayCtx) {
+        overlayCtxRef.current = overlayCtx;
+        const rect = overlayCanvas.getBoundingClientRect();
 
-      const width = rect.width > 0 ? rect.width : 400;
-      const height = rect.height > 0 ? rect.height : 400;
+        const width = rect.width > 0 ? rect.width : 400;
+        const height = rect.height > 0 ? rect.height : 400;
 
-      overlayCanvas.width = width;
-      overlayCanvas.height = height;
+        console.log('=== Canvas initialization ===', {
+          rectWidth: rect.width,
+          rectHeight: rect.height,
+          finalWidth: width,
+          finalHeight: height
+        });
 
-      overlayCtx.fillStyle = '#ffffff';
-      overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-    }
+        overlayCanvas.width = width;
+        overlayCanvas.height = height;
+        canvasDimensionsRef.current = { width, height };
 
-    // Initialize user drawing canvas
-    const userDrawingCtx = userDrawingCanvas.getContext('2d');
-    if (userDrawingCtx) {
-      userDrawingCtxRef.current = userDrawingCtx;
-      userDrawingCanvas.width = overlayCanvas.width;
-      userDrawingCanvas.height = overlayCanvas.height;
+        overlayCtx.fillStyle = '#ffffff';
+        overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
 
-      userDrawingCtx.lineWidth = 3;
-      userDrawingCtx.lineCap = 'round';
-      userDrawingCtx.lineJoin = 'round';
-      userDrawingCtx.strokeStyle = internalSelectedColor;
+      // Initialize user drawing canvas
+      const userDrawingCtx = userDrawingCanvas.getContext('2d');
+      if (userDrawingCtx) {
+        userDrawingCtxRef.current = userDrawingCtx;
+        userDrawingCanvas.width = overlayCanvas.width;
+        userDrawingCanvas.height = overlayCanvas.height;
 
-      userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
+        userDrawingCtx.lineWidth = 3;
+        userDrawingCtx.lineCap = 'round';
+        userDrawingCtx.lineJoin = 'round';
+        userDrawingCtx.strokeStyle = internalSelectedColor;
 
-      isInitializedRef.current = true;
+        userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
 
-      const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
-      onDrawingChange(initialDataUrl);
-    }
+        isInitializedRef.current = true;
+
+        const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
+        onDrawingChange(initialDataUrl);
+      }
+    });
   }, [onDrawingChange, internalSelectedColor]);
 
   // Separate effect for restoring drawing data
@@ -155,6 +167,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     currentTransformRef.current = templateTransform;
   }, [templateTransform]);
 
+  // Reset template initialization when template changes
+  useEffect(() => {
+    if (permanentTemplate && templateImageUrl) {
+      console.log('=== Template URL changed, resetting initialization ===');
+      templateInitializedRef.current = false;
+    }
+  }, [permanentTemplate, templateImageUrl]);
+
   // Initialize template dimensions when image first loads
   useEffect(() => {
     if (!permanentTemplate || !templateImageUrl || templateInitializedRef.current) {
@@ -162,55 +182,90 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
 
     if (!isInitializedRef.current) {
+      console.log('=== Waiting for canvas initialization ===');
       return;
     }
 
     const overlayCanvas = overlayCanvasRef.current;
     if (!overlayCanvas || overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+      console.log('=== Canvas not ready, dimensions:', {
+        exists: !!overlayCanvas,
+        width: overlayCanvas?.width,
+        height: overlayCanvas?.height
+      });
       return;
     }
+
+    console.log('=== Starting template initialization ===', {
+      canvasWidth: overlayCanvas.width,
+      canvasHeight: overlayCanvas.height,
+      templateUrl: templateImageUrl
+    });
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      console.log('=== Template image loaded for initialization ===');
-      templateImageRef.current = img;
+      // Use requestAnimationFrame to ensure we have the latest canvas dimensions
+      requestAnimationFrame(() => {
+        if (!overlayCanvas || overlayCanvas.width === 0 || overlayCanvas.height === 0) {
+          console.error('=== Canvas lost dimensions after image load ===');
+          return;
+        }
 
-      const padding = 16;
-      const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
-      const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+        console.log('=== Template image loaded for initialization ===', {
+          imageWidth: img.width,
+          imageHeight: img.height,
+          canvasWidth: overlayCanvas.width,
+          canvasHeight: overlayCanvas.height
+        });
 
-      const scaleX = effectiveCanvasWidth / img.width;
-      const scaleY = effectiveCanvasHeight / img.height;
-      const scale = Math.min(scaleX, scaleY);
+        templateImageRef.current = img;
 
-      const drawWidth = img.width * scale;
-      const drawHeight = img.height * scale;
+        const padding = 16;
+        const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
+        const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
 
-      const centerX = overlayCanvas.width / 2;
-      const centerY = overlayCanvas.height / 2;
+        const scaleX = effectiveCanvasWidth / img.width;
+        const scaleY = effectiveCanvasHeight / img.height;
+        const scale = Math.min(scaleX, scaleY);
 
-      const offsetX = centerX - drawWidth / 2;
-      const offsetY = centerY - drawHeight / 2;
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
 
-      console.log('=== Setting initial template transform ===', {
-        x: offsetX,
-        y: offsetY,
-        scale: 1,
-        width: drawWidth,
-        height: drawHeight
+        const centerX = overlayCanvas.width / 2;
+        const centerY = overlayCanvas.height / 2;
+
+        const offsetX = centerX - drawWidth / 2;
+        const offsetY = centerY - drawHeight / 2;
+
+        console.log('=== Calculated template transform ===', {
+          centerX,
+          centerY,
+          drawWidth,
+          drawHeight,
+          offsetX,
+          offsetY,
+          scale: 1
+        });
+
+        // Validation: ensure offsets are reasonable
+        if (offsetX < 0 || offsetY < 0 || offsetX > overlayCanvas.width || offsetY > overlayCanvas.height) {
+          console.error('=== Invalid template offsets calculated ===', { offsetX, offsetY });
+          return;
+        }
+
+        setTemplateTransform({
+          x: offsetX,
+          y: offsetY,
+          scale: 1,
+          width: drawWidth,
+          height: drawHeight
+        });
+
+        templateInitializedRef.current = true;
+        console.log('=== Template initialization complete ===');
       });
-
-      setTemplateTransform({
-        x: offsetX,
-        y: offsetY,
-        scale: 1,
-        width: drawWidth,
-        height: drawHeight
-      });
-
-      templateInitializedRef.current = true;
     };
 
     img.onerror = (error) => {
@@ -515,12 +570,18 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const position = getCanvasPosition(e);
 
     if (isPointInResizeHandle(position.x, position.y)) {
-      console.log('Resize handle clicked at:', position);
+      console.log('=== Resize handle clicked ===', {
+        position,
+        currentTransform: templateTransform
+      });
       setIsResizingTemplate(true);
       setDragStartPos(position);
       setDragStartTransform({ ...templateTransform });
     } else if (isPointInTemplate(position.x, position.y)) {
-      console.log('Template body clicked at:', position);
+      console.log('=== Template body clicked ===', {
+        position,
+        currentTransform: templateTransform
+      });
       setIsDraggingTemplate(true);
       setDragStartPos(position);
       setDragStartTransform({ ...templateTransform });
@@ -555,11 +616,15 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         newScale = Math.min(newScale, (canvas.height - dragStartTransform.y) / (dragStartTransform.height / dragStartTransform.scale));
       }
 
+      const finalWidth = (dragStartTransform.width / dragStartTransform.scale) * newScale;
+      const finalHeight = (dragStartTransform.height / dragStartTransform.scale) * newScale;
+
       setTemplateTransform({
-        ...dragStartTransform,
+        x: dragStartTransform.x,
+        y: dragStartTransform.y,
         scale: newScale,
-        width: (dragStartTransform.width / dragStartTransform.scale) * newScale,
-        height: (dragStartTransform.height / dragStartTransform.scale) * newScale
+        width: finalWidth,
+        height: finalHeight
       });
     } else if (isDraggingTemplate) {
       let newX = dragStartTransform.x + deltaX;
