@@ -219,6 +219,7 @@ export default function CreativeRemixPage() {
               {dailyChallenge.freeDrawChallenge.imageUrl ? (
                 <>
                   <DrawingCanvas
+                    key={dailyChallenge.freeDrawChallenge.imageUrl}
                     onDrawingChange={handleDrawingChange}
                     availableColors={defaultColors}
                     permanentTemplate={true}
