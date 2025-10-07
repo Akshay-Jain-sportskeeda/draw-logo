@@ -26,6 +26,7 @@ export default function CreativeRemixPage() {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [isResizeMode, setIsResizeMode] = useState(false);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
@@ -219,7 +220,39 @@ export default function CreativeRemixPage() {
                     availableColors={defaultColors}
                     permanentTemplate={true}
                     templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
+                    isResizeMode={isResizeMode}
+                    onResizeModeChange={setIsResizeMode}
                   />
+
+                  {/* Resize Mode Toggle Button */}
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={() => setIsResizeMode(!isResizeMode)}
+                      className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                        isResizeMode
+                          ? 'bg-green-500 text-white hover:bg-green-600'
+                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                      }`}
+                    >
+                      {isResizeMode ? (
+                        <>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Done
+                        </>
+                      ) : (
+                        <>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeLinecap="round" strokeLinejoin="round"/>
+                            <polyline points="7 10 12 15 17 10" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="12" y1="15" x2="12" y2="3" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          Resize Template
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">

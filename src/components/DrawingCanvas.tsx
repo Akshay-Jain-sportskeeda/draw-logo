@@ -10,16 +10,29 @@ interface DrawingCanvasProps {
   permanentTemplate?: boolean;
   templateImageUrl?: string;
   drawingData?: string;
+  isResizeMode?: boolean;
+  onResizeModeChange?: (isResizeMode: boolean) => void;
 }
 
-export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData, isResizeMode = false, onResizeModeChange }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const userDrawingCanvasRef = useRef<HTMLCanvasElement>(null);
   const userDrawingCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const resizeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const resizeCtxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const templateImageRef = useRef<HTMLImageElement | null>(null);
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+
+  // Resize mode state
+  const [templateTransform, setTemplateTransform] = useState({ scale: 1.0, positionX: 0, positionY: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, scale: 1.0 });
+  const [showInstructions, setShowInstructions] = useState(true);
   
   // Helper function to get a non-white default color
   const getDefaultColor = (colors: string[]): string => {
@@ -49,6 +62,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     { name: 'Bold', value: 15 }
   ];
 
+  // Resize constraints
+  const MIN_SCALE = 0.4;
+  const MAX_SCALE = 2.0;
+  const RESIZE_HANDLE_SIZE = 20;
+
   // Update selected color when available colors change
   useEffect(() => {
     if (availableColors.length > 0 && !availableColors.includes(internalSelectedColor)) {
@@ -62,32 +80,28 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     value: color
   }));
 
-  // Initialize both canvases once on mount
+  // Initialize all canvases once on mount
   useEffect(() => {
     if (isInitializedRef.current) return;
 
     const overlayCanvas = overlayCanvasRef.current;
     const userDrawingCanvas = userDrawingCanvasRef.current;
+    const resizeCanvas = resizeCanvasRef.current;
 
-    if (!overlayCanvas || !userDrawingCanvas) return;
+    if (!overlayCanvas || !userDrawingCanvas || !resizeCanvas) return;
 
     // Initialize overlay canvas
     const overlayCtx = overlayCanvas.getContext('2d');
     if (overlayCtx) {
       overlayCtxRef.current = overlayCtx;
-      // Set canvas size based on current display size
       const rect = overlayCanvas.getBoundingClientRect();
 
-      // Ensure we have valid dimensions
       const width = rect.width > 0 ? rect.width : 400;
       const height = rect.height > 0 ? rect.height : 400;
 
       overlayCanvas.width = width;
       overlayCanvas.height = height;
 
-      console.log('Overlay canvas initialized:', { width, height });
-
-      // Fill with white background
       overlayCtx.fillStyle = '#ffffff';
       overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
     }
@@ -96,28 +110,30 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const userDrawingCtx = userDrawingCanvas.getContext('2d');
     if (userDrawingCtx) {
       userDrawingCtxRef.current = userDrawingCtx;
-      // Set canvas size to match overlay canvas
       userDrawingCanvas.width = overlayCanvas.width;
       userDrawingCanvas.height = overlayCanvas.height;
 
-      console.log('User drawing canvas initialized:', { width: userDrawingCanvas.width, height: userDrawingCanvas.height });
-
-      // Set drawing styles
       userDrawingCtx.lineWidth = 3;
       userDrawingCtx.lineCap = 'round';
       userDrawingCtx.lineJoin = 'round';
       userDrawingCtx.strokeStyle = internalSelectedColor;
 
-      // Clear to transparent (no background fill for drawing layer)
       userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
 
       isInitializedRef.current = true;
 
-      // Initialize with empty drawing only once
       const initialDataUrl = userDrawingCanvas.toDataURL('image/png');
       onDrawingChange(initialDataUrl);
     }
-  }, [onDrawingChange]);
+
+    // Initialize resize canvas
+    const resizeCtx = resizeCanvas.getContext('2d');
+    if (resizeCtx) {
+      resizeCtxRef.current = resizeCtx;
+      resizeCanvas.width = overlayCanvas.width;
+      resizeCanvas.height = overlayCanvas.height;
+    }
+  }, [onDrawingChange, internalSelectedColor]);
 
   // Separate effect for restoring drawing data
   useEffect(() => {
@@ -137,27 +153,16 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     img.src = drawingData;
   }, [drawingData]);
 
-  // Render overlay function
-  const renderOverlay = async (imageUrl: string | null) => {
+  // Render overlay function with transform support
+  const renderOverlay = useCallback((imageUrl: string | null) => {
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
 
-    console.log('renderOverlay called:', {
-      imageUrl,
-      hasCanvas: !!overlayCanvas,
-      hasCtx: !!overlayCtx,
-      canvasWidth: overlayCanvas?.width,
-      canvasHeight: overlayCanvas?.height
-    });
-
     if (!overlayCanvas || !overlayCtx) {
-      console.warn('Canvas or context not available for rendering overlay');
       return;
     }
 
-    // Ensure canvas has valid dimensions
     if (overlayCanvas.width === 0 || overlayCanvas.height === 0) {
-      console.warn('Canvas has zero dimensions, cannot render overlay');
       return;
     }
 
@@ -167,111 +172,162 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     if (imageUrl) {
       try {
-        console.log('Loading template image from:', imageUrl);
-        const img = new Image();
+        const img = templateImageRef.current || new Image();
         img.crossOrigin = 'anonymous';
 
         img.onload = () => {
-          console.log('Template image loaded successfully:', {
-            imageWidth: img.width,
-            imageHeight: img.height,
-            canvasWidth: overlayCanvas.width,
-            canvasHeight: overlayCanvas.height
-          });
+          templateImageRef.current = img;
 
-          // Account for padding to match logo container (p-4 = 16px padding)
+          // Save context state
+          overlayCtx.save();
+
+          // Account for padding
           const padding = 16;
           const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
           const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
 
-          // Calculate scale to fit entire image within effective area (object-contain behavior)
+          // Calculate base scale to fit image
           const scaleX = effectiveCanvasWidth / img.width;
           const scaleY = effectiveCanvasHeight / img.height;
-          const scale = Math.min(scaleX, scaleY);
+          const baseScale = Math.min(scaleX, scaleY);
 
-          const drawWidth = img.width * scale;
-          const drawHeight = img.height * scale;
-          const offsetX = padding + (effectiveCanvasWidth - drawWidth) / 2;
-          const offsetY = padding + (effectiveCanvasHeight - drawHeight) / 2;
+          // Apply user's scale transform
+          const finalScale = baseScale * templateTransform.scale;
 
-          console.log('Drawing template at:', { offsetX, offsetY, drawWidth, drawHeight, scale });
+          const drawWidth = img.width * finalScale;
+          const drawHeight = img.height * finalScale;
+
+          // Calculate center position
+          const centerX = overlayCanvas.width / 2;
+          const centerY = overlayCanvas.height / 2;
+
+          // Apply user's position offset
+          const offsetX = centerX - drawWidth / 2 + templateTransform.positionX;
+          const offsetY = centerY - drawHeight / 2 + templateTransform.positionY;
 
           // For permanent templates, use full opacity, otherwise use transparency
           overlayCtx.globalAlpha = permanentTemplate ? 1.0 : 0.3;
           overlayCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
           overlayCtx.globalAlpha = 1.0;
 
-          console.log('Template image rendered successfully with opacity:', permanentTemplate ? 1.0 : 0.3);
+          // Restore context state
+          overlayCtx.restore();
         };
 
         img.onerror = (error) => {
           console.error('Failed to load overlay image:', imageUrl, error);
-          // Draw error message on canvas
           overlayCtx.fillStyle = '#ff0000';
           overlayCtx.font = '16px Arial';
           overlayCtx.fillText('Failed to load template image', 20, 40);
         };
 
-        img.src = imageUrl;
+        if (!templateImageRef.current) {
+          img.src = imageUrl;
+        }
       } catch (error) {
         console.error('Error loading overlay image:', error);
       }
-    } else {
-      console.log('No image URL provided, showing white background only');
     }
-  };
+  }, [permanentTemplate, templateTransform]);
 
   // Handle overlay image changes or permanent template
   useEffect(() => {
     if (!isInitializedRef.current) {
-      console.log('Canvas not initialized yet, skipping overlay render');
       return;
     }
 
     const overlayCanvas = overlayCanvasRef.current;
     const overlayCtx = overlayCtxRef.current;
 
-    console.log('Overlay useEffect triggered:', {
-      permanentTemplate,
-      templateImageUrl,
-      overlayImageUrl,
-      hasOverlayCanvas: !!overlayCanvas,
-      hasOverlayCtx: !!overlayCtx,
-      canvasWidth: overlayCanvas?.width,
-      canvasHeight: overlayCanvas?.height
-    });
-
-    // Check if canvas has valid dimensions before rendering
     if (!overlayCanvas || !overlayCtx || overlayCanvas.width === 0 || overlayCanvas.height === 0) {
-      console.warn('Canvas not ready for rendering, waiting...');
-      // Retry after a longer delay to ensure canvas is initialized
       const timeoutId = setTimeout(() => {
         if (permanentTemplate && templateImageUrl) {
-          console.log('Retry: Rendering permanent template:', templateImageUrl);
           renderOverlay(templateImageUrl);
         } else if (overlayImageUrl) {
-          console.log('Retry: Rendering overlay image:', overlayImageUrl);
           renderOverlay(overlayImageUrl);
         } else {
-          console.log('Retry: Rendering empty overlay (white background)');
           renderOverlay(null);
         }
       }, 100);
       return () => clearTimeout(timeoutId);
     }
 
-    // Canvas is ready, render immediately
     if (permanentTemplate && templateImageUrl) {
-      console.log('Rendering permanent template:', templateImageUrl);
       renderOverlay(templateImageUrl);
     } else if (overlayImageUrl) {
-      console.log('Rendering overlay image:', overlayImageUrl);
       renderOverlay(overlayImageUrl);
     } else {
-      console.log('Rendering empty overlay (white background)');
       renderOverlay(null);
     }
-  }, [overlayImageUrl, permanentTemplate, templateImageUrl]);
+  }, [overlayImageUrl, permanentTemplate, templateImageUrl, renderOverlay]);
+
+  // Render resize canvas overlay
+  const renderResizeCanvas = useCallback(() => {
+    const resizeCanvas = resizeCanvasRef.current;
+    const resizeCtx = resizeCtxRef.current;
+    const overlayCanvas = overlayCanvasRef.current;
+
+    if (!resizeCanvas || !resizeCtx || !overlayCanvas || !templateImageRef.current) {
+      return;
+    }
+
+    const img = templateImageRef.current;
+
+    // Clear resize canvas
+    resizeCtx.clearRect(0, 0, resizeCanvas.width, resizeCanvas.height);
+
+    // Calculate template bounds
+    const padding = 16;
+    const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
+    const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+
+    const scaleX = effectiveCanvasWidth / img.width;
+    const scaleY = effectiveCanvasHeight / img.height;
+    const baseScale = Math.min(scaleX, scaleY);
+
+    const finalScale = baseScale * templateTransform.scale;
+    const drawWidth = img.width * finalScale;
+    const drawHeight = img.height * finalScale;
+
+    const centerX = overlayCanvas.width / 2;
+    const centerY = overlayCanvas.height / 2;
+
+    const boxX = centerX - drawWidth / 2 + templateTransform.positionX;
+    const boxY = centerY - drawHeight / 2 + templateTransform.positionY;
+
+    // Draw bounding box
+    resizeCtx.strokeStyle = '#3b82f6';
+    resizeCtx.lineWidth = 3;
+    resizeCtx.setLineDash([8, 4]);
+    resizeCtx.strokeRect(boxX, boxY, drawWidth, drawHeight);
+    resizeCtx.setLineDash([]);
+
+    // Draw resize handle at bottom-right corner
+    const handleX = boxX + drawWidth - RESIZE_HANDLE_SIZE / 2;
+    const handleY = boxY + drawHeight - RESIZE_HANDLE_SIZE / 2;
+
+    resizeCtx.fillStyle = '#3b82f6';
+    resizeCtx.fillRect(handleX, handleY, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
+
+    resizeCtx.strokeStyle = '#ffffff';
+    resizeCtx.lineWidth = 2;
+    resizeCtx.strokeRect(handleX, handleY, RESIZE_HANDLE_SIZE, RESIZE_HANDLE_SIZE);
+
+    // Draw resize icon in handle
+    resizeCtx.strokeStyle = '#ffffff';
+    resizeCtx.lineWidth = 2;
+    resizeCtx.beginPath();
+    resizeCtx.moveTo(handleX + 5, handleY + RESIZE_HANDLE_SIZE - 5);
+    resizeCtx.lineTo(handleX + RESIZE_HANDLE_SIZE - 5, handleY + 5);
+    resizeCtx.stroke();
+  }, [templateTransform, RESIZE_HANDLE_SIZE]);
+
+  // Update resize canvas when in resize mode
+  useEffect(() => {
+    if (isResizeMode && templateImageRef.current) {
+      renderResizeCanvas();
+    }
+  }, [isResizeMode, templateTransform, renderResizeCanvas]);
 
   // Update stroke color when color changes
   useEffect(() => {
@@ -304,14 +360,12 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const scaleY = canvas.height / rect.height;
 
     if ('touches' in e) {
-      // Touch event
       const touch = e.touches[0];
       return {
         x: (touch.clientX - rect.left) * scaleX,
         y: (touch.clientY - rect.top) * scaleY,
       };
     } else {
-      // Mouse event
       return {
         x: (e.clientX - rect.left) * scaleX,
         y: (e.clientY - rect.top) * scaleY,
@@ -319,9 +373,147 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  // Get template bounds
+  const getTemplateBounds = useCallback(() => {
+    const overlayCanvas = overlayCanvasRef.current;
+    const img = templateImageRef.current;
+
+    if (!overlayCanvas || !img) {
+      return null;
+    }
+
+    const padding = 16;
+    const effectiveCanvasWidth = overlayCanvas.width - (padding * 2);
+    const effectiveCanvasHeight = overlayCanvas.height - (padding * 2);
+
+    const scaleX = effectiveCanvasWidth / img.width;
+    const scaleY = effectiveCanvasHeight / img.height;
+    const baseScale = Math.min(scaleX, scaleY);
+
+    const finalScale = baseScale * templateTransform.scale;
+    const drawWidth = img.width * finalScale;
+    const drawHeight = img.height * finalScale;
+
+    const centerX = overlayCanvas.width / 2;
+    const centerY = overlayCanvas.height / 2;
+
+    const boxX = centerX - drawWidth / 2 + templateTransform.positionX;
+    const boxY = centerY - drawHeight / 2 + templateTransform.positionY;
+
+    return { x: boxX, y: boxY, width: drawWidth, height: drawHeight };
+  }, [templateTransform]);
+
+  // Check if point is in resize handle
+  const isInResizeHandle = useCallback((x: number, y: number) => {
+    const bounds = getTemplateBounds();
+    if (!bounds) return false;
+
+    const handleX = bounds.x + bounds.width - RESIZE_HANDLE_SIZE / 2;
+    const handleY = bounds.y + bounds.height - RESIZE_HANDLE_SIZE / 2;
+
+    return x >= handleX && x <= handleX + RESIZE_HANDLE_SIZE &&
+           y >= handleY && y <= handleY + RESIZE_HANDLE_SIZE;
+  }, [getTemplateBounds, RESIZE_HANDLE_SIZE]);
+
+  // Check if point is in bounding box
+  const isInBoundingBox = useCallback((x: number, y: number) => {
+    const bounds = getTemplateBounds();
+    if (!bounds) return false;
+
+    return x >= bounds.x && x <= bounds.x + bounds.width &&
+           y >= bounds.y && y <= bounds.y + bounds.height;
+  }, [getTemplateBounds]);
+
+  // Handle resize mode interactions
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isResizeMode) return;
+
     e.preventDefault();
-    // Close the palette when starting to draw
+    const position = getCanvasPosition(e);
+
+    if (isInResizeHandle(position.x, position.y)) {
+      setIsResizing(true);
+      setResizeStart({ x: position.x, y: position.y, scale: templateTransform.scale });
+      setShowInstructions(false);
+    } else if (isInBoundingBox(position.x, position.y)) {
+      setIsDragging(true);
+      setDragStart({ x: position.x - templateTransform.positionX, y: position.y - templateTransform.positionY });
+      setShowInstructions(false);
+    }
+  }, [isResizeMode, templateTransform, isInResizeHandle, isInBoundingBox, getCanvasPosition]);
+
+  const handleResizeMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isResizeMode) return;
+
+    e.preventDefault();
+    const position = getCanvasPosition(e);
+
+    if (isResizing) {
+      const bounds = getTemplateBounds();
+      if (!bounds) return;
+
+      const centerX = bounds.x + bounds.width / 2;
+      const centerY = bounds.y + bounds.height / 2;
+
+      const startDist = Math.sqrt(
+        Math.pow(resizeStart.x - centerX, 2) + Math.pow(resizeStart.y - centerY, 2)
+      );
+      const currentDist = Math.sqrt(
+        Math.pow(position.x - centerX, 2) + Math.pow(position.y - centerY, 2)
+      );
+
+      const scaleDelta = currentDist / startDist;
+      const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, resizeStart.scale * scaleDelta));
+
+      setTemplateTransform(prev => ({ ...prev, scale: newScale }));
+    } else if (isDragging) {
+      const newX = position.x - dragStart.x;
+      const newY = position.y - dragStart.y;
+
+      const overlayCanvas = overlayCanvasRef.current;
+      if (!overlayCanvas) return;
+
+      const bounds = getTemplateBounds();
+      if (!bounds) return;
+
+      const maxX = overlayCanvas.width / 2;
+      const maxY = overlayCanvas.height / 2;
+      const minX = -overlayCanvas.width / 2;
+      const minY = -overlayCanvas.height / 2;
+
+      const clampedX = Math.max(minX, Math.min(maxX, newX));
+      const clampedY = Math.max(minY, Math.min(maxY, newY));
+
+      setTemplateTransform(prev => ({ ...prev, positionX: clampedX, positionY: clampedY }));
+    }
+  }, [isResizeMode, isResizing, isDragging, resizeStart, dragStart, getTemplateBounds, getCanvasPosition, MIN_SCALE, MAX_SCALE]);
+
+  const handleResizeMouseUp = useCallback(() => {
+    setIsResizing(false);
+    setIsDragging(false);
+  }, []);
+
+  // Auto-hide instructions after 3 seconds
+  useEffect(() => {
+    if (isResizeMode && showInstructions) {
+      const timer = setTimeout(() => {
+        setShowInstructions(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isResizeMode, showInstructions]);
+
+  // Show instructions when entering resize mode
+  useEffect(() => {
+    if (isResizeMode) {
+      setShowInstructions(true);
+    }
+  }, [isResizeMode]);
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (isResizeMode) return;
+
+    e.preventDefault();
     setIsPaletteExpanded(false);
     setIsDrawing(true);
     const position = getCanvasPosition(e);
@@ -329,6 +521,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (isResizeMode) return;
+
     e.preventDefault();
     if (!isDrawing) return;
 
@@ -353,7 +547,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     setLastPosition(currentPosition);
 
-    // Emit only the user's drawing data
     const dataUrl = canvas.toDataURL('image/png');
     onDrawingChange(dataUrl);
   };
@@ -403,7 +596,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* User Drawing Canvas (transparent, on top) */}
         <canvas
           ref={userDrawingCanvasRef}
-          className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+          className={`absolute inset-0 w-full h-full touch-none ${isResizeMode ? 'pointer-events-none' : 'cursor-crosshair'}`}
           style={{ zIndex: 2 }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
@@ -413,15 +606,44 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
         />
+
+        {/* Resize Canvas (for bounding box and resize handle) */}
+        {isResizeMode && (
+          <canvas
+            ref={resizeCanvasRef}
+            className="absolute inset-0 w-full h-full cursor-move touch-none"
+            style={{ zIndex: 3 }}
+            onMouseDown={handleResizeMouseDown}
+            onMouseMove={handleResizeMouseMove}
+            onMouseUp={handleResizeMouseUp}
+            onMouseLeave={handleResizeMouseUp}
+            onTouchStart={handleResizeMouseDown}
+            onTouchMove={handleResizeMouseMove}
+            onTouchEnd={handleResizeMouseUp}
+          />
+        )}
+
+        {/* Instructions overlay for resize mode */}
+        {isResizeMode && showInstructions && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium" style={{ zIndex: 4 }}>
+            Drag box to move, use corner handle to resize
+          </div>
+        )}
+
+        {/* Mode indicator overlay */}
+        {isResizeMode && (
+          <div className="absolute inset-0 bg-blue-50 bg-opacity-10 pointer-events-none rounded-lg" style={{ zIndex: 0 }} />
+        )}
         
         {/* Combined Drawing Controls */}
-        <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
-          {/* Main pencil icon button */}
-          <button
-            onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
-            className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
-            title="Drawing Tools"
-          >
+        {!isResizeMode && (
+          <div className="absolute bottom-4 left-4" style={{ zIndex: 10 }}>
+            {/* Main pencil icon button */}
+            <button
+              onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+              className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
+              title="Drawing Tools"
+            >
             {/* Pencil icon */}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
@@ -509,20 +731,23 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               </div>
             </div>
           )}
-        </div>
-        
+          </div>
+        )}
+
         {/* Clear Canvas button */}
-        <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
-          <button
-            onClick={() => {
-              clearCanvas();
-              onClearCanvas?.();
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-          >
-            Clear
-          </button>
-        </div>
+        {!isResizeMode && (
+          <div className="absolute bottom-4 right-4" style={{ zIndex: 10 }}>
+            <button
+              onClick={() => {
+                clearCanvas();
+                onClearCanvas?.();
+              }}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          </div>
+        )}
     </div>
   );
 }
