@@ -292,7 +292,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         {/* Background/Overlay Canvas */}
         <canvas
           ref={overlayCanvasRef}
-          className="w-full h-full border-2 border-gray-300 rounded-lg"
+          className="w-full h-full border-2 border-gray-300 rounded-lg pointer-events-none"
         />
         
         {/* User Drawing Canvas (transparent, on top) */}
