@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import DrawingCanvas from '@/components/DrawingCanvas';
+import ObjectManipulationCanvas from '@/components/ObjectManipulationCanvas';
 import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
@@ -212,11 +212,10 @@ export default function CreativeRemixPage() {
                 {dailyChallenge.freeDrawChallenge.name}
               </h2>
               {dailyChallenge.freeDrawChallenge.imageUrl ? (
-                <DrawingCanvas
+                <ObjectManipulationCanvas
                   key={dailyChallenge.freeDrawChallenge.imageUrl}
                   onDrawingChange={handleDrawingChange}
                   availableColors={defaultColors}
-                  permanentTemplate={true}
                   templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
                 />
               ) : (

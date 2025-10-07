@@ -1,0 +1,287 @@
+import { DrawableObject, Point, TransformHandles, HandleType } from '@/types/drawableObject';
+
+export function generateObjectId(): string {
+  return `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export function getObjectBounds(obj: DrawableObject): { x: number; y: number; width: number; height: number } {
+  return {
+    x: obj.x,
+    y: obj.y,
+    width: obj.width,
+    height: obj.height,
+  };
+}
+
+export function isPointInObject(point: Point, obj: DrawableObject): boolean {
+  const bounds = getObjectBounds(obj);
+  return (
+    point.x >= bounds.x &&
+    point.x <= bounds.x + bounds.width &&
+    point.y >= bounds.y &&
+    point.y <= bounds.y + bounds.height
+  );
+}
+
+export function getTransformHandles(obj: DrawableObject): TransformHandles {
+  const { x, y, width, height } = obj;
+  const centerX = x + width / 2;
+  const centerY = y + height / 2;
+
+  return {
+    topLeft: { x, y },
+    topRight: { x: x + width, y },
+    bottomLeft: { x, y: y + height },
+    bottomRight: { x: x + width, y: y + height },
+    top: { x: centerX, y },
+    right: { x: x + width, y: centerY },
+    bottom: { x: centerX, y: y + height },
+    left: { x, y: centerY },
+    rotation: { x: centerX, y: y - 30 },
+  };
+}
+
+export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 8): HandleType {
+  const handles = getTransformHandles(obj);
+  const halfSize = handleSize / 2;
+
+  const handleEntries: [HandleType, Point][] = [
+    ['rotation', handles.rotation],
+    ['topLeft', handles.topLeft],
+    ['topRight', handles.topRight],
+    ['bottomLeft', handles.bottomLeft],
+    ['bottomRight', handles.bottomRight],
+    ['top', handles.top],
+    ['right', handles.right],
+    ['bottom', handles.bottom],
+    ['left', handles.left],
+  ];
+
+  for (const [type, handlePoint] of handleEntries) {
+    if (
+      point.x >= handlePoint.x - halfSize &&
+      point.x <= handlePoint.x + halfSize &&
+      point.y >= handlePoint.y - halfSize &&
+      point.y <= handlePoint.y + halfSize
+    ) {
+      return type as HandleType;
+    }
+  }
+
+  return null;
+}
+
+export function resizeObject(
+  obj: DrawableObject,
+  handle: HandleType,
+  newPoint: Point,
+  maintainAspect: boolean = false
+): DrawableObject {
+  if (!handle || handle === 'rotation') return obj;
+
+  let { x, y, width, height } = obj;
+  const originalAspect = width / height;
+
+  switch (handle) {
+    case 'topLeft':
+      const deltaXTL = newPoint.x - x;
+      const deltaYTL = newPoint.y - y;
+      if (maintainAspect) {
+        const avgDelta = (deltaXTL + deltaYTL) / 2;
+        x += avgDelta;
+        y += avgDelta;
+        width -= avgDelta;
+        height -= avgDelta;
+      } else {
+        x = newPoint.x;
+        y = newPoint.y;
+        width -= deltaXTL;
+        height -= deltaYTL;
+      }
+      break;
+
+    case 'topRight':
+      const deltaYTR = newPoint.y - y;
+      if (maintainAspect) {
+        const newWidth = newPoint.x - x;
+        const newHeight = newWidth / originalAspect;
+        y += height - newHeight;
+        width = newWidth;
+        height = newHeight;
+      } else {
+        y = newPoint.y;
+        width = newPoint.x - x;
+        height -= deltaYTR;
+      }
+      break;
+
+    case 'bottomLeft':
+      const deltaXBL = newPoint.x - x;
+      if (maintainAspect) {
+        const newHeight = newPoint.y - y;
+        const newWidth = newHeight * originalAspect;
+        x += width - newWidth;
+        width = newWidth;
+        height = newHeight;
+      } else {
+        x = newPoint.x;
+        width -= deltaXBL;
+        height = newPoint.y - y;
+      }
+      break;
+
+    case 'bottomRight':
+      if (maintainAspect) {
+        const newWidth = newPoint.x - x;
+        const newHeight = newWidth / originalAspect;
+        width = newWidth;
+        height = newHeight;
+      } else {
+        width = newPoint.x - x;
+        height = newPoint.y - y;
+      }
+      break;
+
+    case 'top':
+      const deltaYT = newPoint.y - y;
+      y = newPoint.y;
+      height -= deltaYT;
+      break;
+
+    case 'bottom':
+      height = newPoint.y - y;
+      break;
+
+    case 'left':
+      const deltaXL = newPoint.x - x;
+      x = newPoint.x;
+      width -= deltaXL;
+      break;
+
+    case 'right':
+      width = newPoint.x - x;
+      break;
+  }
+
+  if (width < 10) width = 10;
+  if (height < 10) height = 10;
+
+  return { ...obj, x, y, width, height };
+}
+
+export function moveObject(obj: DrawableObject, deltaX: number, deltaY: number): DrawableObject {
+  return {
+    ...obj,
+    x: obj.x + deltaX,
+    y: obj.y + deltaY,
+  };
+}
+
+export function drawObject(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
+  if (!obj.visible) return;
+
+  ctx.save();
+
+  const centerX = obj.x + obj.width / 2;
+  const centerY = obj.y + obj.height / 2;
+
+  if (obj.rotation !== 0) {
+    ctx.translate(centerX, centerY);
+    ctx.rotate((obj.rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
+  }
+
+  ctx.strokeStyle = obj.color;
+  ctx.fillStyle = obj.color;
+  ctx.lineWidth = obj.thickness;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  switch (obj.type) {
+    case 'rectangle':
+      ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+      break;
+
+    case 'circle':
+      const radius = Math.min(obj.width, obj.height) / 2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.stroke();
+      break;
+
+    case 'ellipse':
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, obj.width / 2, obj.height / 2, 0, 0, 2 * Math.PI);
+      ctx.stroke();
+      break;
+
+    case 'line':
+      ctx.beginPath();
+      ctx.moveTo(obj.x, obj.y);
+      ctx.lineTo(obj.x + obj.width, obj.y + obj.height);
+      ctx.stroke();
+      break;
+
+    case 'freehand':
+      if (obj.points && obj.points.length > 0) {
+        ctx.beginPath();
+        ctx.moveTo(obj.points[0].x + obj.x, obj.points[0].y + obj.y);
+        for (let i = 1; i < obj.points.length; i++) {
+          ctx.lineTo(obj.points[i].x + obj.x, obj.points[i].y + obj.y);
+        }
+        ctx.stroke();
+      }
+      break;
+
+    case 'image':
+      if (obj.imageData) {
+        const img = new Image();
+        img.src = obj.imageData;
+        ctx.drawImage(img, obj.x, obj.y, obj.width, obj.height);
+      }
+      break;
+  }
+
+  ctx.restore();
+}
+
+export function drawSelectionBorder(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
+  ctx.save();
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.strokeRect(obj.x, obj.y, obj.width, obj.height);
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
+  const handles = getTransformHandles(obj);
+  const handleSize = 8;
+
+  ctx.save();
+  ctx.fillStyle = '#2563eb';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+
+  Object.entries(handles).forEach(([key, point]) => {
+    if (key === 'rotation') {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, handleSize / 2, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(handles.top.x, handles.top.y);
+      ctx.lineTo(point.x, point.y);
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      ctx.fillRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
+      ctx.strokeRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
+    }
+  });
+
+  ctx.restore();
+}
