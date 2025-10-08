@@ -123,6 +123,28 @@ export default function CreativeRemixPage() {
       const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}!`;
       const shareUrl = window.location.href;
 
+      // Helper function to copy image to clipboard
+      const copyImageToClipboard = async () => {
+        if (getComposite && navigator.clipboard && (navigator.clipboard as any).write) {
+          try {
+            console.log('=== SHARE: Copying image to clipboard ===');
+            const compositeImageData = getComposite();
+            const blob = await fetch(compositeImageData).then(r => r.blob());
+            await (navigator.clipboard as any).write([
+              new (window as any).ClipboardItem({
+                'image/png': blob
+              })
+            ]);
+            alert('Image copied to clipboard!');
+            return true;
+          } catch (error) {
+            console.error('=== SHARE: Error copying image to clipboard ===', error);
+            return false;
+          }
+        }
+        return false;
+      };
+
       if (navigator.share && getComposite) {
         try {
           console.log('=== SHARE: Generating composite image ===');
@@ -156,8 +178,11 @@ export default function CreativeRemixPage() {
             console.log('=== SHARE: User cancelled share ===');
           } else {
             console.error('=== SHARE: Error sharing ===', error);
-            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-            alert('Link copied to clipboard!');
+            const imageCopied = await copyImageToClipboard();
+            if (!imageCopied) {
+              await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+              alert('Link copied to clipboard!');
+            }
           }
         }
       } else if (navigator.share) {
@@ -173,13 +198,20 @@ export default function CreativeRemixPage() {
             console.log('=== SHARE: User cancelled share ===');
           } else {
             console.error('=== SHARE: Error sharing ===', error);
-            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-            alert('Link copied to clipboard!');
+            const imageCopied = await copyImageToClipboard();
+            if (!imageCopied) {
+              await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+              alert('Link copied to clipboard!');
+            }
           }
         }
       } else {
-        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-        alert('Link copied to clipboard!');
+        // No Web Share API, try to copy image to clipboard first
+        const imageCopied = await copyImageToClipboard();
+        if (!imageCopied) {
+          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+          alert('Link copied to clipboard!');
+        }
       }
     } catch (error) {
       console.error('=== SHARE: Error ===', error);
