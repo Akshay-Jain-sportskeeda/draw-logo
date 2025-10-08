@@ -1,6 +1,7 @@
 import { firestore } from '@/lib/firebase';
 import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { GameResult, LeaderboardEntry } from '@/types/game';
+import { getDateFromTimestamp } from './dateHelpers';
 
 export type { GameResult };
 
@@ -39,7 +40,7 @@ export async function fetchUserGameHistory(userId: string, gameMode?: string): P
         hintsUsed: data.hintsUsed || 0,
         totalTime: data.totalTime || 0,
         completedAt: new Date(data.timestamp),
-        puzzleDate: data.puzzleDate || new Date(data.timestamp).toLocaleDateString('en-CA'),
+        puzzleDate: data.puzzleDate || getDateFromTimestamp(data.timestamp),
         challengeName: data.challengeName || 'Unknown Challenge',
         score: data.score || 0,
         gameMode: data.gameMode || 'draw-memory'

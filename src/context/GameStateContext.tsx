@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth } from '@/lib/useAuth';
 import { firestore } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { getTodayDateString } from '@/utils/dateHelpers';
 
 interface DailyChallenge {
   date: string;
@@ -129,7 +130,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
-  const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [currentPuzzleDate, setCurrentPuzzleDate] = useState<string>(getTodayDateString());
   
   // Archive screen
   const [showArchiveScreen, setShowArchiveScreen] = useState(false);
@@ -283,7 +284,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       console.log('Firestore collection reference created successfully');
       
       // Check if user already has a score for this puzzle date
-      const currentPuzzleDate = dailyChallenge?.date || new Date().toLocaleDateString('en-CA');
+      const currentPuzzleDate = dailyChallenge?.date || getTodayDateString();
       console.log('Checking for existing score for puzzleDate:', currentPuzzleDate);
       
       const existingScoreQuery = query(

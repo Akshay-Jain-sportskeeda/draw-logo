@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { fetchUserGameHistory, GameResult, getUserRank } from '../utils/firestore';
 import { UserStats } from '../types/game';
+import { getTodayDateString, getDateFromTimestamp } from '../utils/dateHelpers';
 
 export function useLeaderboard() {
   const [loading, setLoading] = useState(false);
@@ -66,12 +67,12 @@ export function useLeaderboard() {
         if (games.length === 0) return 0;
 
         let streak = 0;
-        const todayStr = new Date().toLocaleDateString('en-CA');
+        const todayStr = getTodayDateString();
         let checkDateStr = todayStr;
 
         while (true) {
           const validEntryForThisDate = games.find(entry => {
-            const completionDateStr = entry.completedAt.toLocaleDateString('en-CA');
+            const completionDateStr = getDateFromTimestamp(entry.completedAt.getTime());
             const puzzleDateMatches = entry.puzzleDate === checkDateStr;
             const completionDateMatches = completionDateStr === checkDateStr;
             return puzzleDateMatches && completionDateMatches;
@@ -87,7 +88,7 @@ export function useLeaderboard() {
 
           const currentDate = new Date(checkDateStr);
           currentDate.setDate(currentDate.getDate() - 1);
-          checkDateStr = currentDate.toLocaleDateString('en-CA');
+          checkDateStr = getDateFromTimestamp(currentDate.getTime());
 
           const daysDiff = Math.floor((Date.now() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
           if (daysDiff > 365) {

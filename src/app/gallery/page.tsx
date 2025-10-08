@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { useVotes } from '@/lib/useVotes';
+import { getTodayDateString } from '@/utils/dateHelpers';
 
 interface Submission {
   id: string;
@@ -27,7 +28,7 @@ export default function GalleryPage() {
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDateString());
   const [showMySubmissions, setShowMySubmissions] = useState(false);
 
   const submissionIds = submissions.map(s => s.id);
@@ -118,8 +119,11 @@ export default function GalleryPage() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    const newDate = currentDate.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const newDate = `${year}-${month}-${day}`;
+    const today = getTodayDateString();
     const earliestDate = '2025-09-13';
 
     if (newDate <= today && newDate >= earliestDate) {
@@ -130,7 +134,10 @@ export default function GalleryPage() {
   const canGoPrev = () => {
     const prevDate = new Date(selectedDate);
     prevDate.setDate(prevDate.getDate() - 1);
-    const prevDateStr = prevDate.toISOString().split('T')[0];
+    const year = prevDate.getFullYear();
+    const month = String(prevDate.getMonth() + 1).padStart(2, '0');
+    const day = String(prevDate.getDate()).padStart(2, '0');
+    const prevDateStr = `${year}-${month}-${day}`;
     const earliestDate = '2025-09-13';
     return prevDateStr >= earliestDate;
   };
@@ -138,8 +145,11 @@ export default function GalleryPage() {
   const canGoNext = () => {
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1);
-    const nextDateStr = nextDate.toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
+    const year = nextDate.getFullYear();
+    const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+    const day = String(nextDate.getDate()).padStart(2, '0');
+    const nextDateStr = `${year}-${month}-${day}`;
+    const today = getTodayDateString();
     return nextDateStr <= today;
   };
 
