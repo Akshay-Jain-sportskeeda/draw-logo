@@ -1018,6 +1018,69 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
               }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isResizingTemplate) return;
+                const canvas = overlayCanvasRef.current;
+                if (!canvas || !dragStartTransform) return;
+                const rect = canvas.getBoundingClientRect();
+                if (!rect || e.touches.length === 0) return;
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const canvasX = (x / rect.width) * canvas.width;
+                const canvasY = (y / rect.height) * canvas.height;
+
+                const deltaX = canvasX - dragStartPos.x;
+                const deltaY = canvasY - dragStartPos.y;
+
+                const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const direction = (deltaX + deltaY) < 0 ? 1 : -1;
+                const scaleChange = (diagonal * direction) / 200;
+                let newScale = Math.max(0.2, dragStartTransform.scale + scaleChange);
+
+                const baseWidth = dragStartTransform.width / dragStartTransform.scale;
+                const baseHeight = dragStartTransform.height / dragStartTransform.scale;
+
+                const newWidth = baseWidth * newScale;
+                const newHeight = baseHeight * newScale;
+
+                const widthDiff = newWidth - dragStartTransform.width;
+                const heightDiff = newHeight - dragStartTransform.height;
+
+                let newX = dragStartTransform.x - widthDiff;
+                let newY = dragStartTransform.y - heightDiff;
+
+                if (newX < 0) {
+                  newScale = dragStartTransform.x / baseWidth + dragStartTransform.scale;
+                  newX = 0;
+                }
+                if (newY < 0) {
+                  newScale = Math.min(newScale, dragStartTransform.y / baseHeight + dragStartTransform.scale);
+                  newY = 0;
+                }
+                if (newX + newWidth > canvas.width) {
+                  newScale = Math.min(newScale, (canvas.width - newX) / baseWidth);
+                }
+                if (newY + newHeight > canvas.height) {
+                  newScale = Math.min(newScale, (canvas.height - newY) / baseHeight);
+                }
+
+                const finalWidth = baseWidth * newScale;
+                const finalHeight = baseHeight * newScale;
+                const finalWidthDiff = finalWidth - dragStartTransform.width;
+                const finalHeightDiff = finalHeight - dragStartTransform.height;
+
+                setTemplateTransform({
+                  x: dragStartTransform.x - finalWidthDiff,
+                  y: dragStartTransform.y - finalHeightDiff,
+                  scale: newScale,
+                  width: finalWidth,
+                  height: finalHeight,
+                  rotation: dragStartTransform.rotation
+                });
+              }}
               onTouchEnd={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1071,6 +1134,34 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setIsRotatingTemplate(true);
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isRotatingTemplate) return;
+                const rect = overlayCanvasRef.current?.getBoundingClientRect();
+                if (!rect || e.touches.length === 0) return;
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const canvasX = (x / rect.width) * (overlayCanvasRef.current?.width || 1);
+                const canvasY = (y / rect.height) * (overlayCanvasRef.current?.height || 1);
+
+                if (!dragStartTransform) return;
+
+                const centerX = dragStartTransform.x + dragStartTransform.width / 2;
+                const centerY = dragStartTransform.y + dragStartTransform.height / 2;
+
+                const startAngle = Math.atan2(dragStartPos.y - centerY, dragStartPos.x - centerX);
+                const currentAngle = Math.atan2(canvasY - centerY, canvasX - centerX);
+
+                const angleDiff = (currentAngle - startAngle) * (180 / Math.PI);
+                const newRotation = dragStartTransform.rotation + angleDiff;
+
+                setTemplateTransform({
+                  ...dragStartTransform,
+                  rotation: newRotation
+                });
               }}
               onTouchEnd={(e) => {
                 e.preventDefault();
