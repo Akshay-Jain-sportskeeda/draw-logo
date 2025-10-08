@@ -19,14 +19,12 @@ export default function GalleryPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [filterMode, setFilterMode] = useState<'all' | 'creative-remix'>('all');
 
   useEffect(() => {
     const submissionsRef = collection(firestore, 'nfl-draw-logo');
     const q = query(
-      submissionsRef, 
-      where('status', '==', 'approved'),
-      orderBy('rating', 'desc'),
+      submissionsRef,
+      where('gameMode', '==', 'creative-remix'),
       orderBy('timestamp', 'desc')
     );
 
@@ -57,9 +55,6 @@ export default function GalleryPage() {
     };
   }, []);
 
-  const filteredSubmissions = filterMode === 'all'
-    ? submissions
-    : submissions.filter(sub => sub.gameMode === filterMode);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
@@ -85,37 +80,15 @@ export default function GalleryPage() {
           </p>
         </div>
 
-        <div className="flex justify-center gap-4 mb-8">
-          <button
-            onClick={() => setFilterMode('all')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              filterMode === 'all'
-                ? 'bg-blue-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-            }`}
-          >
-            All Submissions
-          </button>
-          <button
-            onClick={() => setFilterMode('creative-remix')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              filterMode === 'creative-remix'
-                ? 'bg-green-500 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-            }`}
-          >
-            Creative Remix
-          </button>
-        </div>
 
         {isLoading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             <p className="text-gray-600 mt-4">Loading gallery...</p>
           </div>
-        ) : filteredSubmissions.length === 0 ? (
+        ) : submissions.length === 0 ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <p className="text-gray-500 text-lg">No approved submissions yet</p>
+            <p className="text-gray-500 text-lg">No Creative Remix submissions yet</p>
             <p className="text-gray-400 mt-2">Be the first to submit your artwork!</p>
             <Link href="/creative-remix" className="inline-block mt-6 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium">
               Create Now
@@ -123,7 +96,7 @@ export default function GalleryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredSubmissions.map((submission) => (
+            {submissions.map((submission) => (
               <div
                 key={submission.id}
                 onClick={() => setSelectedSubmission(submission)}
@@ -135,6 +108,13 @@ export default function GalleryPage() {
                     alt={`Artwork by ${submission.userName}`}
                     className="w-full h-full object-contain"
                   />
+                  <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                    submission.status === 'approved' ? 'bg-green-500 text-white' :
+                    submission.status === 'rejected' ? 'bg-red-500 text-white' :
+                    'bg-yellow-500 text-white'
+                  }`}>
+                    {submission.status}
+                  </div>
                   {submission.rating && (
                     <div className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                       {submission.rating}
