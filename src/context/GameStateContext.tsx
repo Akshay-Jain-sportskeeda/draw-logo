@@ -547,7 +547,40 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
     const shareText = `I just scored ${score}% drawing the ${dailyChallenge.memoryChallenge.name} logo! Can you beat my score?`;
 
-    if (navigator.share) {
+    if (navigator.share && getCompositeImage) {
+      try {
+        console.log('=== Generating composite image for sharing ===');
+        const compositeImageData = getCompositeImage();
+
+        if (compositeImageData && navigator.canShare) {
+          const blob = await fetch(compositeImageData).then(r => r.blob());
+          const file = new File([blob], 'my-drawing.png', { type: 'image/png' });
+
+          if (navigator.canShare({ files: [file] })) {
+            console.log('=== Sharing with image file ===');
+            await navigator.share({
+              title: 'NFL Logo Drawing Game',
+              text: shareText,
+              files: [file]
+            });
+            return;
+          }
+        }
+
+        console.log('=== Sharing without image (not supported) ===');
+        await navigator.share({
+          title: 'NFL Logo Drawing Game',
+          text: shareText,
+          url: window.location.href
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Share error:', error);
+          navigator.clipboard.writeText(shareText);
+          alert('Score copied to clipboard!');
+        }
+      }
+    } else if (navigator.share) {
       try {
         await navigator.share({
           title: 'NFL Logo Drawing Game',
@@ -555,14 +588,16 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
           url: window.location.href
         });
       } catch (error) {
-        navigator.clipboard.writeText(shareText);
-        alert('Score copied to clipboard!');
+        if ((error as Error).name !== 'AbortError') {
+          navigator.clipboard.writeText(shareText);
+          alert('Score copied to clipboard!');
+        }
       }
     } else {
       navigator.clipboard.writeText(shareText);
       alert('Score copied to clipboard!');
     }
-  }, [score, dailyChallenge]);
+  }, [score, dailyChallenge, getCompositeImage]);
 
   const handleArchive = useCallback(() => {
     setShowArchiveScreen(true);

@@ -123,7 +123,44 @@ export default function CreativeRemixPage() {
       const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}!`;
       const shareUrl = window.location.href;
 
-      if (navigator.share) {
+      if (navigator.share && getComposite) {
+        try {
+          console.log('=== SHARE: Generating composite image ===');
+          const compositeImageData = getComposite();
+
+          if (compositeImageData && compositeImageData.length > 100 && navigator.canShare) {
+            const blob = await fetch(compositeImageData).then(r => r.blob());
+            const file = new File([blob], 'my-creative-remix.png', { type: 'image/png' });
+
+            if (navigator.canShare({ files: [file] })) {
+              console.log('=== SHARE: Sharing with image file ===');
+              await navigator.share({
+                title: 'Creative Remix - NFL Logo Drawing Game',
+                text: shareText,
+                files: [file]
+              });
+              console.log('=== SHARE: Successfully shared with image ===');
+              return;
+            }
+          }
+
+          console.log('=== SHARE: Sharing without image (not supported) ===');
+          await navigator.share({
+            title: 'Creative Remix - NFL Logo Drawing Game',
+            text: shareText,
+            url: shareUrl
+          });
+          console.log('=== SHARE: Successfully shared via Web Share API ===');
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            console.log('=== SHARE: User cancelled share ===');
+          } else {
+            console.error('=== SHARE: Error sharing ===', error);
+            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+            alert('Link copied to clipboard!');
+          }
+        }
+      } else if (navigator.share) {
         try {
           await navigator.share({
             title: 'Creative Remix - NFL Logo Drawing Game',
