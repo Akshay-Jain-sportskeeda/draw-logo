@@ -51,13 +51,6 @@ export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: 
   const handleEntries: [HandleType, Point][] = [
     ['rotation', handles.rotation],
     ['topLeft', handles.topLeft],
-    ['topRight', handles.topRight],
-    ['bottomLeft', handles.bottomLeft],
-    ['bottomRight', handles.bottomRight],
-    ['top', handles.top],
-    ['right', handles.right],
-    ['bottom', handles.bottom],
-    ['left', handles.left],
   ];
 
   for (const [type, handlePoint] of handleEntries) {
@@ -291,7 +284,7 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = 2;
       ctx.stroke();
-    } else {
+    } else if (key === 'topLeft') {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
       ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
