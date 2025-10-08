@@ -987,6 +987,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 pointerEvents: 'auto',
               }}
               onMouseDown={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect) return;
@@ -998,7 +999,13 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
               }}
+              onMouseUp={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTemplateInteractionEnd();
+              }}
               onTouchStart={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect || e.touches.length === 0) return;
@@ -1010,6 +1017,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setIsResizingTemplate(true);
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTemplateInteractionEnd();
               }}
             />
 
@@ -1029,6 +1041,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 pointerEvents: 'auto',
               }}
               onMouseDown={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect) return;
@@ -1040,7 +1053,13 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
               }}
+              onMouseUp={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTemplateInteractionEnd();
+              }}
               onTouchStart={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect || e.touches.length === 0) return;
@@ -1052,6 +1071,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setIsRotatingTemplate(true);
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleTemplateInteractionEnd();
               }}
             />
 
