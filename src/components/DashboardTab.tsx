@@ -81,8 +81,9 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
   // Calculate pending games - each date has 2 game modes (Draw Memory + Creative Remix)
   const today = new Date().toISOString().split('T')[0];
-  const todayInAvailable = availablePuzzles.some(puzzle => puzzle.date === today);
-  const totalAvailableDates = todayInAvailable ? availablePuzzles.length : availablePuzzles.length + 1;
+  // Filter out future dates - only count today and past dates
+  const availablePastPuzzles = availablePuzzles.filter(puzzle => puzzle.date <= today);
+  const totalAvailableDates = availablePastPuzzles.length;
   const totalAvailableGames = totalAvailableDates * 2; // 2 game modes per date
   const completedGames = (completedDrawMemoryDates.length || 0) + (completedCreativeRemixDates.length || 0);
   const pendingGamesCount = totalAvailableGames - completedGames;
