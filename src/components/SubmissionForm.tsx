@@ -14,9 +14,10 @@ interface SubmissionFormProps {
   onSubmitSuccess: (submissionId: string) => void;
   onSubmitError: (error: string) => void;
   getCompositeImage?: (() => string) | null;
+  puzzleDate?: string;
 }
 
-export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmitSuccess, onSubmitError, getCompositeImage }: SubmissionFormProps) {
+export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmitSuccess, onSubmitError, getCompositeImage, puzzleDate }: SubmissionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
@@ -79,8 +80,9 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
 
       // Create a unique filename for the drawing using date-based folder structure
       const timestamp = Date.now();
-      const fileName = generateDateBasedStoragePath(user!.uid, timestamp);
+      const fileName = generateDateBasedStoragePath(user!.uid, timestamp, puzzleDate);
       console.log('Attempting to upload with fileName:', fileName);
+      console.log('Using puzzleDate for storage path:', puzzleDate);
 
       // Upload the drawing to Firebase Storage
       const imageRef = storageRef(storage, fileName);
@@ -105,7 +107,9 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
         status: 'pending',
         rating: null,
         gameMode: 'creative-remix',
-        adminNotes: ''
+        adminNotes: '',
+        puzzleDate: puzzleDate || '',
+        votes: 0
       };
       console.log('Attempting to save submission data to Firestore:', submissionData);
 

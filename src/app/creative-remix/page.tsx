@@ -332,6 +332,7 @@ export default function CreativeRemixPage() {
                 onSubmitSuccess={handleSubmitSuccess}
                 onSubmitError={handleSubmitError}
                 getCompositeImage={getComposite}
+                puzzleDate={dailyChallenge.date}
               />
             </div>
           </div>

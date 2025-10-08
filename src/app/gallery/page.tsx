@@ -19,6 +19,7 @@ interface Submission {
   rating: number | null;
   gameMode: string;
   votes?: number;
+  puzzleDate?: string;
 }
 
 export default function GalleryPage() {
@@ -52,7 +53,8 @@ export default function GalleryPage() {
             status: data.status || 'pending',
             rating: data.rating,
             gameMode: data.gameMode || 'creative-remix',
-            votes: data.votes || 0
+            votes: data.votes || 0,
+            puzzleDate: data.puzzleDate || ''
           });
         }
       });
@@ -74,14 +76,8 @@ export default function GalleryPage() {
   useEffect(() => {
     let filtered = allSubmissions;
 
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
     filtered = filtered.filter(submission => {
-      const submissionDate = new Date(submission.timestamp);
-      return submissionDate >= startOfDay && submissionDate <= endOfDay;
+      return submission.puzzleDate === selectedDate;
     });
 
     if (showMySubmissions && user) {

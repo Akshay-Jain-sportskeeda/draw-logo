@@ -28,10 +28,11 @@ export function getTodayDateString(): string {
  * Generates a date-based storage path for creative remix submissions
  * @param userId - The user's unique ID
  * @param timestamp - The timestamp in milliseconds
+ * @param puzzleDate - The puzzle date in YYYY-MM-DD format (optional, defaults to timestamp date)
  * @returns Storage path in format: creative-remix/YYYY-MM-DD/userId-timestamp-randomString.png
  */
-export function generateDateBasedStoragePath(userId: string, timestamp: number): string {
-  const dateString = getDateFromTimestamp(timestamp);
+export function generateDateBasedStoragePath(userId: string, timestamp: number, puzzleDate?: string): string {
+  const dateString = puzzleDate || getDateFromTimestamp(timestamp);
   const randomString = Math.random().toString(36).substring(2, 15);
   return `creative-remix/${dateString}/${userId}-${timestamp}-${randomString}.png`;
 }
