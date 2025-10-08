@@ -124,11 +124,11 @@ export default function GalleryPage() {
             <Link href="/" className="absolute left-0 text-blue-600 hover:text-blue-700 font-medium text-sm">
               ← Back
             </Link>
-            <h1 className="text-4xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold text-gray-800">
               Gallery
             </h1>
           </div>
-          <p className="text-lg text-gray-600 text-center">
+          <p className="text-sm text-gray-600 text-center">
             Amazing artwork from our talented community!
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function GalleryPage() {
                 className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                   showMySubmissions
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
                 }`}
               >
                 {showMySubmissions ? 'All Logos' : 'My Logos'}
