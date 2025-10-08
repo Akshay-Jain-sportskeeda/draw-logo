@@ -545,41 +545,6 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
     console.log('=== HANDLE SHARE: Starting ===');
 
-    // Upload composite image if available
-    if (getCompositeImage && user) {
-      try {
-        console.log('=== Generating composite image for upload ===');
-        const compositeImageData = getCompositeImage();
-
-        if (compositeImageData) {
-          console.log('=== Uploading composite image ===');
-          const timestamp = Date.now();
-          const fileName = `draw-memory/${user.uid}/${dailyChallenge.date}-${timestamp}.png`;
-
-          const uploadResponse = await fetch('/api/upload-drawing', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              drawingData: compositeImageData,
-              userId: user.uid,
-              fileName: fileName
-            }),
-          });
-
-          if (uploadResponse.ok) {
-            const uploadResult = await uploadResponse.json();
-            console.log('=== Composite image uploaded successfully ===', uploadResult.publicUrl);
-          } else {
-            console.error('Failed to upload composite image:', await uploadResponse.text());
-          }
-        }
-      } catch (error) {
-        console.error('Error uploading composite image:', error);
-      }
-    }
-
     const shareText = `I just scored ${score}% drawing the ${dailyChallenge.memoryChallenge.name} logo! Can you beat my score?`;
 
     if (navigator.share) {
@@ -597,7 +562,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       navigator.clipboard.writeText(shareText);
       alert('Score copied to clipboard!');
     }
-  }, [score, dailyChallenge, getCompositeImage, user]);
+  }, [score, dailyChallenge]);
 
   const handleArchive = useCallback(() => {
     setShowArchiveScreen(true);

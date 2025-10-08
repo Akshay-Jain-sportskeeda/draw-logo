@@ -6,8 +6,6 @@ import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { storage } from '@/lib/firebase';
-import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
 
 interface DailyChallenge {
   date: string;
@@ -107,7 +105,7 @@ export default function CreativeRemixPage() {
   };
 
   const handleShare = async () => {
-    if (!getComposite || !drawingData) {
+    if (!drawingData) {
       alert('Please create a drawing before sharing!');
       return;
     }
@@ -120,25 +118,9 @@ export default function CreativeRemixPage() {
     setIsSharing(true);
 
     try {
-      console.log('=== SHARE: Generating composite image ===');
-      const compositeImageData = getComposite();
+      console.log('=== SHARE: Starting share process ===');
 
-      if (!compositeImageData || compositeImageData.length < 100) {
-        throw new Error('Failed to generate composite image');
-      }
-
-      console.log('=== SHARE: Uploading composite image to Firebase Storage ===');
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const fileName = `creative-remix-shares/${user?.uid || 'anonymous'}/${timestamp}-${randomString}.png`;
-
-      const imageRef = storageRef(storage, fileName);
-      await uploadString(imageRef, compositeImageData, 'data_url');
-
-      const publicUrl = await getDownloadURL(imageRef);
-      console.log('=== SHARE: Image uploaded successfully ===', publicUrl);
-
-      const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}! 🎨`;
+      const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}!`;
       const shareUrl = window.location.href;
 
       if (navigator.share) {
