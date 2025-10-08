@@ -325,16 +325,12 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleClearCanvas = useCallback(() => {
-    // Reset all game state (combining clear and reset functionality)
+    // Clear only the drawing data, keep overlay and logo visible
     setDrawingData('');
     setScore(null);
     setScoreBreakdown(null);
     setTimeTaken(null);
-    setShowLogo(false);
-    setColorExtractionError(null);
-    setOverlayLogoUrl(null);
     setStartTime(Date.now());
-    setScoreSaved(false);
     setShowImprovementTicker(false);
     setShowWinScreen(false);
   }, []);
