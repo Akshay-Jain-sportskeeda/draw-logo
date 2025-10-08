@@ -284,7 +284,7 @@ export default function GalleryPage() {
                   )}
                   <button
                     onClick={(e) => handleVoteClick(submission.id, e)}
-                    className="absolute top-2 right-2 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110 group"
+                    className="absolute top-2 right-2 px-3 py-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110 group flex items-center gap-1.5"
                     title={user ? (hasUserVoted(submission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
@@ -296,15 +296,8 @@ export default function GalleryPage() {
                           : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
                     />
+                    <span className="text-sm font-semibold text-gray-700">{getVoteCount(submission.id)}</span>
                   </button>
-                  <div className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                    <img
-                      src="/flame-flat-style.svg"
-                      alt="Vote"
-                      className="w-4 h-4"
-                    />
-                    <span>{getVoteCount(submission.id)}</span>
-                  </div>
                 </div>
                 <div className="p-4">
                   <p className="font-semibold text-gray-800">{submission.userName}</p>
@@ -357,7 +350,7 @@ export default function GalleryPage() {
                   )}
                   <button
                     onClick={(e) => handleVoteClick(selectedSubmission.id, e)}
-                    className="absolute top-4 left-4 p-3 rounded-full bg-white shadow-lg transition-all hover:scale-110 group"
+                    className="absolute top-4 right-4 px-4 py-3 rounded-full bg-white shadow-lg transition-all hover:scale-110 group flex items-center gap-2"
                     title={user ? (hasUserVoted(selectedSubmission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
@@ -369,15 +362,8 @@ export default function GalleryPage() {
                           : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
                     />
+                    <span className="text-lg font-bold text-gray-700">{getVoteCount(selectedSubmission.id)}</span>
                   </button>
-                  <div className="absolute bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg flex items-center gap-2">
-                    <img
-                      src="/flame-flat-style.svg"
-                      alt="Vote"
-                      className="w-5 h-5"
-                    />
-                    <span>{getVoteCount(selectedSubmission.id)}</span>
-                  </div>
                 </div>
 
                 <div className="flex gap-4 justify-center">
