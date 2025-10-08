@@ -149,6 +149,31 @@ export default function GalleryPage() {
     return nextDateStr <= today;
   };
 
+  const handleShare = async (submission: Submission) => {
+    try {
+      const shareText = `Check out my drawing in the NFL Logo Gallery!`;
+      const shareUrl = window.location.href;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My NFL Logo Drawing',
+          text: shareText,
+          url: shareUrl,
+        });
+      } else if (navigator.clipboard) {
+        const textToShare = `${shareText}\n${shareUrl}`;
+        await navigator.clipboard.writeText(textToShare);
+        alert('Link copied to clipboard!');
+      } else {
+        alert('Sharing is not supported on this device');
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
@@ -203,18 +228,22 @@ export default function GalleryPage() {
               </button>
             </div>
 
-            {user && (
-              <button
-                onClick={() => setShowMySubmissions(!showMySubmissions)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                  showMySubmissions
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
-                }`}
-              >
-                {showMySubmissions ? 'All Logos' : 'My Logos'}
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (!user) {
+                  setShowLoginModal(true);
+                } else {
+                  setShowMySubmissions(!showMySubmissions);
+                }
+              }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
+                showMySubmissions
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300'
+              }`}
+            >
+              {showMySubmissions ? 'All Logos' : 'My Logos'}
+            </button>
           </div>
         </div>
 
@@ -300,11 +329,30 @@ export default function GalleryPage() {
                   </button>
                 </div>
                 <div className="p-4">
-                  <p className="font-semibold text-gray-800">{submission.userName}</p>
+                  <p className="font-semibold text-gray-800">
+                    {submission.userName}
+                    {user && submission.userId === user.uid && (
+                      <span className="ml-2 text-xs text-blue-600 font-medium">(You)</span>
+                    )}
+                  </p>
                   <p className="text-xs text-gray-500 mt-1">
                     {new Date(submission.timestamp).toLocaleDateString()}
                   </p>
                 </div>
+                {user && submission.userId === user.uid && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare(submission);
+                    }}
+                    className="absolute bottom-2 right-2 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110"
+                    title="Share drawing"
+                  >
+                    <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -322,7 +370,12 @@ export default function GalleryPage() {
               <div className="p-6">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">{selectedSubmission.userName}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      {selectedSubmission.userName}
+                      {user && selectedSubmission.userId === user.uid && (
+                        <span className="ml-2 text-sm text-blue-600 font-medium">(You)</span>
+                      )}
+                    </h2>
                     <p className="text-sm text-gray-600 mt-1">
                       {new Date(selectedSubmission.timestamp).toLocaleString()}
                     </p>
@@ -375,6 +428,17 @@ export default function GalleryPage() {
                   >
                     View Full Size
                   </a>
+                  {user && selectedSubmission.userId === user.uid && (
+                    <button
+                      onClick={() => handleShare(selectedSubmission)}
+                      className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      Share
+                    </button>
+                  )}
                   <button
                     onClick={() => setSelectedSubmission(null)}
                     className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
