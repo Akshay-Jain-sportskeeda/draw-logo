@@ -140,55 +140,53 @@ export default function GalleryPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-3 mb-6 max-w-2xl mx-auto">
-          <div className="flex items-center justify-between gap-4">
-            <button
-              onClick={() => handleDateChange('prev')}
-              disabled={!canGoPrev()}
-              className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-full transition-all duration-200 hover:scale-110"
-              aria-label="Previous day"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15,18 9,12 15,6"/>
-              </svg>
-            </button>
+        <div className="bg-white rounded-lg shadow-md p-3 mb-6 max-w-3xl mx-auto">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDateChange('prev')}
+                disabled={!canGoPrev()}
+                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-full transition-all duration-200 hover:scale-110"
+                aria-label="Previous day"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+              </button>
 
-            <div className="flex-1 text-center">
-              <h3 className="text-lg font-semibold text-gray-800">
+              <h3 className="text-lg font-semibold text-gray-800 whitespace-nowrap">
                 {new Date(selectedDate).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric'
                 })}
               </h3>
+
+              <button
+                onClick={() => handleDateChange('next')}
+                disabled={!canGoNext()}
+                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-full transition-all duration-200 hover:scale-110"
+                aria-label="Next day"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9,18 15,12 9,6"/>
+                </svg>
+              </button>
             </div>
 
-            <button
-              onClick={() => handleDateChange('next')}
-              disabled={!canGoNext()}
-              className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-full transition-all duration-200 hover:scale-110"
-              aria-label="Next day"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9,18 15,12 9,6"/>
-              </svg>
-            </button>
-          </div>
-
-          {user && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
+            {user && (
               <button
                 onClick={() => setShowMySubmissions(!showMySubmissions)}
-                className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                   showMySubmissions
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {showMySubmissions ? 'Show All Submissions' : 'My Submissions'}
+                {showMySubmissions ? 'All Logos' : 'My Logos'}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
 
