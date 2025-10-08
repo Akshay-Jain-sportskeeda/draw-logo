@@ -335,7 +335,11 @@ export default function GalleryPage() {
               <div
                 key={submission.id}
                 onClick={() => setSelectedSubmission(submission)}
-                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer overflow-hidden transform hover:-translate-y-1"
+                className={`bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer overflow-hidden transform hover:-translate-y-1 ${
+                  hasUserVoted(submission.id)
+                    ? 'ring-2 ring-orange-400 shadow-orange-200'
+                    : ''
+                }`}
               >
                 <div className="aspect-square bg-gray-100 relative">
                   <img
@@ -357,7 +361,11 @@ export default function GalleryPage() {
                   )}
                   <button
                     onClick={(e) => handleVoteClick(submission.id, e)}
-                    className="absolute top-2 right-2 px-3 py-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110 group flex items-center gap-1.5"
+                    className={`absolute top-2 right-2 px-3 py-2 rounded-full shadow-md transition-all hover:scale-110 group flex items-center gap-1.5 ${
+                      hasUserVoted(submission.id)
+                        ? 'bg-orange-100 hover:bg-orange-200 border-2 border-orange-400'
+                        : 'bg-white/90 hover:bg-white'
+                    }`}
                     title={user ? (hasUserVoted(submission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
@@ -365,11 +373,14 @@ export default function GalleryPage() {
                       alt="Vote"
                       className={`w-5 h-5 transition-all ${
                         hasUserVoted(submission.id)
-                          ? 'opacity-100 scale-110'
+                          ? 'opacity-100 scale-110 drop-shadow-md'
                           : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
+                      style={hasUserVoted(submission.id) ? { filter: 'brightness(1.1) saturate(1.3)' } : {}}
                     />
-                    <span className="text-sm font-semibold text-gray-700">{getVoteCount(submission.id)}</span>
+                    <span className={`text-sm font-semibold ${
+                      hasUserVoted(submission.id) ? 'text-orange-700' : 'text-gray-700'
+                    }`}>{getVoteCount(submission.id)}</span>
                   </button>
                 </div>
                 <div className="p-4">
@@ -438,7 +449,11 @@ export default function GalleryPage() {
                   <img
                     src={selectedSubmission.drawingUrl}
                     alt={`Artwork by ${selectedSubmission.userName}`}
-                    className="w-full rounded-lg border-2 border-gray-200"
+                    className={`w-full rounded-lg border-2 transition-all ${
+                      hasUserVoted(selectedSubmission.id)
+                        ? 'border-orange-400 shadow-orange-200 shadow-lg'
+                        : 'border-gray-200'
+                    }`}
                   />
                   {selectedSubmission.rating && (
                     <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg">
@@ -447,7 +462,11 @@ export default function GalleryPage() {
                   )}
                   <button
                     onClick={(e) => handleVoteClick(selectedSubmission.id, e)}
-                    className="absolute top-4 right-4 px-4 py-3 rounded-full bg-white shadow-lg transition-all hover:scale-110 group flex items-center gap-2"
+                    className={`absolute top-4 right-4 px-4 py-3 rounded-full shadow-lg transition-all hover:scale-110 group flex items-center gap-2 ${
+                      hasUserVoted(selectedSubmission.id)
+                        ? 'bg-orange-100 hover:bg-orange-200 border-2 border-orange-400'
+                        : 'bg-white'
+                    }`}
                     title={user ? (hasUserVoted(selectedSubmission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
@@ -455,11 +474,14 @@ export default function GalleryPage() {
                       alt="Vote"
                       className={`w-6 h-6 transition-all ${
                         hasUserVoted(selectedSubmission.id)
-                          ? 'opacity-100 scale-110'
+                          ? 'opacity-100 scale-110 drop-shadow-md'
                           : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
+                      style={hasUserVoted(selectedSubmission.id) ? { filter: 'brightness(1.1) saturate(1.3)' } : {}}
                     />
-                    <span className="text-lg font-bold text-gray-700">{getVoteCount(selectedSubmission.id)}</span>
+                    <span className={`text-lg font-bold ${
+                      hasUserVoted(selectedSubmission.id) ? 'text-orange-700' : 'text-gray-700'
+                    }`}>{getVoteCount(selectedSubmission.id)}</span>
                   </button>
                 </div>
 
