@@ -275,46 +275,45 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
 
   ctx.save();
 
-  Object.entries(handles).forEach(([key, point]) => {
-    if (key === 'rotation') {
-      ctx.fillStyle = '#2563eb';
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 1;
+  ctx.fillStyle = '#2563eb';
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 1;
 
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, handleSize / 2, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.stroke();
+  ctx.fillRect(
+    handles.topLeft.x - handleSize / 2,
+    handles.topLeft.y - handleSize / 2,
+    handleSize,
+    handleSize
+  );
+  ctx.strokeRect(
+    handles.topLeft.x - handleSize / 2,
+    handles.topLeft.y - handleSize / 2,
+    handleSize,
+    handleSize
+  );
 
-      ctx.shadowColor = 'transparent';
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      ctx.beginPath();
-      const isBelow = point.y > obj.y + obj.height;
-      const connectPoint = isBelow ? handles.bottom : handles.top;
-      ctx.moveTo(connectPoint.x, connectPoint.y);
-      ctx.lineTo(point.x, point.y);
-      ctx.strokeStyle = '#2563eb';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    } else if (key === 'topLeft') {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-      ctx.shadowBlur = 3;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 1;
-      ctx.fillStyle = '#2563eb';
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(handles.rotation.x, handles.rotation.y, handleSize / 2, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.stroke();
 
-      ctx.fillRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
-      ctx.strokeRect(point.x - handleSize / 2, point.y - handleSize / 2, handleSize, handleSize);
-    }
-  });
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+
+  ctx.beginPath();
+  const isBelow = handles.rotation.y > obj.y + obj.height;
+  const connectPoint = isBelow ? handles.bottom : handles.top;
+  ctx.moveTo(connectPoint.x, connectPoint.y);
+  ctx.lineTo(handles.rotation.x, handles.rotation.y);
+  ctx.strokeStyle = '#2563eb';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 
   ctx.restore();
 }
