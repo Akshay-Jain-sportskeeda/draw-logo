@@ -139,11 +139,11 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
         <div className={styles.legendContainer}>
           <div className={styles.legendItem}>
             <div className={`${styles.modeBadge} ${styles.drawMemoryBadge}`}>D</div>
-            <span>Draw Memory</span>
+            <span>Draw Memory completed</span>
           </div>
           <div className={styles.legendItem}>
             <div className={`${styles.modeBadge} ${styles.creativeRemixBadge}`}>C</div>
-            <span>Creative Remix</span>
+            <span>Creative Remix completed</span>
           </div>
         </div>
 
