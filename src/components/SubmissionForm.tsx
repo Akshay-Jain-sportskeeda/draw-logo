@@ -64,14 +64,16 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       if (getCompositeImage) {
         console.log('=== Generating composite image for submission ===');
         const composite = getCompositeImage();
-        if (composite) {
+        if (composite && composite.length > 100) {
           imageToUpload = composite;
-          console.log('Using composite image for upload');
+          console.log('Using composite image for upload (size:', composite.length, 'bytes)');
         } else {
-          console.warn('Composite image generation returned empty, using drawing data');
+          console.warn('Composite image generation returned empty or invalid, using drawing data');
+          console.warn('This may indicate the template was not properly loaded');
         }
       } else {
         console.log('No composite generator available, using drawing data only');
+        console.warn('Template may not be included in submission');
       }
 
       // Create a unique filename for the drawing

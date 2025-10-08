@@ -129,19 +129,63 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const img = templateImageRef.current;
     const transform = currentTransformRef.current;
 
-    if (permanentTemplate && img && img.complete && templateImageUrl && transform.width > 0 && transform.height > 0) {
-      console.log('Drawing permanent template with transform:', transform);
+    console.log('=== COMPOSITE GENERATION DEBUG ===');
+    console.log('permanentTemplate:', permanentTemplate);
+    console.log('templateImageUrl:', templateImageUrl);
+    console.log('img exists:', !!img);
+    console.log('img.complete:', img?.complete);
+    console.log('img.src:', img?.src);
+    console.log('img.width:', img?.width);
+    console.log('img.height:', img?.height);
+    console.log('transform:', transform);
 
-      compositeCtx.save();
-      const centerX = transform.x + transform.width / 2;
-      const centerY = transform.y + transform.height / 2;
-      compositeCtx.translate(centerX, centerY);
-      compositeCtx.rotate((transform.rotation * Math.PI) / 180);
-      compositeCtx.translate(-centerX, -centerY);
-      compositeCtx.drawImage(img, transform.x, transform.y, transform.width, transform.height);
-      compositeCtx.restore();
+    if (permanentTemplate && templateImageUrl) {
+      let imageToUse = img;
 
-      console.log('Permanent template drawn successfully');
+      if (!img || !img.complete) {
+        console.warn('Template image reference is null or not loaded - creating new image from URL');
+        const tempImg = new Image();
+        tempImg.crossOrigin = 'anonymous';
+        tempImg.src = templateImageUrl;
+
+        if (tempImg.complete && tempImg.naturalWidth > 0) {
+          console.log('Browser has cached image - using it synchronously');
+          imageToUse = tempImg;
+          templateImageRef.current = tempImg;
+        } else {
+          console.error('Template image not available in browser cache for composite generation');
+          console.error('This may happen if the image was not fully loaded before export');
+          imageToUse = null;
+        }
+      }
+
+      if (imageToUse && transform.width > 0 && transform.height > 0) {
+        console.log('Drawing permanent template with transform:', transform);
+        console.log('Using image:', { width: imageToUse.width, height: imageToUse.height, complete: imageToUse.complete });
+
+        compositeCtx.save();
+        const centerX = transform.x + transform.width / 2;
+        const centerY = transform.y + transform.height / 2;
+        compositeCtx.translate(centerX, centerY);
+        compositeCtx.rotate((transform.rotation * Math.PI) / 180);
+        compositeCtx.translate(-centerX, -centerY);
+
+        try {
+          compositeCtx.drawImage(imageToUse, transform.x, transform.y, transform.width, transform.height);
+          console.log('Permanent template drawn successfully');
+        } catch (error) {
+          console.error('Error drawing template image to composite:', error);
+        }
+
+        compositeCtx.restore();
+      } else {
+        if (!imageToUse) {
+          console.error('No valid image available for drawing');
+        }
+        if (transform.width <= 0 || transform.height <= 0) {
+          console.error('Invalid transform dimensions:', { width: transform.width, height: transform.height });
+        }
+      }
     } else if (!permanentTemplate && overlayImageUrl && img && img.complete) {
       console.log('Drawing overlay logo');
 
@@ -605,9 +649,20 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   // Expose composite image generator to parent component
   useEffect(() => {
     if (onCompositeImageReady && isInitializedRef.current) {
+      if (permanentTemplate && templateTransform.width === 0) {
+        console.log('=== Waiting for template initialization before registering composite getter ===');
+        return;
+      }
+      console.log('=== Registering composite image generator with parent ===');
+      console.log('Template state:', {
+        permanentTemplate,
+        templateInitialized: templateInitializedRef.current,
+        transformWidth: templateTransform.width,
+        transformHeight: templateTransform.height
+      });
       onCompositeImageReady(getCompositeImage);
     }
-  }, [onCompositeImageReady, getCompositeImage]);
+  }, [onCompositeImageReady, getCompositeImage, permanentTemplate, templateTransform]);
 
   const getCanvasPosition = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = userDrawingCanvasRef.current;
