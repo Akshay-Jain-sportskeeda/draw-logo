@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { storage, firestore } from '@/lib/firebase';
-import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
+import { firestore } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
 interface SubmissionFormProps {
@@ -64,27 +63,27 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       const fileName = `creative-remix/${user!.uid}/${timestamp}-${randomString}.png`;
       console.log('Attempting to upload with fileName:', fileName);
 
-      // Upload the drawing to Firebase Storage
-      const imageRef = storageRef(storage, fileName);
-      
-      // Remove the data URL prefix if present
-      const base64Data = drawingData.replace(/^data:image\/[a-z]+;base64,/, '');
-      console.log('Base64 data length:', base64Data.length);
-      console.log('Original drawingData starts with:', drawingData.substring(0, 50));
-      
-      // Upload the base64 string as a data URL with proper error handling
-      console.log('Starting Firebase Storage upload...');
-      try {
-        await uploadString(imageRef, drawingData, 'data_url');
-      } catch (uploadError) {
-        console.error('Firebase Storage upload error:', uploadError);
-        throw uploadError;
-      }
-      console.log('Upload successful for fileName:', fileName);
+      // Upload the drawing via server-side API
+      console.log('Starting server-side upload...');
+      const uploadResponse = await fetch('/api/upload-drawing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          drawingData,
+          userId: user!.uid,
+          fileName
+        }),
+      });
 
-      // Get the public download URL
-      const publicUrl = await getDownloadURL(imageRef);
-      console.log('Generated public URL:', publicUrl);
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'Failed to upload image');
+      }
+
+      const { publicUrl } = await uploadResponse.json();
+      console.log('Upload successful, public URL:', publicUrl);
 
       // Save submission data to Firestore
       const submissionsRef = collection(firestore, 'nfl-draw-logo');
