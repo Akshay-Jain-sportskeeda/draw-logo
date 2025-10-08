@@ -603,16 +603,19 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     setInternalSelectedColor(color);
     setIsErasing(false);
     setIsPaletteExpanded(false);
+    setIsResizeMode(false);
   };
 
   const handleEraserSelect = () => {
     setIsErasing(true);
     setIsPaletteExpanded(false);
+    setIsResizeMode(false);
   };
 
   const handleThicknessSelect = (thickness: number) => {
     setLineThickness(thickness);
     setIsPaletteExpanded(false);
+    setIsResizeMode(false);
   };
 
   const isPointInTemplate = (x: number, y: number): boolean => {
@@ -884,7 +887,10 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         >
           {/* Main pencil icon button */}
           <button
-            onClick={() => setIsPaletteExpanded(!isPaletteExpanded)}
+            onClick={() => {
+              setIsPaletteExpanded(!isPaletteExpanded);
+              setIsResizeMode(false);
+            }}
             className="w-10 h-10 rounded-full border-2 border-gray-800 bg-white shadow-lg hover:scale-110 transition-all duration-200 relative flex items-center justify-center"
             title="Drawing Tools"
             style={{
@@ -1027,6 +1033,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             onClick={() => {
               clearCanvas();
               onClearCanvas?.();
+              setIsResizeMode(false);
             }}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
             style={{
