@@ -288,7 +288,7 @@ export default function GalleryPage() {
                     title={user ? (hasUserVoted(submission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
-                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      src="/flame-flat-style.svg"
                       alt="Vote"
                       className={`w-5 h-5 transition-all ${
                         hasUserVoted(submission.id)
@@ -299,7 +299,7 @@ export default function GalleryPage() {
                   </button>
                   <div className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
                     <img
-                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      src="/flame-flat-style.svg"
                       alt="Vote"
                       className="w-4 h-4"
                     />
@@ -361,7 +361,7 @@ export default function GalleryPage() {
                     title={user ? (hasUserVoted(selectedSubmission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
                     <img
-                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      src="/flame-flat-style.svg"
                       alt="Vote"
                       className={`w-6 h-6 transition-all ${
                         hasUserVoted(selectedSubmission.id)
@@ -372,7 +372,7 @@ export default function GalleryPage() {
                   </button>
                   <div className="absolute bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg flex items-center gap-2">
                     <img
-                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      src="/flame-flat-style.svg"
                       alt="Vote"
                       className="w-5 h-5"
                     />
