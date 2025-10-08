@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { storage, firestore } from '@/lib/firebase';
 import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
+import { generateDateBasedStoragePath } from '@/utils/dateHelpers';
 
 interface SubmissionFormProps {
   drawingData: string;
@@ -76,10 +77,9 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
         console.warn('Template may not be included in submission');
       }
 
-      // Create a unique filename for the drawing
+      // Create a unique filename for the drawing using date-based folder structure
       const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 15);
-      const fileName = `creative-remix/${user!.uid}/${timestamp}-${randomString}.png`;
+      const fileName = generateDateBasedStoragePath(user!.uid, timestamp);
       console.log('Attempting to upload with fileName:', fileName);
 
       // Upload the drawing to Firebase Storage
