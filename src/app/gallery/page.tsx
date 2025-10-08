@@ -119,23 +119,16 @@ export default function GalleryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="text-center mb-6 lg:block hidden">
-          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
-            ← Back to Menu
-          </Link>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Community Gallery
-          </h1>
-          <p className="text-lg text-gray-600">
-            Amazing artwork from our talented community!
-          </p>
-        </div>
-
-        <div className="text-center mb-6 lg:hidden block">
-          <Link href="/" className="inline-block mb-4 text-blue-600 hover:text-blue-700 font-medium">
-            ← Back to Menu
-          </Link>
-          <p className="text-lg text-gray-600">
+        <div className="mb-6">
+          <div className="flex items-center justify-center relative mb-2">
+            <Link href="/" className="absolute left-0 text-blue-600 hover:text-blue-700 font-medium text-sm">
+              ← Back
+            </Link>
+            <h1 className="text-4xl font-bold text-gray-800">
+              Gallery
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 text-center">
             Amazing artwork from our talented community!
           </p>
         </div>
