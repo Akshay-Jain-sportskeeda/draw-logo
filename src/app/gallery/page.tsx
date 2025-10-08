@@ -119,12 +119,13 @@ export default function GalleryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
       <div className="container mx-auto px-4 max-w-[576px]">
-        <div className="mb-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
           <div className="flex items-center justify-center relative mb-2">
             <Link href="/" className="absolute left-0 text-blue-600 hover:text-blue-700 font-medium text-sm">
               ← Back
             </Link>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
               Gallery
             </h1>
           </div>
@@ -133,7 +134,8 @@ export default function GalleryPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-3 mb-6 max-w-3xl mx-auto">
+        {/* Date Navigation */}
+        <div className="bg-white rounded-lg shadow-md p-3 mb-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <button
