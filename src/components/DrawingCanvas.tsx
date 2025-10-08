@@ -190,8 +190,11 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     const img = new Image();
     img.onload = () => {
+      userDrawingCtx.save();
+      userDrawingCtx.globalCompositeOperation = 'source-over';
       userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
       userDrawingCtx.drawImage(img, 0, 0);
+      userDrawingCtx.restore();
     };
     img.src = drawingData;
   }, [drawingData]);
@@ -494,30 +497,23 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     renderOverlay(templateImageUrl);
   }, [templateTransform, permanentTemplate, templateImageUrl, renderOverlay]);
 
-  // Update stroke color and composite operation when color or erasing state changes
+  // Update default context properties when color or erasing state changes
   useEffect(() => {
     const ctx = userDrawingCtxRef.current;
     if (ctx) {
+      // Set default properties - these will be used if not explicitly set during draw
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      ctx.lineWidth = lineThickness;
 
       if (isErasing) {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)';
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = internalSelectedColor;
       }
     }
-  }, [internalSelectedColor, isErasing]);
-
-  // Update line thickness when thickness changes
-  useEffect(() => {
-    const ctx = userDrawingCtxRef.current;
-    if (ctx) {
-      ctx.lineWidth = lineThickness;
-    }
-  }, [lineThickness]);
+  }, [internalSelectedColor, isErasing, lineThickness]);
 
   // Cleanup scroll lock on unmount or when any interaction ends
   useEffect(() => {
@@ -567,22 +563,23 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     const currentPosition = getCanvasPosition(e);
 
-    ctx.beginPath();
+    ctx.save();
     ctx.lineWidth = lineThickness;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     if (isErasing) {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.strokeStyle = 'rgba(0,0,0,1)';
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = internalSelectedColor;
     }
 
+    ctx.beginPath();
     ctx.moveTo(lastPosition.x, lastPosition.y);
     ctx.lineTo(currentPosition.x, currentPosition.y);
     ctx.stroke();
+    ctx.restore();
 
     setLastPosition(currentPosition);
 
