@@ -232,7 +232,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
                               <div>{pendingDrawMemory}/{totalAvailableDates} Draw from memory</div>
                             )}
                             {pendingCreativeRemix > 0 && (
-                              <div>{pendingCreativeRemix}/{totalAvailableDates} Remix mode</div>
+                              <div>{pendingCreativeRemix}/{totalAvailableDates} Creative Remix mode</div>
                             )}
                           </div>
                         </div>
