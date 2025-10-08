@@ -307,7 +307,7 @@ export default function GalleryPage() {
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 20C16 20 16 17 12 15Z"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z"/>
                     </svg>
                     <span>{getVoteCount(submission.id)}</span>
                   </div>
@@ -386,7 +386,7 @@ export default function GalleryPage() {
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 20C16 20 16 17 12 15Z"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z"/>
                     </svg>
                     <span>{getVoteCount(selectedSubmission.id)}</span>
                   </div>

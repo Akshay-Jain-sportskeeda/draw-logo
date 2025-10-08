@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User } from 'firebase/auth';
+import { getUserVotes, toggleVote as toggleVoteFirestore } from '@/utils/firestore';
 
 interface VoteState {
   [submissionId: string]: {
@@ -22,22 +23,8 @@ export function useVotes(user: User | null, submissionIds: string[]) {
 
     const fetchUserVotes = async () => {
       try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/get-user-votes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ submissionIds })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user votes');
-        }
-
-        const data = await response.json();
-        const votedIds = new Set(data.votedSubmissionIds);
+        const votedSubmissionIds = await getUserVotes(user.uid, submissionIds);
+        const votedIds = new Set(votedSubmissionIds);
 
         setVoteStates(prev => {
           const updated = { ...prev };
@@ -100,27 +87,13 @@ export function useVotes(user: User | null, submissionIds: string[]) {
     }));
 
     try {
-      const token = await user.getIdToken();
-      const response = await fetch('/api/vote-submission', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ submissionId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle vote');
-      }
-
-      const data = await response.json();
+      const result = await toggleVoteFirestore(user.uid, submissionId);
 
       setVoteStates(prev => ({
         ...prev,
         [submissionId]: {
-          count: data.voteCount,
-          hasVoted: data.voted
+          count: result.voteCount,
+          hasVoted: result.voted
         }
       }));
 

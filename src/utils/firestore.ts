@@ -1,5 +1,5 @@
 import { firestore } from '@/lib/firebase';
-import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData, doc, getDoc, setDoc, deleteDoc, runTransaction, increment } from 'firebase/firestore';
 import { GameResult, LeaderboardEntry } from '@/types/game';
 import { getDateFromTimestamp } from './dateHelpers';
 
@@ -200,6 +200,76 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : 'No stack trace'
     });
+    throw error;
+  }
+}
+
+export async function getUserVotes(userId: string, submissionIds: string[]): Promise<string[]> {
+  try {
+    const votedSubmissionIds: string[] = [];
+
+    for (const submissionId of submissionIds) {
+      const voteDocId = `${userId}_${submissionId}`;
+      const voteDocRef = doc(firestore, 'submission-votes', voteDocId);
+      const voteDoc = await getDoc(voteDocRef);
+
+      if (voteDoc.exists()) {
+        votedSubmissionIds.push(submissionId);
+      }
+    }
+
+    return votedSubmissionIds;
+  } catch (error) {
+    console.error('Error fetching user votes:', error);
+    throw error;
+  }
+}
+
+export async function toggleVote(userId: string, submissionId: string): Promise<{ voted: boolean; voteCount: number }> {
+  try {
+    const voteDocId = `${userId}_${submissionId}`;
+    const voteDocRef = doc(firestore, 'submission-votes', voteDocId);
+    const submissionRef = doc(firestore, 'nfl-draw-logo', submissionId);
+
+    const result = await runTransaction(firestore, async (transaction) => {
+      const voteDoc = await transaction.get(voteDocRef);
+      const submissionDoc = await transaction.get(submissionRef);
+
+      if (!submissionDoc.exists()) {
+        throw new Error('Submission not found');
+      }
+
+      const submissionData = submissionDoc.data();
+      const currentVotes = submissionData?.votes || 0;
+
+      if (voteDoc.exists()) {
+        transaction.delete(voteDocRef);
+        transaction.update(submissionRef, {
+          votes: Math.max(0, currentVotes - 1)
+        });
+        return {
+          voted: false,
+          voteCount: Math.max(0, currentVotes - 1)
+        };
+      } else {
+        transaction.set(voteDocRef, {
+          userId,
+          submissionId,
+          timestamp: Date.now()
+        });
+        transaction.update(submissionRef, {
+          votes: currentVotes + 1
+        });
+        return {
+          voted: true,
+          voteCount: currentVotes + 1
+        };
+      }
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error toggling vote:', error);
     throw error;
   }
 }
