@@ -454,7 +454,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       
       const cappedTimeSeconds = Math.min(calculatedTimeTaken, 600); // Cap at 10 minutes
       const timeScore = Math.max(0, (1 - cappedTimeSeconds / 600) * 100); // Time score 0-100
-      const finalScore = Math.round(0.75 * accuracyScore + 0.25 * timeScore); // Combined score
+      const finalScore = Math.round(0.85 * accuracyScore + 0.15 * timeScore); // Combined score
       
       console.log('Full scoring breakdown:');
       console.log('- Accuracy Score:', accuracyScore);
@@ -467,8 +467,8 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         accuracyScore: Math.round(accuracyScore * 100) / 100,
         timeScore: Math.round(timeScore * 100) / 100,
         finalScore: finalScore,
-        accuracyContribution: Math.round(0.75 * accuracyScore * 100) / 100,
-        timeContribution: Math.round(0.25 * timeScore * 100) / 100,
+        accuracyContribution: Math.round(0.85 * accuracyScore * 100) / 100,
+        timeContribution: Math.round(0.15 * timeScore * 100) / 100,
         cappedTimeSeconds: cappedTimeSeconds,
         actualTimeSeconds: calculatedTimeTaken,
         drawingAnalysis: result.breakdown // Keep original drawing analysis
