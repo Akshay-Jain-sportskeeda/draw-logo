@@ -1149,7 +1149,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           >
             <button
               onClick={() => setIsResizeMode(!isResizeMode)}
-              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+              className={`px-3 py-1.5 rounded-lg transition-colors font-medium text-sm ${
                 isResizeMode
                   ? 'bg-green-500 text-white hover:bg-green-600'
                   : 'bg-blue-500 text-white hover:bg-blue-600'
@@ -1182,7 +1182,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               onClearCanvas?.();
               setIsResizeMode(false);
             }}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+            className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
             style={{
               userSelect: 'none',
               WebkitUserSelect: 'none',
