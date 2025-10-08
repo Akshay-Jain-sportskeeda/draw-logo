@@ -85,6 +85,7 @@ export default function CreativeRemixPage() {
 
   const handleSubmitSuccess = () => {
     setSubmitted(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const handleSubmitError = (error: string) => {
@@ -94,6 +95,7 @@ export default function CreativeRemixPage() {
   const handleCreateAnother = () => {
     setSubmitted(false);
     setDrawingData('');
+    document.body.style.overflow = 'unset';
   };
 
   const handleRefreshChallenge = () => {
@@ -358,10 +360,18 @@ export default function CreativeRemixPage() {
               >
                 Create Another
               </button>
-              <Link href="/gallery" className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium inline-block">
+              <Link
+                href="/gallery"
+                className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium inline-block"
+                onClick={() => document.body.style.overflow = 'unset'}
+              >
                 View Gallery
               </Link>
-              <Link href="/" className="w-full px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
+              <Link
+                href="/"
+                className="w-full px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block"
+                onClick={() => document.body.style.overflow = 'unset'}
+              >
                 Back to Menu
               </Link>
             </div>
