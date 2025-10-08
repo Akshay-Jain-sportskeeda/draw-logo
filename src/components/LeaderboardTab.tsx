@@ -347,7 +347,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                       {/* Stats */}
                       <div className="hidden md:flex items-center gap-4 mt-1 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
-                          <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                          <Target className="w-3 h-3" />
                           <span>{Math.round(entry.accuracyScore || 0)}% accuracy</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -409,7 +409,7 @@ export const LeaderboardTab: React.FC<LeaderboardTabProps> = ({
                           
                           <div className="hidden md:flex items-center gap-4 mt-1 text-sm text-gray-600">
                             <div className="flex items-center gap-1">
-                              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                              <Target className="w-3 h-3" />
                               <span>{Math.round(userRankInfo.userEntry.accuracyScore || 0)}% accuracy</span>
                             </div>
                             <div className="flex items-center gap-1">
