@@ -28,10 +28,19 @@ export function getTransformHandles(obj: DrawableObject, canvasHeight: number = 
   const centerX = x + width / 2;
   const centerY = y + height / 2;
   const handleOffset = 30;
+  const handleSize = 14;
 
   const rotationAbove = y - handleOffset;
   const rotationBelow = y + height + handleOffset;
-  const useBottomPosition = rotationAbove < 0 || (rotationBelow <= canvasHeight && y < handleOffset * 2);
+
+  let rotationY: number;
+  if (rotationAbove >= handleSize / 2) {
+    rotationY = rotationAbove;
+  } else if (rotationBelow <= canvasHeight - handleSize / 2) {
+    rotationY = rotationBelow;
+  } else {
+    rotationY = Math.max(handleSize / 2, Math.min(canvasHeight - handleSize / 2, rotationAbove));
+  }
 
   return {
     topLeft: { x, y },
@@ -42,7 +51,7 @@ export function getTransformHandles(obj: DrawableObject, canvasHeight: number = 
     right: { x: x + width, y: centerY },
     bottom: { x: centerX, y: y + height },
     left: { x, y: centerY },
-    rotation: { x: centerX, y: useBottomPosition ? rotationBelow : rotationAbove },
+    rotation: { x: centerX, y: rotationY },
   };
 }
 
