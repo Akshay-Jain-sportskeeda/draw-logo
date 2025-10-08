@@ -27,6 +27,7 @@ export default function CreativeRemixPage() {
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [getComposite, setGetComposite] = useState<(() => string) | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
@@ -101,6 +102,83 @@ export default function CreativeRemixPage() {
   const handleRefreshChallenge = () => {
     // Refresh the page to get the daily challenge again
     window.location.reload();
+  };
+
+  const handleShare = async () => {
+    if (!getComposite || !drawingData) {
+      alert('Please create a drawing before sharing!');
+      return;
+    }
+
+    if (!dailyChallenge) {
+      alert('Challenge data not loaded yet!');
+      return;
+    }
+
+    setIsSharing(true);
+
+    try {
+      console.log('=== SHARE: Generating composite image ===');
+      const compositeImageData = getComposite();
+
+      if (!compositeImageData || compositeImageData.length < 100) {
+        throw new Error('Failed to generate composite image');
+      }
+
+      console.log('=== SHARE: Uploading composite image ===');
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileName = `creative-remix-shares/${user?.uid || 'anonymous'}/${timestamp}-${randomString}.png`;
+
+      const uploadResponse = await fetch('/api/upload-drawing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          drawingData: compositeImageData,
+          userId: user?.uid || 'anonymous',
+          fileName: fileName
+        }),
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const uploadResult = await uploadResponse.json();
+      console.log('=== SHARE: Image uploaded successfully ===', uploadResult.publicUrl);
+
+      const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}! 🎨`;
+      const shareUrl = window.location.href;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Creative Remix - NFL Logo Drawing Game',
+            text: shareText,
+            url: shareUrl
+          });
+          console.log('=== SHARE: Successfully shared via Web Share API ===');
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            console.log('=== SHARE: User cancelled share ===');
+          } else {
+            console.error('=== SHARE: Error sharing ===', error);
+            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+            alert('Link copied to clipboard!');
+          }
+        }
+      } else {
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('=== SHARE: Error ===', error);
+      alert('Failed to share. Please try again.');
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   // Show loading state while fetching daily challenge
@@ -239,7 +317,27 @@ export default function CreativeRemixPage() {
               )}
             </div>
 
-            <div className="w-full max-w-md">
+            <div className="w-full max-w-md space-y-4">
+              <button
+                onClick={handleShare}
+                disabled={isSharing || !drawingData}
+                className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSharing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Preparing to Share...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span>Share Your Creation</span>
+                  </>
+                )}
+              </button>
+
               <SubmissionForm
                 drawingData={drawingData}
                 user={user}
