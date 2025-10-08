@@ -118,9 +118,11 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
     return { hasDrawMemory, hasCreativeRemix, isFull: hasDrawMemory && hasCreativeRemix, isPartial: (hasDrawMemory || hasCreativeRemix) && !(hasDrawMemory && hasCreativeRemix) };
   };
 
-  // Filter out future dates - only show today and past dates
+  // Filter out future dates - only show today and past dates, sort in descending order
   const today = new Date().toISOString().split('T')[0];
-  const filteredPuzzles = availablePuzzles.filter(puzzle => puzzle.date <= today);
+  const filteredPuzzles = availablePuzzles
+    .filter(puzzle => puzzle.date <= today)
+    .sort((a, b) => b.date.localeCompare(a.date));
   return (
     <div className={`${styles.archiveScreen} ${show ? styles.show : ''}`}>
       <div className={styles.archiveContent}>
