@@ -166,6 +166,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         userDrawingCtx.lineCap = 'round';
         userDrawingCtx.lineJoin = 'round';
         userDrawingCtx.strokeStyle = internalSelectedColor;
+        userDrawingCtx.globalCompositeOperation = 'source-over';
 
         userDrawingCtx.clearRect(0, 0, userDrawingCanvas.width, userDrawingCanvas.height);
 
@@ -493,13 +494,16 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     renderOverlay(templateImageUrl);
   }, [templateTransform, permanentTemplate, templateImageUrl, renderOverlay]);
 
-  // Update stroke color when color changes
+  // Update stroke color and composite operation when color or erasing state changes
   useEffect(() => {
     const ctx = userDrawingCtxRef.current;
     if (ctx) {
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
       if (isErasing) {
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = '#000000'; // Color doesn't matter when erasing
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = internalSelectedColor;
@@ -564,14 +568,18 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const currentPosition = getCanvasPosition(e);
 
     ctx.beginPath();
+    ctx.lineWidth = lineThickness;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
     if (isErasing) {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = internalSelectedColor;
     }
-    ctx.lineWidth = lineThickness;
+
     ctx.moveTo(lastPosition.x, lastPosition.y);
     ctx.lineTo(currentPosition.x, currentPosition.y);
     ctx.stroke();
