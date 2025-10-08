@@ -287,28 +287,22 @@ export default function GalleryPage() {
                     className="absolute top-2 right-2 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110 group"
                     title={user ? (hasUserVoted(submission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
-                    <svg
-                      className={`w-5 h-5 transition-colors ${
+                    <img
+                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      alt="Vote"
+                      className={`w-5 h-5 transition-all ${
                         hasUserVoted(submission.id)
-                          ? 'text-orange-500 fill-current'
-                          : 'text-gray-400 group-hover:text-orange-500'
+                          ? 'opacity-100 scale-110'
+                          : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
-                    </svg>
+                    />
                   </button>
                   <div className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                    <svg
-                      className="w-4 h-4 text-orange-400 fill-current"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z"/>
-                    </svg>
+                    <img
+                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      alt="Vote"
+                      className="w-4 h-4"
+                    />
                     <span>{getVoteCount(submission.id)}</span>
                   </div>
                 </div>
@@ -366,28 +360,22 @@ export default function GalleryPage() {
                     className="absolute top-4 left-4 p-3 rounded-full bg-white shadow-lg transition-all hover:scale-110 group"
                     title={user ? (hasUserVoted(selectedSubmission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
                   >
-                    <svg
-                      className={`w-6 h-6 transition-colors ${
+                    <img
+                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      alt="Vote"
+                      className={`w-6 h-6 transition-all ${
                         hasUserVoted(selectedSubmission.id)
-                          ? 'text-orange-500 fill-current'
-                          : 'text-gray-400 group-hover:text-orange-500'
+                          ? 'opacity-100 scale-110'
+                          : 'opacity-60 group-hover:opacity-80 group-hover:scale-105'
                       }`}
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
-                    </svg>
+                    />
                   </button>
                   <div className="absolute bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg flex items-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-orange-400 fill-current"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
-                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z"/>
-                    </svg>
+                    <img
+                      src="/297263880_b1f0568f-6fd7-44e5-9168-289c998aa0cc.svg"
+                      alt="Vote"
+                      className="w-5 h-5"
+                    />
                     <span>{getVoteCount(selectedSubmission.id)}</span>
                   </div>
                 </div>
