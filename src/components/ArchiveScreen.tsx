@@ -21,8 +21,10 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
+  const [completedDrawMemoryDates, setCompletedDrawMemoryDates] = useState<string[]>([]);
+  const [completedCreativeRemixDates, setCompletedCreativeRemixDates] = useState<string[]>([]);
   const [availablePuzzles, setAvailablePuzzles] = useState<{date: string; name: string}[]>([]);
-  const { getUserCompletedDates } = useLeaderboard();
+  const { getUserCompletedDates, getUserCompletedGameModes } = useLeaderboard();
 
   // Lock/unlock body scroll when modal opens/closes
   React.useEffect(() => {
@@ -68,18 +70,22 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
 
   useEffect(() => {
     const fetchCompletedDates = async () => {
-      if (userId && getUserCompletedDates) {
+      if (userId && getUserCompletedDates && getUserCompletedGameModes) {
         try {
           const dates = await getUserCompletedDates(userId);
           setCompletedDates(dates);
+
+          const gameModes = await getUserCompletedGameModes(userId);
+          setCompletedDrawMemoryDates(gameModes.drawMemory);
+          setCompletedCreativeRemixDates(gameModes.creativeRemix);
         } catch (error) {
           console.error('Error fetching completed dates:', error);
         }
       }
     };
-    
+
     fetchCompletedDates();
-  }, [userId, getUserCompletedDates]);
+  }, [userId, getUserCompletedDates, getUserCompletedGameModes]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -105,6 +111,12 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
   };
 
   const isDateCompleted = (date: string) => completedDates.includes(date);
+
+  const getCompletionStatus = (date: string) => {
+    const hasDrawMemory = completedDrawMemoryDates.includes(date);
+    const hasCreativeRemix = completedCreativeRemixDates.includes(date);
+    return { hasDrawMemory, hasCreativeRemix, isFull: hasDrawMemory && hasCreativeRemix, isPartial: (hasDrawMemory || hasCreativeRemix) && !(hasDrawMemory && hasCreativeRemix) };
+  };
 
   // Filter out future dates - only show today and past dates
   const today = new Date().toISOString().split('T')[0];
@@ -139,20 +151,40 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
               {/* Today's Game */}
               <button
                 onClick={() => handleDateSelect(new Date().toISOString().split('T')[0])}
-                className={`${styles.dateItem} ${styles.todayItem}`}
+                className={`${styles.dateItem} ${styles.todayItem} ${
+                  (() => {
+                    const status = getCompletionStatus(new Date().toISOString().split('T')[0]);
+                    if (status.isFull) return styles.fullCompletion;
+                    if (status.isPartial) return styles.partialCompletion;
+                    return '';
+                  })()
+                }`}
               >
-                {isDateCompleted(new Date().toISOString().split('T')[0]) && (
-                  <div className={styles.completionTick}>
-                    <Check size={12} />
-                  </div>
-                )}
+                {(() => {
+                  const status = getCompletionStatus(new Date().toISOString().split('T')[0]);
+                  if (status.isFull) {
+                    return (
+                      <div className={styles.completionTick}>
+                        <Check size={12} />
+                      </div>
+                    );
+                  } else if (status.isPartial) {
+                    return (
+                      <div className={styles.completionBadges}>
+                        {status.hasDrawMemory && <div className={`${styles.modeBadge} ${styles.drawMemoryBadge}`}>D</div>}
+                        {status.hasCreativeRemix && <div className={`${styles.modeBadge} ${styles.creativeRemixBadge}`}>C</div>}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 <div className={styles.dateDay}>Today</div>
                 <div className={styles.dateNumber}>
                   {(() => {
                     const today = new Date();
-                    return today.toLocaleDateString('en-US', { 
-                      day: 'numeric', 
-                      month: 'short' 
+                    return today.toLocaleDateString('en-US', {
+                      day: 'numeric',
+                      month: 'short'
                     });
                   })()}
                 </div>
@@ -166,17 +198,25 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
                 // Skip today's puzzle since we show it separately
                 if (isToday) return null;
                 
+                const status = getCompletionStatus(puzzle.date);
                 return (
                   <button
                     key={puzzle.date}
                     onClick={() => handleDateSelect(puzzle.date)}
-                    className={styles.dateItem}
+                    className={`${styles.dateItem} ${
+                      status.isFull ? styles.fullCompletion : status.isPartial ? styles.partialCompletion : ''
+                    }`}
                   >
-                    {isCompleted && (
+                    {status.isFull ? (
                       <div className={styles.completionTick}>
                         <Check size={12} />
                       </div>
-                    )}
+                    ) : status.isPartial ? (
+                      <div className={styles.completionBadges}>
+                        {status.hasDrawMemory && <div className={`${styles.modeBadge} ${styles.drawMemoryBadge}`}>D</div>}
+                        {status.hasCreativeRemix && <div className={`${styles.modeBadge} ${styles.creativeRemixBadge}`}>C</div>}
+                      </div>
+                    ) : null}
                     <div className={styles.dateDay}>{dayOfWeek}</div>
                     <div className={styles.dateNumber}>{dayMonth}</div>
                   </button>

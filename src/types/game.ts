@@ -30,6 +30,10 @@ export interface UserStats {
   bestTimeDate: string;
   bestRankDate: string;
   completedDates: string[];
+  completedDrawMemoryDates: string[];
+  completedCreativeRemixDates: string[];
+  totalDrawMemoryGames: number;
+  totalCreativeRemixGames: number;
 }
 
 export interface LeaderboardEntry {

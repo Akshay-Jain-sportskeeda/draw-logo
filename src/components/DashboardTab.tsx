@@ -24,6 +24,8 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
   const [loading, setLoading] = useState(false);
   const [showArchivePopup, setShowArchivePopup] = useState(false);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
+  const [completedDrawMemoryDates, setCompletedDrawMemoryDates] = useState<string[]>([]);
+  const [completedCreativeRemixDates, setCompletedCreativeRemixDates] = useState<string[]>([]);
   const { getUserStats } = useLeaderboard();
 
   // Track dashboard view for all users
@@ -58,8 +60,16 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
         try {
           // We'll get this from the getUserStats function
           const stats = await getUserStats(userId);
-          if (stats && stats.completedDates) {
-            setCompletedDates(stats.completedDates);
+          if (stats) {
+            if (stats.completedDates) {
+              setCompletedDates(stats.completedDates);
+            }
+            if (stats.completedDrawMemoryDates) {
+              setCompletedDrawMemoryDates(stats.completedDrawMemoryDates);
+            }
+            if (stats.completedCreativeRemixDates) {
+              setCompletedCreativeRemixDates(stats.completedCreativeRemixDates);
+            }
           }
         } catch (error) {
         }
@@ -69,11 +79,15 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
     fetchCompletedDates();
   }, [isLoggedIn, userId]); // Remove getUserStats from dependencies to prevent loops
 
-  // Calculate pending games
+  // Calculate pending games - each date has 2 game modes (Draw Memory + Creative Remix)
   const today = new Date().toISOString().split('T')[0];
   const todayInAvailable = availablePuzzles.some(puzzle => puzzle.date === today);
-  const totalAvailableGames = todayInAvailable ? availablePuzzles.length : availablePuzzles.length + 1;
-  const pendingGamesCount = totalAvailableGames - (completedDates.length || 0);
+  const totalAvailableDates = todayInAvailable ? availablePuzzles.length : availablePuzzles.length + 1;
+  const totalAvailableGames = totalAvailableDates * 2; // 2 game modes per date
+  const completedGames = (completedDrawMemoryDates.length || 0) + (completedCreativeRemixDates.length || 0);
+  const pendingGamesCount = totalAvailableGames - completedGames;
+  const pendingDrawMemory = totalAvailableDates - (completedDrawMemoryDates.length || 0);
+  const pendingCreativeRemix = totalAvailableDates - (completedCreativeRemixDates.length || 0);
 
   const formatTime = (milliseconds: number): string => {
     const seconds = Math.floor(milliseconds / 1000);
@@ -213,7 +227,16 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
                         <Archive className="w-6 h-6" />
                         <div>
                           <div className="text-lg font-bold">Pending Games</div>
-                          <div className="text-sm opacity-90">{pendingGamesCount}/{totalAvailableGames} games remaining</div>
+                          <div className="text-sm opacity-90">
+                            {pendingGamesCount} total remaining
+                            {(pendingDrawMemory > 0 || pendingCreativeRemix > 0) && (
+                              <div className="text-xs mt-1">
+                                {pendingDrawMemory > 0 && `${pendingDrawMemory} Draw Memory`}
+                                {pendingDrawMemory > 0 && pendingCreativeRemix > 0 && ' + '}
+                                {pendingCreativeRemix > 0 && `${pendingCreativeRemix} Creative Remix`}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </button>

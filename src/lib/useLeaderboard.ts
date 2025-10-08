@@ -102,6 +102,10 @@ export function useLeaderboard() {
       const currentStreakCreativeRemix = calculateStreak(creativeRemixGames);
 
       const completedDates = gameResults.map(game => game.puzzleDate);
+      const completedDrawMemoryDates = drawMemoryGames.map(game => game.puzzleDate).filter((date, index, self) => self.indexOf(date) === index);
+      const completedCreativeRemixDates = creativeRemixGames.map(game => game.puzzleDate).filter((date, index, self) => self.indexOf(date) === index);
+      const totalDrawMemoryGames = drawMemoryGames.length;
+      const totalCreativeRemixGames = creativeRemixGames.length;
 
       const bestRank = 1;
       const bestRankDate = bestTimeDate;
@@ -123,7 +127,11 @@ export function useLeaderboard() {
         bestUnassistedTimeDate,
         bestTimeDate,
         bestRankDate,
-        completedDates
+        completedDates,
+        completedDrawMemoryDates,
+        completedCreativeRemixDates,
+        totalDrawMemoryGames,
+        totalCreativeRemixGames
       };
 
       return userStats;
@@ -146,9 +154,26 @@ export function useLeaderboard() {
     }
   }, []);
 
+  const getUserCompletedGameModes = useCallback(async (userId: string): Promise<{drawMemory: string[], creativeRemix: string[]}> => {
+    try {
+      const gameResults = await fetchUserGameHistory(userId);
+      const drawMemoryGames = gameResults.filter(game => game.gameMode === 'draw-memory');
+      const creativeRemixGames = gameResults.filter(game => game.gameMode === 'creative-remix');
+
+      return {
+        drawMemory: drawMemoryGames.map(game => game.puzzleDate).filter((date, index, self) => self.indexOf(date) === index),
+        creativeRemix: creativeRemixGames.map(game => game.puzzleDate).filter((date, index, self) => self.indexOf(date) === index)
+      };
+    } catch (error) {
+      console.error('Error fetching completed game modes:', error);
+      return { drawMemory: [], creativeRemix: [] };
+    }
+  }, []);
+
   return {
     getUserStats,
     getUserCompletedDates,
+    getUserCompletedGameModes,
     loading,
     error
   };
