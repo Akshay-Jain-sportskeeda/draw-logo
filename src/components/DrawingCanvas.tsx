@@ -693,8 +693,28 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         rotation: newRotation
       });
     } else if (isResizingTemplate) {
+      // Calculate center of the image
+      const centerX = dragStartTransform.x + dragStartTransform.width / 2;
+      const centerY = dragStartTransform.y + dragStartTransform.height / 2;
+
+      // Vector from resize handle (top-left) to center
+      const handleToCenter_x = centerX - dragStartTransform.x;
+      const handleToCenter_y = centerY - dragStartTransform.y;
+
+      // Rotate the mouse delta by the negative of the current rotation to get movement in image space
+      const rotationRad = (-dragStartTransform.rotation * Math.PI) / 180;
+      const cos = Math.cos(rotationRad);
+      const sin = Math.sin(rotationRad);
+      const rotatedDeltaX = deltaX * cos - deltaY * sin;
+      const rotatedDeltaY = deltaX * sin + deltaY * cos;
+
+      // Project rotated mouse movement onto the handle-to-center vector
+      // Positive dot product = moving toward center (decrease), negative = moving away (increase)
+      const dotProduct = (rotatedDeltaX * handleToCenter_x + rotatedDeltaY * handleToCenter_y) /
+                        Math.sqrt(handleToCenter_x * handleToCenter_x + handleToCenter_y * handleToCenter_y);
+
       const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const direction = (deltaX + deltaY) < 0 ? 1 : -1;
+      const direction = dotProduct > 0 ? -1 : 1; // Moving toward center = shrink, away = grow
       const scaleChange = (diagonal * direction) / 200;
       let newScale = Math.max(0.2, dragStartTransform.scale + scaleChange);
 
@@ -1085,8 +1105,28 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                   const deltaX = moveCanvasX - canvasX;
                   const deltaY = moveCanvasY - canvasY;
 
+                  // Calculate center of the image
+                  const centerX = startTransform.x + startTransform.width / 2;
+                  const centerY = startTransform.y + startTransform.height / 2;
+
+                  // Vector from resize handle (top-left) to center
+                  const handleToCenter_x = centerX - startTransform.x;
+                  const handleToCenter_y = centerY - startTransform.y;
+
+                  // Rotate the mouse delta by the negative of the current rotation to get movement in image space
+                  const rotationRad = (-startTransform.rotation * Math.PI) / 180;
+                  const cos = Math.cos(rotationRad);
+                  const sin = Math.sin(rotationRad);
+                  const rotatedDeltaX = deltaX * cos - deltaY * sin;
+                  const rotatedDeltaY = deltaX * sin + deltaY * cos;
+
+                  // Project rotated mouse movement onto the handle-to-center vector
+                  // Positive dot product = moving toward center (decrease), negative = moving away (increase)
+                  const dotProduct = (rotatedDeltaX * handleToCenter_x + rotatedDeltaY * handleToCenter_y) /
+                                    Math.sqrt(handleToCenter_x * handleToCenter_x + handleToCenter_y * handleToCenter_y);
+
                   const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                  const direction = (deltaX + deltaY) < 0 ? 1 : -1;
+                  const direction = dotProduct > 0 ? -1 : 1; // Moving toward center = shrink, away = grow
                   const scaleChange = (diagonal * direction) / 200;
                   let newScale = Math.max(0.2, startTransform.scale + scaleChange);
 
@@ -1179,8 +1219,28 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 const deltaX = canvasX - dragStartPos.x;
                 const deltaY = canvasY - dragStartPos.y;
 
+                // Calculate center of the image
+                const centerX = dragStartTransform.x + dragStartTransform.width / 2;
+                const centerY = dragStartTransform.y + dragStartTransform.height / 2;
+
+                // Vector from resize handle (top-left) to center
+                const handleToCenter_x = centerX - dragStartTransform.x;
+                const handleToCenter_y = centerY - dragStartTransform.y;
+
+                // Rotate the mouse delta by the negative of the current rotation to get movement in image space
+                const rotationRad = (-dragStartTransform.rotation * Math.PI) / 180;
+                const cos = Math.cos(rotationRad);
+                const sin = Math.sin(rotationRad);
+                const rotatedDeltaX = deltaX * cos - deltaY * sin;
+                const rotatedDeltaY = deltaX * sin + deltaY * cos;
+
+                // Project rotated mouse movement onto the handle-to-center vector
+                // Positive dot product = moving toward center (decrease), negative = moving away (increase)
+                const dotProduct = (rotatedDeltaX * handleToCenter_x + rotatedDeltaY * handleToCenter_y) /
+                                  Math.sqrt(handleToCenter_x * handleToCenter_x + handleToCenter_y * handleToCenter_y);
+
                 const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                const direction = (deltaX + deltaY) < 0 ? 1 : -1;
+                const direction = dotProduct > 0 ? -1 : 1; // Moving toward center = shrink, away = grow
                 const scaleChange = (diagonal * direction) / 200;
                 let newScale = Math.max(0.2, dragStartTransform.scale + scaleChange);
 
