@@ -28,6 +28,14 @@ interface ScoreBreakdown {
   drawingAnalysis?: any;
 }
 
+interface PendingScore {
+  score: number;
+  timeTaken: number;
+  challengeName: string;
+  puzzleDate: string;
+  breakdown: ScoreBreakdown;
+}
+
 interface GameState {
   // Drawing state
   drawingData: string;
@@ -50,7 +58,8 @@ interface GameState {
   showWinScreen: boolean;
   setShowWinScreen: (show: boolean) => void;
   showImprovementTicker: boolean;
-  
+  showAutoSaveNotification: boolean;
+
   // Logo colors
   logoColors: string[];
   isLoadingColors: boolean;
@@ -101,6 +110,8 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [scoreSaved, setScoreSaved] = useState(false);
   const [showWinScreen, setShowWinScreen] = useState(false);
   const [showImprovementTicker, setShowImprovementTicker] = useState(false);
+  const [pendingScore, setPendingScore] = useState<PendingScore | null>(null);
+  const [showAutoSaveNotification, setShowAutoSaveNotification] = useState(false);
   
   // Logo colors
   const [logoColors, setLogoColors] = useState<string[]>([]);
@@ -204,6 +215,39 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       setScoreSaved(false);
     }
   }, [dailyChallenge]);
+
+  // Auto-save pending score when user logs in
+  useEffect(() => {
+    const autoSavePendingScore = async () => {
+      if (user && pendingScore && !scoreSaved) {
+        console.log('=== AUTO-SAVE PENDING SCORE ===');
+        console.log('User logged in, attempting to save pending score...');
+        console.log('Pending score data:', pendingScore);
+
+        try {
+          await saveScoreToFirestore(
+            pendingScore.score,
+            pendingScore.timeTaken,
+            pendingScore.challengeName,
+            pendingScore.breakdown
+          );
+
+          setPendingScore(null);
+          setShowAutoSaveNotification(true);
+
+          setTimeout(() => {
+            setShowAutoSaveNotification(false);
+          }, 3000);
+
+          console.log('Pending score successfully saved!');
+        } catch (error) {
+          console.error('Failed to auto-save pending score:', error);
+        }
+      }
+    };
+
+    autoSavePendingScore();
+  }, [user, pendingScore, scoreSaved]);
 
   const saveScoreToFirestore = async (score: number, timeTaken: number, challengeName: string, breakdown: any) => {
     console.log('=== SAVE SCORE TO FIRESTORE DEBUG START ===');
@@ -333,6 +377,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     setStartTime(Date.now());
     setShowImprovementTicker(false);
     setShowWinScreen(false);
+    setPendingScore(null);
   }, []);
 
   const handleSubmitDrawing = useCallback(async () => {
@@ -428,10 +473,19 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       // Show win screen for successful scores
       setShowWinScreen(true);
 
-      // Save score to database if user is logged in
+      // Save score to database if user is logged in, otherwise store as pending
       if (user && finalScore !== null) {
         console.log('User is logged in and score exists, calling saveScoreToFirestore...');
         await saveScoreToFirestore(finalScore, calculatedTimeTaken, dailyChallenge.memoryChallenge.name, newScoreBreakdown);
+      } else if (!user && finalScore !== null) {
+        console.log('User not logged in, storing score as pending for auto-save after login');
+        setPendingScore({
+          score: finalScore,
+          timeTaken: calculatedTimeTaken,
+          challengeName: dailyChallenge.memoryChallenge.name,
+          puzzleDate: dailyChallenge.date,
+          breakdown: newScoreBreakdown
+        });
       } else {
         console.log('Score not saved - User logged in:', !!user, 'Score exists:', finalScore !== null);
       }
@@ -456,6 +510,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     setScoreSaved(false);
     setShowImprovementTicker(false);
     setShowWinScreen(false);
+    setPendingScore(null);
   }, []);
 
   const handleRefreshChallenge = useCallback(() => {
@@ -532,6 +587,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       setScoreSaved(false);
       setShowImprovementTicker(false);
       setShowWinScreen(false);
+      setPendingScore(null);
       
     } catch (error) {
       console.error('Error fetching challenge by date:', error);
@@ -573,7 +629,8 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     showWinScreen,
     setShowWinScreen,
     showImprovementTicker,
-    
+    showAutoSaveNotification,
+
     // Logo colors
     logoColors,
     isLoadingColors,

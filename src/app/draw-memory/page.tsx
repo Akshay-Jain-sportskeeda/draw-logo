@@ -33,6 +33,7 @@ export default function DrawMemoryPage() {
     showWinScreen,
     showArchiveScreen,
     setShowArchiveScreen,
+    showAutoSaveNotification,
     handleDrawingChange,
     handleRevealLogo,
     handleOverlayLogo,
@@ -345,6 +346,46 @@ export default function DrawMemoryPage() {
           userId={user?.uid}
         />
       )}
+
+      {/* Auto-save Notification */}
+      {showAutoSaveNotification && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            backgroundColor: '#10b981',
+            color: 'white',
+            padding: '16px 24px',
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            animation: 'slideIn 0.3s ease-out'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span style={{ fontWeight: '500' }}>Score saved successfully!</span>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
 
     </div>
   );
