@@ -22,7 +22,6 @@ interface DailyChallenge {
 export default function CreativeRemixPage() {
   const [drawingData, setDrawingData] = useState<string>('');
   const [submitted, setSubmitted] = useState(false);
-  const [submissionId, setSubmissionId] = useState<string>('');
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
@@ -84,8 +83,7 @@ export default function CreativeRemixPage() {
     setGetComposite(() => getter);
   }, []);
 
-  const handleSubmitSuccess = (id: string) => {
-    setSubmissionId(id);
+  const handleSubmitSuccess = () => {
     setSubmitted(true);
   };
 
@@ -95,7 +93,6 @@ export default function CreativeRemixPage() {
 
   const handleCreateAnother = () => {
     setSubmitted(false);
-    setSubmissionId('');
     setDrawingData('');
   };
 
@@ -265,45 +262,6 @@ export default function CreativeRemixPage() {
     );
   }
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12">
-        <div className="container mx-auto px-4 max-w-2xl">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              Submission Successful!
-            </h2>
-            <p className="text-lg text-gray-600 mb-6">
-              Your artwork has been submitted for review. Once approved by our team, it will appear in the public gallery!
-            </p>
-            <div className="bg-gray-50 p-4 rounded-lg mb-8">
-              <p className="text-sm text-gray-500 mb-1">Submission ID</p>
-              <p className="font-mono text-gray-800">{submissionId}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={handleCreateAnother}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-              >
-                Create Another
-              </button>
-              <Link href="/" className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
-                Back to Menu
-              </Link>
-              <Link href="/gallery" className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium inline-block">
-                View Gallery
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
@@ -377,6 +335,39 @@ export default function CreativeRemixPage() {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {submitted && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              Submission Successful!
+            </h2>
+            <p className="text-lg text-gray-600 mb-8">
+              Your artwork has been submitted for review. Once approved by our team, it will appear in the public gallery!
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleCreateAnother}
+                className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+              >
+                Create Another
+              </button>
+              <Link href="/gallery" className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium inline-block">
+                View Gallery
+              </Link>
+              <Link href="/" className="w-full px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium inline-block">
+                Back to Menu
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
