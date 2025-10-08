@@ -1,5 +1,5 @@
 import { firestore } from '@/lib/firebase';
-import { collection, query, where, orderBy, limit, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, query, where, getDocs, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { GameResult, LeaderboardEntry } from '@/types/game';
 
 export type { GameResult };

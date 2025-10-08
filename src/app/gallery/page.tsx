@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { firestore } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 
 interface Submission {
@@ -22,26 +22,30 @@ export default function GalleryPage() {
 
   useEffect(() => {
     const submissionsRef = collection(firestore, 'nfl-draw-logo');
-    const q = query(
-      submissionsRef,
-      where('gameMode', '==', 'creative-remix'),
-      orderBy('timestamp', 'desc')
-    );
+    // Simple query - fetch all, then filter and sort in memory
+    const q = query(submissionsRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const submissionsArray: Submission[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        submissionsArray.push({
-          id: doc.id,
-          drawingUrl: data.drawingUrl || '',
-          userName: data.userName || 'Anonymous',
-          timestamp: data.timestamp || Date.now(),
-          status: data.status || 'pending',
-          rating: data.rating,
-          gameMode: data.gameMode || 'creative-remix'
-        });
+        // Only include creative-remix game mode
+        if (data.gameMode === 'creative-remix') {
+          submissionsArray.push({
+            id: doc.id,
+            drawingUrl: data.drawingUrl || '',
+            userName: data.userName || 'Anonymous',
+            timestamp: data.timestamp || Date.now(),
+            status: data.status || 'pending',
+            rating: data.rating,
+            gameMode: data.gameMode || 'creative-remix'
+          });
+        }
       });
+
+      // Sort in memory by timestamp descending
+      submissionsArray.sort((a, b) => b.timestamp - a.timestamp);
+
       setSubmissions(submissionsArray);
       setIsLoading(false);
     }, (error) => {
