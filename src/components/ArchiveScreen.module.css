@@ -85,6 +85,23 @@
   margin: 0;
 }
 
+.legendContainer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
 .archiveContentBody {
   padding: 24px;
   max-height: 400px;

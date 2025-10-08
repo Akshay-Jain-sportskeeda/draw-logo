@@ -135,7 +135,18 @@ const ArchiveScreen: React.FC<ArchiveScreenProps> = ({
           </div>
           <div className={styles.archiveSubtitle}>Select a previous day to play</div>
         </div>
-        
+
+        <div className={styles.legendContainer}>
+          <div className={styles.legendItem}>
+            <div className={`${styles.modeBadge} ${styles.drawMemoryBadge}`}>D</div>
+            <span>Draw Memory</span>
+          </div>
+          <div className={styles.legendItem}>
+            <div className={`${styles.modeBadge} ${styles.creativeRemixBadge}`}>C</div>
+            <span>Creative Remix</span>
+          </div>
+        </div>
+
         <div className={styles.archiveContentBody}>
           {isLoading ? (
             <div className={styles.loadingContainer}>
