@@ -573,8 +573,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
   const isPointInResizeHandle = (x: number, y: number): boolean => {
     if (!templateTransform.width || !templateTransform.height) return false;
-    const handleX = templateTransform.x + templateTransform.width;
-    const handleY = templateTransform.y + templateTransform.height;
+    const handleX = templateTransform.x;
+    const handleY = templateTransform.y;
     const handleSize = 20;
     return (
       x >= handleX - handleSize &&
@@ -624,26 +624,45 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     if (isResizingTemplate) {
       const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const direction = (deltaX + deltaY) > 0 ? 1 : -1;
+      const direction = (deltaX + deltaY) < 0 ? 1 : -1;
       const scaleChange = (diagonal * direction) / 200;
       let newScale = Math.max(0.2, dragStartTransform.scale + scaleChange);
 
-      const newWidth = (dragStartTransform.width / dragStartTransform.scale) * newScale;
-      const newHeight = (dragStartTransform.height / dragStartTransform.scale) * newScale;
+      const baseWidth = dragStartTransform.width / dragStartTransform.scale;
+      const baseHeight = dragStartTransform.height / dragStartTransform.scale;
 
-      if (dragStartTransform.x + newWidth > canvas.width) {
-        newScale = (canvas.width - dragStartTransform.x) / (dragStartTransform.width / dragStartTransform.scale);
+      const newWidth = baseWidth * newScale;
+      const newHeight = baseHeight * newScale;
+
+      const widthDiff = newWidth - dragStartTransform.width;
+      const heightDiff = newHeight - dragStartTransform.height;
+
+      let newX = dragStartTransform.x - widthDiff;
+      let newY = dragStartTransform.y - heightDiff;
+
+      if (newX < 0) {
+        newScale = dragStartTransform.x / baseWidth + dragStartTransform.scale;
+        newX = 0;
       }
-      if (dragStartTransform.y + newHeight > canvas.height) {
-        newScale = Math.min(newScale, (canvas.height - dragStartTransform.y) / (dragStartTransform.height / dragStartTransform.scale));
+      if (newY < 0) {
+        newScale = Math.min(newScale, dragStartTransform.y / baseHeight + dragStartTransform.scale);
+        newY = 0;
+      }
+      if (newX + newWidth > canvas.width) {
+        newScale = Math.min(newScale, (canvas.width - newX) / baseWidth);
+      }
+      if (newY + newHeight > canvas.height) {
+        newScale = Math.min(newScale, (canvas.height - newY) / baseHeight);
       }
 
-      const finalWidth = (dragStartTransform.width / dragStartTransform.scale) * newScale;
-      const finalHeight = (dragStartTransform.height / dragStartTransform.scale) * newScale;
+      const finalWidth = baseWidth * newScale;
+      const finalHeight = baseHeight * newScale;
+      const finalWidthDiff = finalWidth - dragStartTransform.width;
+      const finalHeightDiff = finalHeight - dragStartTransform.height;
 
       setTemplateTransform({
-        x: dragStartTransform.x,
-        y: dragStartTransform.y,
+        x: dragStartTransform.x - finalWidthDiff,
+        y: dragStartTransform.y - finalHeightDiff,
         scale: newScale,
         width: finalWidth,
         height: finalHeight
@@ -917,12 +936,12 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               pointerEvents: 'none',
             }}
           >
-            {/* Resize handle at bottom-right corner */}
+            {/* Resize handle at top-left corner */}
             <div
               className="absolute cursor-nwse-resize"
               style={{
-                right: '-8px',
-                bottom: '-8px',
+                left: '-8px',
+                top: '-8px',
                 width: '20px',
                 height: '20px',
                 backgroundColor: '#3b82f6',
