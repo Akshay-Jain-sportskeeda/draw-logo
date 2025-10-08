@@ -118,7 +118,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8">
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="container mx-auto px-4 max-w-[576px]">
         <div className="mb-6">
           <div className="flex items-center justify-center relative mb-2">
             <Link href="/" className="absolute left-0 text-blue-600 hover:text-blue-700 font-medium text-sm">
@@ -221,7 +221,7 @@ export default function GalleryPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {submissions.map((submission) => (
               <div
                 key={submission.id}

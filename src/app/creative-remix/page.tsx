@@ -267,7 +267,7 @@ export default function CreativeRemixPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto px-4 max-w-[576px]">
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
