@@ -23,10 +23,15 @@ export function isPointInObject(point: Point, obj: DrawableObject): boolean {
   );
 }
 
-export function getTransformHandles(obj: DrawableObject): TransformHandles {
+export function getTransformHandles(obj: DrawableObject, canvasHeight: number = 400): TransformHandles {
   const { x, y, width, height } = obj;
   const centerX = x + width / 2;
   const centerY = y + height / 2;
+  const handleOffset = 30;
+
+  const rotationAbove = y - handleOffset;
+  const rotationBelow = y + height + handleOffset;
+  const useBottomPosition = rotationAbove < 0 || (rotationBelow <= canvasHeight && y < handleOffset * 2);
 
   return {
     topLeft: { x, y },
@@ -37,12 +42,12 @@ export function getTransformHandles(obj: DrawableObject): TransformHandles {
     right: { x: x + width, y: centerY },
     bottom: { x: centerX, y: y + height },
     left: { x, y: centerY },
-    rotation: { x: centerX, y: y - 30 },
+    rotation: { x: centerX, y: useBottomPosition ? rotationBelow : rotationAbove },
   };
 }
 
-export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12): HandleType {
-  const handles = getTransformHandles(obj);
+export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: number = 12, canvasHeight: number = 400): HandleType {
+  const handles = getTransformHandles(obj, canvasHeight);
   const strokeWidth = 2;
   const shadowOffset = 2;
   const touchTolerance = 8;
@@ -67,6 +72,16 @@ export function getHandleAtPoint(point: Point, obj: DrawableObject, handleSize: 
   return null;
 }
 
+export function rotateObject(
+  obj: DrawableObject,
+  currentPoint: Point,
+  centerPoint: Point
+): DrawableObject {
+  const angle = Math.atan2(currentPoint.y - centerPoint.y, currentPoint.x - centerPoint.x);
+  const rotation = (angle * 180) / Math.PI + 90;
+  return { ...obj, rotation };
+}
+
 export function resizeObject(
   obj: DrawableObject,
   handle: HandleType,
@@ -74,7 +89,8 @@ export function resizeObject(
   maintainAspect: boolean = false
 ): DrawableObject {
   console.log('resizeObject called with handle:', handle, 'newPoint:', newPoint, 'maintainAspect:', maintainAspect);
-  if (!handle || handle === 'rotation') return obj;
+  if (!handle) return obj;
+  if (handle === 'rotation') return obj;
 
   let { x, y, width, height } = obj;
   const originalAspect = width / height;
@@ -253,8 +269,8 @@ export function drawSelectionBorder(ctx: CanvasRenderingContext2D, obj: Drawable
   ctx.restore();
 }
 
-export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: DrawableObject): void {
-  const handles = getTransformHandles(obj);
+export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: DrawableObject, canvasHeight: number = 400): void {
+  const handles = getTransformHandles(obj, canvasHeight);
   const handleSize = 14;
 
   ctx.save();
@@ -279,7 +295,9 @@ export function drawTransformHandles(ctx: CanvasRenderingContext2D, obj: Drawabl
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
       ctx.beginPath();
-      ctx.moveTo(handles.top.x, handles.top.y);
+      const isBelow = point.y > obj.y + obj.height;
+      const connectPoint = isBelow ? handles.bottom : handles.top;
+      ctx.moveTo(connectPoint.x, connectPoint.y);
       ctx.lineTo(point.x, point.y);
       ctx.strokeStyle = '#2563eb';
       ctx.lineWidth = 2;

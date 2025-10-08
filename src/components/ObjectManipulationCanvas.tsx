@@ -7,6 +7,7 @@ import {
   isPointInObject,
   getHandleAtPoint,
   resizeObject,
+  rotateObject,
   moveObject,
   drawObject,
   drawSelectionBorder,
@@ -40,6 +41,7 @@ export default function ObjectManipulationCanvas({
   const [isDrawing, setIsDrawing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isRotating, setIsRotating] = useState(false);
   const [dragStartPoint, setDragStartPoint] = useState<Point | null>(null);
   const [resizeHandle, setResizeHandle] = useState<HandleType>(null);
   const [tempPoints, setTempPoints] = useState<Point[]>([]);
@@ -48,6 +50,7 @@ export default function ObjectManipulationCanvas({
 
   const isInitializedRef = useRef(false);
   const isResizingRef = useRef(false);
+  const isRotatingRef = useRef(false);
   const resizeHandleRef = useRef<HandleType>(null);
   const dragStartPointRef = useRef<Point | null>(null);
   const isDraggingRef = useRef(false);
@@ -157,7 +160,7 @@ export default function ObjectManipulationCanvas({
     const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
     if (selectedObject) {
       drawSelectionBorder(ctx, selectedObject);
-      drawTransformHandles(ctx, selectedObject);
+      drawTransformHandles(ctx, selectedObject, objectCanvas.height);
     }
   }, [objects, selectedObjectId, tempObject]);
 
@@ -236,32 +239,46 @@ export default function ObjectManipulationCanvas({
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
 
       if (selectedObject) {
-        const handle = getHandleAtPoint(point, selectedObject, 14);
+        const canvas = objectCanvasRef.current;
+        const canvasHeight = canvas?.height || 400;
+        const handle = getHandleAtPoint(point, selectedObject, 14, canvasHeight);
         console.log('Checking for handle at point:', point, 'result:', handle);
         if (handle) {
           console.log('Handle detected:', handle, 'at point:', point);
           handleFound = true;
-          setIsResizing(true);
-          isResizingRef.current = true;
+          if (handle === 'rotation') {
+            setIsRotating(true);
+            isRotatingRef.current = true;
+          } else {
+            setIsResizing(true);
+            isResizingRef.current = true;
+          }
           setResizeHandle(handle);
           resizeHandleRef.current = handle;
           setDragStartPoint(point);
           dragStartPointRef.current = point;
           setCursorStyle(getCursorForHandle(handle));
-          console.log('Set resize state - isResizing: true, handle:', handle);
+          console.log('Set resize/rotate state - handle:', handle);
           return;
         }
       }
 
       if (!handleFound) {
+        const canvas = objectCanvasRef.current;
+        const canvasHeight = canvas?.height || 400;
         for (const obj of [...objects].reverse()) {
-          const handle = getHandleAtPoint(point, obj, 14);
+          const handle = getHandleAtPoint(point, obj, 14, canvasHeight);
           if (handle) {
             console.log('Handle on unselected object detected:', handle, 'object:', obj.id);
             setSelectedObjectId(obj.id);
             handleFound = true;
-            setIsResizing(true);
-            isResizingRef.current = true;
+            if (handle === 'rotation') {
+              setIsRotating(true);
+              isRotatingRef.current = true;
+            } else {
+              setIsResizing(true);
+              isResizingRef.current = true;
+            }
             setResizeHandle(handle);
             resizeHandleRef.current = handle;
             setDragStartPoint(point);
@@ -299,12 +316,14 @@ export default function ObjectManipulationCanvas({
     e.preventDefault();
     const point = getCanvasPosition(e);
 
-    if (currentTool === 'select' && !isResizingRef.current && !isDraggingRef.current && !isDrawing) {
+    if (currentTool === 'select' && !isResizingRef.current && !isRotatingRef.current && !isDraggingRef.current && !isDrawing) {
       let cursorSet = false;
+      const canvas = objectCanvasRef.current;
+      const canvasHeight = canvas?.height || 400;
 
       for (const obj of objects) {
         if (obj.id === selectedObjectId || !selectedObjectId) {
-          const handle = getHandleAtPoint(point, obj, 14);
+          const handle = getHandleAtPoint(point, obj, 14, canvasHeight);
           if (handle) {
             setCursorStyle(getCursorForHandle(handle));
             cursorSet = true;
@@ -330,7 +349,16 @@ export default function ObjectManipulationCanvas({
       setCursorStyle('crosshair');
     }
 
-    if (isResizingRef.current && resizeHandleRef.current) {
+    if (isRotatingRef.current && selectedObjectId) {
+      console.log('Executing rotation logic');
+      const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
+      if (selectedObject) {
+        const centerX = selectedObject.x + selectedObject.width / 2;
+        const centerY = selectedObject.y + selectedObject.height / 2;
+        const rotated = rotateObject(selectedObject, point, { x: centerX, y: centerY });
+        setObjects(objects.map((obj) => (obj.id === selectedObjectId ? rotated : obj)));
+      }
+    } else if (isResizingRef.current && resizeHandleRef.current) {
       console.log('Executing resize logic - handle:', resizeHandleRef.current, 'point:', point);
       const selectedObject = objects.find((obj) => obj.id === selectedObjectId);
       if (selectedObject) {
@@ -412,6 +440,8 @@ export default function ObjectManipulationCanvas({
     isDraggingRef.current = false;
     setIsResizing(false);
     isResizingRef.current = false;
+    setIsRotating(false);
+    isRotatingRef.current = false;
     setDragStartPoint(null);
     dragStartPointRef.current = null;
     setResizeHandle(null);
@@ -458,7 +488,7 @@ export default function ObjectManipulationCanvas({
         className="absolute top-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-2"
         style={{
           zIndex: 10,
-          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto',
+          pointerEvents: (isResizing || isRotating || isDragging || isDrawing) ? 'none' : 'auto',
           userSelect: 'none',
           WebkitUserSelect: 'none',
           WebkitTouchCallout: 'none'
@@ -578,7 +608,7 @@ export default function ObjectManipulationCanvas({
         className="absolute bottom-4 right-4 flex gap-2"
         style={{
           zIndex: 10,
-          pointerEvents: (isResizing || isDragging || isDrawing) ? 'none' : 'auto',
+          pointerEvents: (isResizing || isRotating || isDragging || isDrawing) ? 'none' : 'auto',
           userSelect: 'none',
           WebkitUserSelect: 'none',
           WebkitTouchCallout: 'none'
