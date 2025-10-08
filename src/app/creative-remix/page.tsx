@@ -6,6 +6,8 @@ import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
+import { storage } from '@/lib/firebase';
+import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
 
 interface DailyChallenge {
   date: string;
@@ -125,29 +127,16 @@ export default function CreativeRemixPage() {
         throw new Error('Failed to generate composite image');
       }
 
-      console.log('=== SHARE: Uploading composite image ===');
+      console.log('=== SHARE: Uploading composite image to Firebase Storage ===');
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
       const fileName = `creative-remix-shares/${user?.uid || 'anonymous'}/${timestamp}-${randomString}.png`;
 
-      const uploadResponse = await fetch('/api/upload-drawing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          drawingData: compositeImageData,
-          userId: user?.uid || 'anonymous',
-          fileName: fileName
-        }),
-      });
+      const imageRef = storageRef(storage, fileName);
+      await uploadString(imageRef, compositeImageData, 'data_url');
 
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const uploadResult = await uploadResponse.json();
-      console.log('=== SHARE: Image uploaded successfully ===', uploadResult.publicUrl);
+      const publicUrl = await getDownloadURL(imageRef);
+      console.log('=== SHARE: Image uploaded successfully ===', publicUrl);
 
       const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}! 🎨`;
       const shareUrl = window.location.href;
