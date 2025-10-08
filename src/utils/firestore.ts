@@ -65,16 +65,13 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
   console.log('fetchLeaderboardEntries called with date:', date);
   try {
     const scoresRef = collection(firestore, 'nfl-draw-logo');
+    // Simple query - only filter by date, then filter and sort in memory
     const q = query(
       scoresRef,
-      where('gameMode', '==', 'draw-memory'),
-      where('puzzleDate', '==', date),
-      orderBy('score', 'desc'),
-      orderBy('timestamp', 'asc'),
-      limit(20)
+      where('puzzleDate', '==', date)
     );
     console.log('Firestore query created for leaderboard entries');
-    console.log('Query filters: gameMode=draw-memory, puzzleDate=' + date);
+    console.log('Query filters: puzzleDate=' + date);
 
     const querySnapshot = await getDocs(q);
     console.log('Firestore query executed, snapshot size:', querySnapshot.size);
@@ -82,28 +79,44 @@ export async function fetchLeaderboardEntries(date: string): Promise<Leaderboard
 
     querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
-      console.log('Processing document:', doc.id, 'data:', data);
-      console.log('accuracyScore from data:', data.accuracyScore);
-      console.log('score from data:', data.score);
-      leaderboardEntries.push({
-        id: doc.id,
-        userId: data.userId,
-        displayName: data.displayName || 'Anonymous',
-        moves: data.moves || 0,
-        hintsUsed: data.hintsUsed || 0,
-        totalTime: data.totalTime || 0, // Already in milliseconds
-        completedAt: new Date(data.timestamp),
-        puzzleDate: data.puzzleDate || date,
-        score: data.score || 0,
-        accuracyScore: data.scoreBreakdown?.accuracyScore || 0,
-        timeScore: data.timeScore || 0
-      });
+      // Only include draw-memory game mode
+      if (data.gameMode === 'draw-memory') {
+        console.log('Processing document:', doc.id, 'data:', data);
+        console.log('accuracyScore from data:', data.accuracyScore);
+        console.log('score from data:', data.score);
+        leaderboardEntries.push({
+          id: doc.id,
+          userId: data.userId,
+          displayName: data.displayName || 'Anonymous',
+          moves: data.moves || 0,
+          hintsUsed: data.hintsUsed || 0,
+          totalTime: data.totalTime || 0,
+          completedAt: new Date(data.timestamp),
+          puzzleDate: data.puzzleDate || date,
+          score: data.score || 0,
+          accuracyScore: data.scoreBreakdown?.accuracyScore || 0,
+          timeScore: data.timeScore || 0
+        });
+      }
     });
 
-    console.log('Leaderboard entries processed, total:', leaderboardEntries.length);
-    console.log('Final leaderboard entries:', leaderboardEntries);
+    // Sort in memory: first by score descending, then by timestamp ascending
+    leaderboardEntries.sort((a, b) => {
+      const scoreA = a.score || 0;
+      const scoreB = b.score || 0;
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+      return a.completedAt.getTime() - b.completedAt.getTime();
+    });
+
+    // Limit to top 20
+    const top20 = leaderboardEntries.slice(0, 20);
+
+    console.log('Leaderboard entries processed, total:', top20.length);
+    console.log('Final leaderboard entries:', top20);
     console.log('=== FETCHLEADERBOARDENTRIES DEBUG END ===');
-    return leaderboardEntries;
+    return top20;
   } catch (error) {
     console.error('Error fetching leaderboard entries:', error);
     console.log('fetchLeaderboardEntries error details:', {
@@ -119,15 +132,13 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
   console.log('getUserRank called with userId:', userId, 'puzzleDate:', puzzleDate);
   try {
     const scoresRef = collection(firestore, 'nfl-draw-logo');
+    // Simple query - only filter by date, then filter and sort in memory
     const q = query(
       scoresRef,
-      where('gameMode', '==', 'draw-memory'),
-      where('puzzleDate', '==', puzzleDate),
-      orderBy('score', 'desc'),
-      orderBy('timestamp', 'asc')
+      where('puzzleDate', '==', puzzleDate)
     );
     console.log('Firestore query created for user rank');
-    console.log('Query filters: gameMode=draw-memory, puzzleDate=' + puzzleDate);
+    console.log('Query filters: puzzleDate=' + puzzleDate);
 
     const querySnapshot = await getDocs(q);
     console.log('Firestore query executed, snapshot size:', querySnapshot.size);
@@ -135,19 +146,32 @@ export async function getUserRank(userId: string, puzzleDate: string): Promise<{
 
     querySnapshot.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       const data = doc.data();
-      allEntries.push({
-        id: doc.id,
-        userId: data.userId,
-        displayName: data.displayName || 'Anonymous',
-        moves: data.moves || 0,
-        hintsUsed: data.hintsUsed || 0,
-        totalTime: data.totalTime || 0, // Already in milliseconds
-        completedAt: new Date(data.timestamp),
-        puzzleDate: data.puzzleDate || puzzleDate,
-        score: data.score || 0,
-        accuracyScore: data.scoreBreakdown?.accuracyScore || 0,
-        timeScore: data.timeScore || 0
-      });
+      // Only include draw-memory game mode
+      if (data.gameMode === 'draw-memory') {
+        allEntries.push({
+          id: doc.id,
+          userId: data.userId,
+          displayName: data.displayName || 'Anonymous',
+          moves: data.moves || 0,
+          hintsUsed: data.hintsUsed || 0,
+          totalTime: data.totalTime || 0,
+          completedAt: new Date(data.timestamp),
+          puzzleDate: data.puzzleDate || puzzleDate,
+          score: data.score || 0,
+          accuracyScore: data.scoreBreakdown?.accuracyScore || 0,
+          timeScore: data.timeScore || 0
+        });
+      }
+    });
+
+    // Sort in memory: first by score descending, then by timestamp ascending
+    allEntries.sort((a, b) => {
+      const scoreA = a.score || 0;
+      const scoreB = b.score || 0;
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+      return a.completedAt.getTime() - b.completedAt.getTime();
     });
 
     console.log('All entries processed, total:', allEntries.length);
