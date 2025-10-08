@@ -767,7 +767,12 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   return (
-    <div className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto">
+    <div
+      className="relative w-full max-w-[400px] h-[300px] sm:h-[400px] mx-auto"
+      style={{
+        touchAction: isResizeMode ? 'none' : 'auto'
+      }}
+    >
         {/* Background/Overlay Canvas */}
         <canvas
           ref={overlayCanvasRef}
@@ -1017,6 +1022,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               pointerEvents: 'none',
               transform: `rotate(${templateTransform.rotation}deg)`,
               transformOrigin: 'center center',
+              touchAction: 'none',
             }}
           >
             {/* Resize handle at top-left corner */}
@@ -1032,6 +1038,10 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 borderRadius: '2px',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                 pointerEvents: 'auto',
+                touchAction: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -1151,6 +1161,10 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 borderRadius: '50%',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                 pointerEvents: 'auto',
+                touchAction: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                WebkitTouchCallout: 'none',
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
