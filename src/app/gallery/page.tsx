@@ -5,6 +5,8 @@ import { firestore } from '@/lib/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
+import { useAuthModal } from '@/context/AuthModalContext';
+import { useVotes } from '@/lib/useVotes';
 
 interface Submission {
   id: string;
@@ -15,16 +17,21 @@ interface Submission {
   status: string;
   rating: number | null;
   gameMode: string;
+  votes?: number;
 }
 
 export default function GalleryPage() {
   const { user } = useAuth();
+  const { setShowLoginModal } = useAuthModal();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [showMySubmissions, setShowMySubmissions] = useState(false);
+
+  const submissionIds = submissions.map(s => s.id);
+  const { toggleVote, getVoteCount, hasUserVoted, initializeVote } = useVotes(user, submissionIds);
 
   useEffect(() => {
     const submissionsRef = collection(firestore, 'nfl-draw-logo');
@@ -43,7 +50,8 @@ export default function GalleryPage() {
             timestamp: data.timestamp || Date.now(),
             status: data.status || 'pending',
             rating: data.rating,
-            gameMode: data.gameMode || 'creative-remix'
+            gameMode: data.gameMode || 'creative-remix',
+            votes: data.votes || 0
           });
         }
       });
@@ -81,6 +89,26 @@ export default function GalleryPage() {
 
     setSubmissions(filtered);
   }, [allSubmissions, selectedDate, showMySubmissions, user]);
+
+  useEffect(() => {
+    submissions.forEach(submission => {
+      initializeVote(submission.id, submission.votes || 0);
+    });
+  }, [submissions, initializeVote]);
+
+  const handleVoteClick = async (submissionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    const result = await toggleVote(submissionId);
+    if (!result.success && result.error) {
+      console.error('Vote error:', result.error);
+    }
+  };
 
   const handleDateChange = (direction: 'prev' | 'next') => {
     const currentDate = new Date(selectedDate);
@@ -248,6 +276,35 @@ export default function GalleryPage() {
                       {submission.rating}
                     </div>
                   )}
+                  <button
+                    onClick={(e) => handleVoteClick(submission.id, e)}
+                    className="absolute top-2 right-2 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-all hover:scale-110 group"
+                    title={user ? (hasUserVoted(submission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
+                  >
+                    <svg
+                      className={`w-5 h-5 transition-colors ${
+                        hasUserVoted(submission.id)
+                          ? 'text-orange-500 fill-current'
+                          : 'text-gray-400 group-hover:text-orange-500'
+                      }`}
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
+                    </svg>
+                  </button>
+                  <div className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 text-orange-400 fill-current"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 20C16 20 16 17 12 15Z"/>
+                    </svg>
+                    <span>{getVoteCount(submission.id)}</span>
+                  </div>
                 </div>
                 <div className="p-4">
                   <p className="font-semibold text-gray-800">{submission.userName}</p>
@@ -298,6 +355,35 @@ export default function GalleryPage() {
                       {selectedSubmission.rating}/100
                     </div>
                   )}
+                  <button
+                    onClick={(e) => handleVoteClick(selectedSubmission.id, e)}
+                    className="absolute top-4 left-4 p-3 rounded-full bg-white shadow-lg transition-all hover:scale-110 group"
+                    title={user ? (hasUserVoted(selectedSubmission.id) ? 'Remove vote' : 'Vote for this') : 'Log in to vote'}
+                  >
+                    <svg
+                      className={`w-6 h-6 transition-colors ${
+                        hasUserVoted(selectedSubmission.id)
+                          ? 'text-orange-500 fill-current'
+                          : 'text-gray-400 group-hover:text-orange-500'
+                      }`}
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 21.66 16 20C16 17 12 15 12 15Z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor"/>
+                    </svg>
+                  </button>
+                  <div className="absolute bottom-4 right-4 bg-black/80 text-white px-4 py-2 rounded-full text-lg font-bold shadow-lg flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5 text-orange-400 fill-current"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M12 2C12 2 7 5.5 7 10C7 12.76 9.24 15 12 15C14.76 15 17 12.76 17 10C17 5.5 12 2 12 2Z"/>
+                      <path d="M12 15C12 15 8 17 8 20C8 21.66 9.34 23 11 23H13C14.66 23 16 20C16 20 16 17 12 15Z"/>
+                    </svg>
+                    <span>{getVoteCount(selectedSubmission.id)}</span>
+                  </div>
                 </div>
 
                 <div className="flex gap-4 justify-center">

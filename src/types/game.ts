@@ -56,3 +56,15 @@ export interface WinStats {
   displayTime: string;
   calculation: string;
 }
+
+export interface SubmissionVote {
+  userId: string;
+  submissionId: string;
+  timestamp: number;
+}
+
+export interface VoteStatus {
+  submissionId: string;
+  hasVoted: boolean;
+  voteCount: number;
+}

@@ -73,3 +73,10 @@ export function getAdminDatabase() {
 export function getAdminAuth() {
   return admin.auth(getAdminApp());
 }
+
+export function getAdminFirestore() {
+  return admin.firestore(getAdminApp());
+}
+
+export const adminAuth = getAdminAuth();
+export const adminDb = getAdminFirestore();
