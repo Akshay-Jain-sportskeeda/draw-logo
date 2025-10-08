@@ -335,11 +335,7 @@ export default function GalleryPage() {
               <div
                 key={submission.id}
                 onClick={() => setSelectedSubmission(submission)}
-                className={`bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer overflow-hidden transform hover:-translate-y-1 ${
-                  hasUserVoted(submission.id)
-                    ? 'ring-2 ring-orange-400 shadow-orange-200'
-                    : ''
-                }`}
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all cursor-pointer overflow-hidden transform hover:-translate-y-1"
               >
                 <div className="aspect-square bg-gray-100 relative">
                   <img
