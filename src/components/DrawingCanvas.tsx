@@ -69,6 +69,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const canvasDimensionsRef = useRef({ width: 0, height: 0 });
   const [templateInitRetry, setTemplateInitRetry] = useState(0);
   const scrollPositionRef = useRef({ x: 0, y: 0 });
+  const documentMouseMoveHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
+  const documentMouseUpHandlerRef = useRef<((e: MouseEvent) => void) | null>(null);
 
   // Scroll lock utilities
   const lockScroll = useCallback(() => {
@@ -520,13 +522,6 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     };
   }, [unlockScroll]);
 
-  // Unlock scroll when resize mode is disabled
-  useEffect(() => {
-    if (!isResizeMode) {
-      unlockScroll();
-    }
-  }, [isResizeMode, unlockScroll]);
-
   const getCanvasPosition = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = userDrawingCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -758,13 +753,30 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
   };
 
-  const handleTemplateInteractionEnd = () => {
+  const handleTemplateInteractionEnd = useCallback(() => {
     unlockScroll();
     setIsDraggingTemplate(false);
     setIsResizingTemplate(false);
     setIsRotatingTemplate(false);
     setDragStartTransform(null);
-  };
+
+    if (documentMouseMoveHandlerRef.current) {
+      document.removeEventListener('mousemove', documentMouseMoveHandlerRef.current);
+      documentMouseMoveHandlerRef.current = null;
+    }
+    if (documentMouseUpHandlerRef.current) {
+      document.removeEventListener('mouseup', documentMouseUpHandlerRef.current);
+      documentMouseUpHandlerRef.current = null;
+    }
+  }, [unlockScroll]);
+
+  // Unlock scroll when resize mode is disabled
+  useEffect(() => {
+    if (!isResizeMode) {
+      unlockScroll();
+      handleTemplateInteractionEnd();
+    }
+  }, [isResizeMode, unlockScroll, handleTemplateInteractionEnd]);
 
   return (
     <div
@@ -1056,6 +1068,79 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setIsResizingTemplate(true);
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
+
+                const handleMouseMove = (moveEvent: MouseEvent) => {
+                  moveEvent.preventDefault();
+                  const canvas = overlayCanvasRef.current;
+                  if (!canvas) return;
+                  const currentRect = canvas.getBoundingClientRect();
+                  if (!currentRect) return;
+
+                  const moveX = moveEvent.clientX - currentRect.left;
+                  const moveY = moveEvent.clientY - currentRect.top;
+                  const moveCanvasX = (moveX / currentRect.width) * canvas.width;
+                  const moveCanvasY = (moveY / currentRect.height) * canvas.height;
+
+                  const startTransform = dragStartTransform || templateTransform;
+                  const deltaX = moveCanvasX - canvasX;
+                  const deltaY = moveCanvasY - canvasY;
+
+                  const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                  const direction = (deltaX + deltaY) < 0 ? 1 : -1;
+                  const scaleChange = (diagonal * direction) / 200;
+                  let newScale = Math.max(0.2, startTransform.scale + scaleChange);
+
+                  const baseWidth = startTransform.width / startTransform.scale;
+                  const baseHeight = startTransform.height / startTransform.scale;
+
+                  const newWidth = baseWidth * newScale;
+                  const newHeight = baseHeight * newScale;
+
+                  const widthDiff = newWidth - startTransform.width;
+                  const heightDiff = newHeight - startTransform.height;
+
+                  let newX = startTransform.x - widthDiff;
+                  let newY = startTransform.y - heightDiff;
+
+                  if (newX < 0) {
+                    newScale = startTransform.x / baseWidth + startTransform.scale;
+                    newX = 0;
+                  }
+                  if (newY < 0) {
+                    newScale = Math.min(newScale, startTransform.y / baseHeight + startTransform.scale);
+                    newY = 0;
+                  }
+                  if (newX + newWidth > canvas.width) {
+                    newScale = Math.min(newScale, (canvas.width - newX) / baseWidth);
+                  }
+                  if (newY + newHeight > canvas.height) {
+                    newScale = Math.min(newScale, (canvas.height - newY) / baseHeight);
+                  }
+
+                  const finalWidth = baseWidth * newScale;
+                  const finalHeight = baseHeight * newScale;
+                  const finalWidthDiff = finalWidth - startTransform.width;
+                  const finalHeightDiff = finalHeight - startTransform.height;
+
+                  setTemplateTransform({
+                    x: startTransform.x - finalWidthDiff,
+                    y: startTransform.y - finalHeightDiff,
+                    scale: newScale,
+                    width: finalWidth,
+                    height: finalHeight,
+                    rotation: startTransform.rotation
+                  });
+                };
+
+                const handleMouseUp = (upEvent: MouseEvent) => {
+                  upEvent.preventDefault();
+                  handleTemplateInteractionEnd();
+                };
+
+                documentMouseMoveHandlerRef.current = handleMouseMove;
+                documentMouseUpHandlerRef.current = handleMouseUp;
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
               }}
               onMouseUp={(e) => {
                 e.preventDefault();
@@ -1179,6 +1264,44 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setIsRotatingTemplate(true);
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
+
+                const handleMouseMove = (moveEvent: MouseEvent) => {
+                  moveEvent.preventDefault();
+                  const canvas = overlayCanvasRef.current;
+                  if (!canvas) return;
+                  const currentRect = canvas.getBoundingClientRect();
+                  if (!currentRect) return;
+
+                  const moveX = moveEvent.clientX - currentRect.left;
+                  const moveY = moveEvent.clientY - currentRect.top;
+                  const moveCanvasX = (moveX / currentRect.width) * canvas.width;
+                  const moveCanvasY = (moveY / currentRect.height) * canvas.height;
+
+                  const startTransform = dragStartTransform || templateTransform;
+                  const centerX = startTransform.x + startTransform.width / 2;
+                  const centerY = startTransform.y + startTransform.height / 2;
+
+                  const startAngle = Math.atan2(canvasY - centerY, canvasX - centerX);
+                  const currentAngle = Math.atan2(moveCanvasY - centerY, moveCanvasX - centerX);
+
+                  const angleDiff = (currentAngle - startAngle) * (180 / Math.PI);
+                  const newRotation = startTransform.rotation + angleDiff;
+
+                  setTemplateTransform({
+                    ...startTransform,
+                    rotation: newRotation
+                  });
+                };
+
+                const handleMouseUp = (upEvent: MouseEvent) => {
+                  upEvent.preventDefault();
+                  handleTemplateInteractionEnd();
+                };
+
+                documentMouseMoveHandlerRef.current = handleMouseMove;
+                documentMouseUpHandlerRef.current = handleMouseUp;
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
               }}
               onMouseUp={(e) => {
                 e.preventDefault();
