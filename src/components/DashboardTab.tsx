@@ -228,13 +228,11 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
                         <div>
                           <div className="text-lg font-bold">Pending Games</div>
                           <div className="text-sm opacity-90">
-                            {pendingGamesCount} total remaining
-                            {(pendingDrawMemory > 0 || pendingCreativeRemix > 0) && (
-                              <div className="text-xs mt-1">
-                                {pendingDrawMemory > 0 && `${pendingDrawMemory} Draw Memory`}
-                                {pendingDrawMemory > 0 && pendingCreativeRemix > 0 && ' + '}
-                                {pendingCreativeRemix > 0 && `${pendingCreativeRemix} Creative Remix`}
-                              </div>
+                            {pendingDrawMemory > 0 && (
+                              <div>{pendingDrawMemory}/{totalAvailableDates} Draw from memory</div>
+                            )}
+                            {pendingCreativeRemix > 0 && (
+                              <div>{pendingCreativeRemix}/{totalAvailableDates} Remix mode</div>
                             )}
                           </div>
                         </div>
