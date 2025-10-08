@@ -267,12 +267,12 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
 
   // Calculate individual scores
   const rawPixelScore = pixelSimilarityScore(userGray, targetGray);
-  const pixelScore = Math.min(100, rawPixelScore * 1.5); // Apply 1.5x leniency factor, cap at 100%
-  console.log(`1. PIXEL SIMILARITY SCORE (Jaccard Index): ${rawPixelScore.toFixed(2)}% (raw) → ${pixelScore.toFixed(2)}% (with 1.5x leniency)`);
+  const pixelScore = Math.min(100, rawPixelScore * 1.3); // Apply 1.3x leniency factor, cap at 100%
+  console.log(`1. PIXEL SIMILARITY SCORE (Jaccard Index): ${rawPixelScore.toFixed(2)}% (raw) → ${pixelScore.toFixed(2)}% (with 1.3x leniency)`);
   console.log('   - Measures overlap of actual drawn content vs background (threshold: 220)');
   console.log('   - Uses Intersection over Union: TP / (TP + FP + FN)');
   console.log('   - TP=both have content, FP=extra marks, FN=missing content');
-  console.log('   - Leniency factor of 1.5x applied to make scoring more forgiving');
+  console.log('   - Leniency factor of 1.3x applied to make scoring more forgiving');
   
   const ssimVal = ssimScore(userRgba, targetRgba, width, height);
   console.log(`2. SSIM (STRUCTURAL SIMILARITY) SCORE: ${ssimVal.toFixed(2)}%`);
