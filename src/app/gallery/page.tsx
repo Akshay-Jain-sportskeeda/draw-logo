@@ -154,23 +154,67 @@ export default function GalleryPage() {
       const shareText = `Check out my drawing in the NFL Logo Gallery!`;
       const shareUrl = window.location.href;
 
+      const copyImageToClipboard = async () => {
+        if (navigator.clipboard && (navigator.clipboard as any).write) {
+          try {
+            const blob = await fetch(submission.drawingUrl).then(r => r.blob());
+            await (navigator.clipboard as any).write([
+              new (window as any).ClipboardItem({
+                'image/png': blob
+              })
+            ]);
+            alert('Image copied to clipboard!');
+            return true;
+          } catch (error) {
+            console.error('Error copying image to clipboard:', error);
+            return false;
+          }
+        }
+        return false;
+      };
+
       if (navigator.share) {
-        await navigator.share({
-          title: 'My NFL Logo Drawing',
-          text: shareText,
-          url: shareUrl,
-        });
-      } else if (navigator.clipboard) {
-        const textToShare = `${shareText}\n${shareUrl}`;
-        await navigator.clipboard.writeText(textToShare);
-        alert('Link copied to clipboard!');
+        try {
+          const blob = await fetch(submission.drawingUrl).then(r => r.blob());
+          const file = new File([blob], 'my-nfl-logo-drawing.png', { type: 'image/png' });
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: 'My NFL Logo Drawing',
+              text: shareText,
+              files: [file]
+            });
+            return;
+          }
+
+          await navigator.share({
+            title: 'My NFL Logo Drawing',
+            text: shareText,
+            url: shareUrl
+          });
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            return;
+          }
+          const imageCopied = await copyImageToClipboard();
+          if (!imageCopied) {
+            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+            alert('Link copied to clipboard!');
+          }
+        }
       } else {
-        alert('Sharing is not supported on this device');
+        const imageCopied = await copyImageToClipboard();
+        if (!imageCopied && navigator.clipboard) {
+          const textToShare = `${shareText}\n${shareUrl}`;
+          await navigator.clipboard.writeText(textToShare);
+          alert('Link copied to clipboard!');
+        } else if (!imageCopied) {
+          alert('Sharing is not supported on this device');
+        }
       }
     } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Error sharing:', error);
-      }
+      console.error('Error sharing:', error);
+      alert('Failed to share. Please try again.');
     }
   };
 
