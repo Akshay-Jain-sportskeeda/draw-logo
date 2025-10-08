@@ -286,16 +286,16 @@ async function finalSimilarity(userBuffer: Buffer, targetBuffer: Buffer, size = 
   console.log('   - Focuses on shapes and outlines (threshold: 15 for softer hand-drawn edges)');
 
   // Calculate weighted contributions
-  const pixelContribution = 0.50 * pixelScore;
-  const ssimContribution = 0.20 * ssimVal;
+  const pixelContribution = 0.70 * pixelScore;
+  const ssimContribution = 0.00 * ssimVal;
   const edgeContribution = 0.30 * edgeScore;
-  
+
   console.log('\n--- WEIGHTED CONTRIBUTIONS ---');
-  console.log(`Pixel Score (50% weight): ${pixelScore.toFixed(2)}% × 0.50 = ${pixelContribution.toFixed(2)}`);
-  console.log(`SSIM Score (20% weight): ${ssimVal.toFixed(2)}% × 0.20 = ${ssimContribution.toFixed(2)}`);
+  console.log(`Pixel Score (70% weight): ${pixelScore.toFixed(2)}% × 0.70 = ${pixelContribution.toFixed(2)}`);
+  console.log(`SSIM Score (0% weight): ${ssimVal.toFixed(2)}% × 0.00 = ${ssimContribution.toFixed(2)}`);
   console.log(`Edge Score (30% weight): ${edgeScore.toFixed(2)}% × 0.30 = ${edgeContribution.toFixed(2)}`);
-  
-  const finalScore = 0.50 * pixelScore + 0.20 * ssimVal + 0.30 * edgeScore;
+
+  const finalScore = 0.70 * pixelScore + 0.00 * ssimVal + 0.30 * edgeScore;
   
   console.log(`\n--- FINAL RESULT ---`);
   console.log(`Combined Score: ${pixelContribution.toFixed(2)} + ${ssimContribution.toFixed(2)} + ${edgeContribution.toFixed(2)} = ${finalScore.toFixed(2)}%`);
