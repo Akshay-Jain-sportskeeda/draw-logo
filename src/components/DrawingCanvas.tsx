@@ -68,6 +68,33 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const currentTransformRef = useRef<TemplateTransform>(templateTransform);
   const canvasDimensionsRef = useRef({ width: 0, height: 0 });
   const [templateInitRetry, setTemplateInitRetry] = useState(0);
+  const scrollPositionRef = useRef({ x: 0, y: 0 });
+
+  // Scroll lock utilities
+  const lockScroll = useCallback(() => {
+    scrollPositionRef.current = {
+      x: window.scrollX || window.pageXOffset,
+      y: window.scrollY || window.pageYOffset
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPositionRef.current.y}px`;
+    document.body.style.left = `-${scrollPositionRef.current.x}px`;
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+  }, []);
+
+  const unlockScroll = useCallback(() => {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+
+    window.scrollTo(scrollPositionRef.current.x, scrollPositionRef.current.y);
+  }, []);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -486,6 +513,20 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     }
   }, [lineThickness]);
 
+  // Cleanup scroll lock on unmount or when any interaction ends
+  useEffect(() => {
+    return () => {
+      unlockScroll();
+    };
+  }, [unlockScroll]);
+
+  // Unlock scroll when resize mode is disabled
+  useEffect(() => {
+    if (!isResizeMode) {
+      unlockScroll();
+    }
+  }, [isResizeMode, unlockScroll]);
+
   const getCanvasPosition = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = userDrawingCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -607,6 +648,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     e.preventDefault();
     e.stopPropagation();
 
+    lockScroll();
+
     const position = getCanvasPosition(e);
 
     if (isPointInResizeHandle(position.x, position.y)) {
@@ -716,6 +759,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   const handleTemplateInteractionEnd = () => {
+    unlockScroll();
     setIsDraggingTemplate(false);
     setIsResizingTemplate(false);
     setIsRotatingTemplate(false);
@@ -735,7 +779,10 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         <canvas
           ref={userDrawingCanvasRef}
           className={`absolute inset-0 w-full h-full touch-none ${isResizeMode ? 'cursor-move' : 'cursor-crosshair'}`}
-          style={{ zIndex: isResizeMode ? 1 : 2 }}
+          style={{
+            zIndex: isResizeMode ? 1 : 2,
+            touchAction: isResizeMode ? 'none' : 'none'
+          }}
           onMouseDown={(e) => {
             if (isResizeMode) {
               handleTemplateInteractionStart(e);
@@ -989,6 +1036,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                lockScroll();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect) return;
                 const x = e.clientX - rect.left;
@@ -1007,6 +1055,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               onTouchStart={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                lockScroll();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect || e.touches.length === 0) return;
                 const touch = e.touches[0];
@@ -1106,6 +1155,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                lockScroll();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect) return;
                 const x = e.clientX - rect.left;
@@ -1124,6 +1174,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               onTouchStart={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                lockScroll();
                 const rect = overlayCanvasRef.current?.getBoundingClientRect();
                 if (!rect || e.touches.length === 0) return;
                 const touch = e.touches[0];
