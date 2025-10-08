@@ -968,6 +968,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
               border: '2px dashed #3b82f6',
               boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.1)',
               pointerEvents: 'none',
+              transform: `rotate(${templateTransform.rotation}deg)`,
+              transformOrigin: 'center center',
             }}
           >
             {/* Resize handle at top-left corner */}
@@ -1051,19 +1053,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 setDragStartPos({ x: canvasX, y: canvasY });
                 setDragStartTransform({ ...templateTransform });
               }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2"
-                style={{ position: 'absolute', top: '2px', left: '2px' }}
-              >
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-              </svg>
-            </div>
+            />
 
             {/* Connection line from template to rotation handle */}
             <div
