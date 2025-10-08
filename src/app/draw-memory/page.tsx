@@ -46,6 +46,7 @@ export default function DrawMemoryPage() {
     handleShare,
     handleArchive,
     setDailyChallengeByDate,
+    setCompositeImageGetter,
   } = gameState;
 
   const getScoreMessage = (score: number) => {
@@ -139,6 +140,7 @@ export default function DrawMemoryPage() {
                     overlayImageUrl={overlayLogoUrl}
                     onClearCanvas={handleClearCanvas}
                     drawingData={drawingData}
+                    onCompositeImageReady={setCompositeImageGetter}
                   />
                 )}
                 {isLoadingColors && (

@@ -40,7 +40,9 @@ interface GameState {
   // Drawing state
   drawingData: string;
   setDrawingData: (data: string) => void;
-  
+  getCompositeImage: (() => string) | null;
+  setCompositeImageGetter: (getter: (() => string) | null) => void;
+
   // Game state
   showLogo: boolean;
   setShowLogo: (show: boolean) => void;
@@ -92,9 +94,14 @@ const GameStateContext = createContext<GameState | undefined>(undefined);
 
 export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  
+
   // Drawing state
   const [drawingData, setDrawingData] = useState<string>('');
+  const [getCompositeImage, setGetCompositeImage] = useState<(() => string) | null>(null);
+
+  const setCompositeImageGetter = useCallback((getter: (() => string) | null) => {
+    setGetCompositeImage(() => getter);
+  }, []);
   
   // Game state
   const [showLogo, setShowLogo] = useState(false);
@@ -535,9 +542,46 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
   const handleShare = useCallback(async () => {
     if (!score || !dailyChallenge) return;
-    
+
+    console.log('=== HANDLE SHARE: Starting ===');
+
+    // Upload composite image if available
+    if (getCompositeImage && user) {
+      try {
+        console.log('=== Generating composite image for upload ===');
+        const compositeImageData = getCompositeImage();
+
+        if (compositeImageData) {
+          console.log('=== Uploading composite image ===');
+          const timestamp = Date.now();
+          const fileName = `draw-memory/${user.uid}/${dailyChallenge.date}-${timestamp}.png`;
+
+          const uploadResponse = await fetch('/api/upload-drawing', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              drawingData: compositeImageData,
+              userId: user.uid,
+              fileName: fileName
+            }),
+          });
+
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json();
+            console.log('=== Composite image uploaded successfully ===', uploadResult.publicUrl);
+          } else {
+            console.error('Failed to upload composite image:', await uploadResponse.text());
+          }
+        }
+      } catch (error) {
+        console.error('Error uploading composite image:', error);
+      }
+    }
+
     const shareText = `I just scored ${score}% drawing the ${dailyChallenge.memoryChallenge.name} logo! Can you beat my score?`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -546,16 +590,14 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
           url: window.location.href
         });
       } catch (error) {
-        // User cancelled or error occurred, fallback to clipboard
         navigator.clipboard.writeText(shareText);
         alert('Score copied to clipboard!');
       }
     } else {
-      // Fallback to clipboard
       navigator.clipboard.writeText(shareText);
       alert('Score copied to clipboard!');
     }
-  }, [score, dailyChallenge]);
+  }, [score, dailyChallenge, getCompositeImage, user]);
 
   const handleArchive = useCallback(() => {
     setShowArchiveScreen(true);
@@ -611,7 +653,9 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     // Drawing state
     drawingData,
     setDrawingData,
-    
+    getCompositeImage,
+    setCompositeImageGetter,
+
     // Game state
     showLogo,
     setShowLogo,

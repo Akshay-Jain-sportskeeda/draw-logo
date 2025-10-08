@@ -10,6 +10,7 @@ interface DrawingCanvasProps {
   permanentTemplate?: boolean;
   templateImageUrl?: string;
   drawingData?: string;
+  onCompositeImageReady?: (getComposite: () => string) => void;
 }
 
 interface TemplateTransform {
@@ -21,7 +22,7 @@ interface TemplateTransform {
   rotation: number;
 }
 
-export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
+export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData, onCompositeImageReady }: DrawingCanvasProps) {
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCtxRef = useRef<CanvasRenderingContext2D | null>(null);
   const userDrawingCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,6 +98,85 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
     window.scrollTo(scrollPositionRef.current.x, scrollPositionRef.current.y);
   }, []);
+
+  // Generate composite image combining template and drawing
+  const getCompositeImage = useCallback((): string => {
+    console.log('=== GENERATING COMPOSITE IMAGE ===');
+
+    const overlayCanvas = overlayCanvasRef.current;
+    const userDrawingCanvas = userDrawingCanvasRef.current;
+
+    if (!overlayCanvas || !userDrawingCanvas) {
+      console.error('Canvas references not available');
+      return '';
+    }
+
+    const compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = overlayCanvas.width;
+    compositeCanvas.height = overlayCanvas.height;
+    const compositeCtx = compositeCanvas.getContext('2d');
+
+    if (!compositeCtx) {
+      console.error('Failed to get composite canvas context');
+      return '';
+    }
+
+    console.log('Composite canvas dimensions:', compositeCanvas.width, 'x', compositeCanvas.height);
+
+    compositeCtx.fillStyle = '#ffffff';
+    compositeCtx.fillRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+
+    const img = templateImageRef.current;
+    const transform = currentTransformRef.current;
+
+    if (permanentTemplate && img && img.complete && templateImageUrl && transform.width > 0 && transform.height > 0) {
+      console.log('Drawing permanent template with transform:', transform);
+
+      compositeCtx.save();
+      const centerX = transform.x + transform.width / 2;
+      const centerY = transform.y + transform.height / 2;
+      compositeCtx.translate(centerX, centerY);
+      compositeCtx.rotate((transform.rotation * Math.PI) / 180);
+      compositeCtx.translate(-centerX, -centerY);
+      compositeCtx.drawImage(img, transform.x, transform.y, transform.width, transform.height);
+      compositeCtx.restore();
+
+      console.log('Permanent template drawn successfully');
+    } else if (!permanentTemplate && overlayImageUrl && img && img.complete) {
+      console.log('Drawing overlay logo');
+
+      const padding = 16;
+      const effectiveCanvasWidth = compositeCanvas.width - (padding * 2);
+      const effectiveCanvasHeight = compositeCanvas.height - (padding * 2);
+
+      const scaleX = effectiveCanvasWidth / img.width;
+      const scaleY = effectiveCanvasHeight / img.height;
+      const scale = Math.min(scaleX, scaleY);
+
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+
+      const centerX = compositeCanvas.width / 2;
+      const centerY = compositeCanvas.height / 2;
+
+      const offsetX = centerX - drawWidth / 2;
+      const offsetY = centerY - drawHeight / 2;
+
+      compositeCtx.globalAlpha = 0.3;
+      compositeCtx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      compositeCtx.globalAlpha = 1.0;
+
+      console.log('Overlay logo drawn successfully');
+    }
+
+    console.log('Drawing user drawing layer');
+    compositeCtx.drawImage(userDrawingCanvas, 0, 0);
+
+    const compositeDataUrl = compositeCanvas.toDataURL('image/png');
+    console.log('=== COMPOSITE IMAGE GENERATED ===');
+
+    return compositeDataUrl;
+  }, [permanentTemplate, templateImageUrl, overlayImageUrl]);
 
   // Available line thickness options
   const thicknessOptions = [
@@ -521,6 +601,13 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
       unlockScroll();
     };
   }, [unlockScroll]);
+
+  // Expose composite image generator to parent component
+  useEffect(() => {
+    if (onCompositeImageReady && isInitializedRef.current) {
+      onCompositeImageReady(getCompositeImage);
+    }
+  }, [onCompositeImageReady, getCompositeImage]);
 
   const getCanvasPosition = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = userDrawingCanvasRef.current;

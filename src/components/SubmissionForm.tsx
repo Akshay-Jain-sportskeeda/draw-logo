@@ -12,9 +12,10 @@ interface SubmissionFormProps {
   onShowLogin: () => void;
   onSubmitSuccess: (submissionId: string) => void;
   onSubmitError: (error: string) => void;
+  getCompositeImage?: (() => string) | null;
 }
 
-export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmitSuccess, onSubmitError }: SubmissionFormProps) {
+export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmitSuccess, onSubmitError, getCompositeImage }: SubmissionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
 
@@ -58,6 +59,21 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       const userName = user!.displayName || user!.email?.split('@')[0] || 'Anonymous';
       console.log('User Name for submission:', userName);
 
+      // Use composite image if available, otherwise fallback to drawing data
+      let imageToUpload = drawingData;
+      if (getCompositeImage) {
+        console.log('=== Generating composite image for submission ===');
+        const composite = getCompositeImage();
+        if (composite) {
+          imageToUpload = composite;
+          console.log('Using composite image for upload');
+        } else {
+          console.warn('Composite image generation returned empty, using drawing data');
+        }
+      } else {
+        console.log('No composite generator available, using drawing data only');
+      }
+
       // Create a unique filename for the drawing
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 15);
@@ -68,7 +84,7 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       const imageRef = storageRef(storage, fileName);
       console.log('Starting Firebase Storage upload...');
 
-      await uploadString(imageRef, drawingData, 'data_url');
+      await uploadString(imageRef, imageToUpload, 'data_url');
       console.log('Upload successful for fileName:', fileName);
 
       // Get the public download URL

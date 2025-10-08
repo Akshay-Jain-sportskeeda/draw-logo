@@ -26,6 +26,7 @@ export default function CreativeRemixPage() {
   const [dailyChallenge, setDailyChallenge] = useState<DailyChallenge | null>(null);
   const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
   const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [getComposite, setGetComposite] = useState<(() => string) | null>(null);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
@@ -75,6 +76,11 @@ export default function CreativeRemixPage() {
 
   const handleDrawingChange = useCallback((dataUrl: string) => {
     setDrawingData(dataUrl);
+  }, []);
+
+  const handleCompositeReady = useCallback((getter: () => string) => {
+    console.log('=== CREATIVE REMIX: Composite getter registered ===');
+    setGetComposite(() => getter);
   }, []);
 
   const handleSubmitSuccess = (id: string) => {
@@ -219,6 +225,7 @@ export default function CreativeRemixPage() {
                   permanentTemplate={true}
                   templateImageUrl={dailyChallenge.freeDrawChallenge.imageUrl}
                   drawingData={drawingData}
+                  onCompositeImageReady={handleCompositeReady}
                 />
               ) : (
                 <div className="w-full max-w-[400px] h-[300px] sm:h-[400px] border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
@@ -239,6 +246,7 @@ export default function CreativeRemixPage() {
                 onShowLogin={() => setShowLoginModal(true)}
                 onSubmitSuccess={handleSubmitSuccess}
                 onSubmitError={handleSubmitError}
+                getCompositeImage={getComposite}
               />
             </div>
           </div>
