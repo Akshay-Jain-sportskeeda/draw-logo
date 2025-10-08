@@ -18,6 +18,7 @@ interface TemplateTransform {
   scale: number;
   width: number;
   height: number;
+  rotation: number;
 }
 
 export default function DrawingCanvas({ onDrawingChange, availableColors = [], overlayImageUrl, onClearCanvas, permanentTemplate = false, templateImageUrl, drawingData }: DrawingCanvasProps) {
@@ -54,10 +55,12 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     y: 0,
     scale: 1,
     width: 0,
-    height: 0
+    height: 0,
+    rotation: 0
   });
   const [isDraggingTemplate, setIsDraggingTemplate] = useState(false);
   const [isResizingTemplate, setIsResizingTemplate] = useState(false);
+  const [isRotatingTemplate, setIsRotatingTemplate] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [dragStartTransform, setDragStartTransform] = useState<TemplateTransform | null>(null);
   const templateImageRef = useRef<HTMLImageElement | null>(null);
@@ -282,7 +285,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           y: offsetY,
           scale: 1,
           width: drawWidth,
-          height: drawHeight
+          height: drawHeight,
+          rotation: 0
         });
 
         templateInitializedRef.current = true;
@@ -326,7 +330,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
         if (permanentTemplate && transform.width > 0 && transform.height > 0) {
           overlayCtx.globalAlpha = 1.0;
+          overlayCtx.save();
+          const centerX = transform.x + transform.width / 2;
+          const centerY = transform.y + transform.height / 2;
+          overlayCtx.translate(centerX, centerY);
+          overlayCtx.rotate((transform.rotation * Math.PI) / 180);
+          overlayCtx.translate(-centerX, -centerY);
           overlayCtx.drawImage(img, transform.x, transform.y, transform.width, transform.height);
+          overlayCtx.restore();
           console.log('=== Template drawn successfully ===');
         } else if (!permanentTemplate) {
           // For non-permanent templates (draw-memory mode)
@@ -364,7 +375,14 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
           if (permanentTemplate && transform.width > 0 && transform.height > 0) {
             overlayCtx.globalAlpha = 1.0;
+            overlayCtx.save();
+            const centerX = transform.x + transform.width / 2;
+            const centerY = transform.y + transform.height / 2;
+            overlayCtx.translate(centerX, centerY);
+            overlayCtx.rotate((transform.rotation * Math.PI) / 180);
+            overlayCtx.translate(-centerX, -centerY);
             overlayCtx.drawImage(newImg, transform.x, transform.y, transform.width, transform.height);
+            overlayCtx.restore();
             console.log('=== Template drawn after load ===');
           } else if (!permanentTemplate) {
             const padding = 16;
@@ -611,7 +629,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   };
 
   const handleTemplateInteractionMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isResizeMode || (!isDraggingTemplate && !isResizingTemplate)) return;
+    if (!isResizeMode || (!isDraggingTemplate && !isResizingTemplate && !isRotatingTemplate)) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -622,7 +640,21 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
     const deltaX = position.x - dragStartPos.x;
     const deltaY = position.y - dragStartPos.y;
 
-    if (isResizingTemplate) {
+    if (isRotatingTemplate) {
+      const centerX = dragStartTransform.x + dragStartTransform.width / 2;
+      const centerY = dragStartTransform.y + dragStartTransform.height / 2;
+
+      const startAngle = Math.atan2(dragStartPos.y - centerY, dragStartPos.x - centerX);
+      const currentAngle = Math.atan2(position.y - centerY, position.x - centerX);
+
+      const angleDiff = (currentAngle - startAngle) * (180 / Math.PI);
+      const newRotation = dragStartTransform.rotation + angleDiff;
+
+      setTemplateTransform({
+        ...dragStartTransform,
+        rotation: newRotation
+      });
+    } else if (isResizingTemplate) {
       const diagonal = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const direction = (deltaX + deltaY) < 0 ? 1 : -1;
       const scaleChange = (diagonal * direction) / 200;
@@ -665,7 +697,8 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         y: dragStartTransform.y - finalHeightDiff,
         scale: newScale,
         width: finalWidth,
-        height: finalHeight
+        height: finalHeight,
+        rotation: dragStartTransform.rotation
       });
     } else if (isDraggingTemplate) {
       let newX = dragStartTransform.x + deltaX;
@@ -685,6 +718,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
   const handleTemplateInteractionEnd = () => {
     setIsDraggingTemplate(false);
     setIsResizingTemplate(false);
+    setIsRotatingTemplate(false);
     setDragStartTransform(null);
   };
 
@@ -758,7 +792,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           className="absolute bottom-4 left-4"
           style={{
             zIndex: 10,
-            pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+            pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
             userSelect: 'none',
             WebkitUserSelect: 'none',
             WebkitTouchCallout: 'none'
@@ -870,7 +904,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             className="absolute top-4 right-4"
             style={{
               zIndex: 10,
-              pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+              pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               WebkitTouchCallout: 'none'
@@ -899,7 +933,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           className="absolute bottom-4 right-4"
           style={{
             zIndex: 10,
-            pointerEvents: (isDraggingTemplate || isResizingTemplate || isDrawing) ? 'none' : 'auto',
+            pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
             userSelect: 'none',
             WebkitUserSelect: 'none',
             WebkitTouchCallout: 'none'
@@ -946,9 +980,102 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
                 height: '20px',
                 backgroundColor: '#3b82f6',
                 border: '2px solid white',
+                borderRadius: '2px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                pointerEvents: 'auto',
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                const rect = overlayCanvasRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const canvasX = (x / rect.width) * (overlayCanvasRef.current?.width || 1);
+                const canvasY = (y / rect.height) * (overlayCanvasRef.current?.height || 1);
+                setIsResizingTemplate(true);
+                setDragStartPos({ x: canvasX, y: canvasY });
+                setDragStartTransform({ ...templateTransform });
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                const rect = overlayCanvasRef.current?.getBoundingClientRect();
+                if (!rect || e.touches.length === 0) return;
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const canvasX = (x / rect.width) * (overlayCanvasRef.current?.width || 1);
+                const canvasY = (y / rect.height) * (overlayCanvasRef.current?.height || 1);
+                setIsResizingTemplate(true);
+                setDragStartPos({ x: canvasX, y: canvasY });
+                setDragStartTransform({ ...templateTransform });
+              }}
+            />
+
+            {/* Rotation handle */}
+            <div
+              className="absolute cursor-grab active:cursor-grabbing"
+              style={{
+                left: '50%',
+                top: '-40px',
+                transform: 'translateX(-50%)',
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#10b981',
+                border: '2px solid white',
                 borderRadius: '50%',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
                 pointerEvents: 'auto',
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                const rect = overlayCanvasRef.current?.getBoundingClientRect();
+                if (!rect) return;
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const canvasX = (x / rect.width) * (overlayCanvasRef.current?.width || 1);
+                const canvasY = (y / rect.height) * (overlayCanvasRef.current?.height || 1);
+                setIsRotatingTemplate(true);
+                setDragStartPos({ x: canvasX, y: canvasY });
+                setDragStartTransform({ ...templateTransform });
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                const rect = overlayCanvasRef.current?.getBoundingClientRect();
+                if (!rect || e.touches.length === 0) return;
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                const canvasX = (x / rect.width) * (overlayCanvasRef.current?.width || 1);
+                const canvasY = (y / rect.height) * (overlayCanvasRef.current?.height || 1);
+                setIsRotatingTemplate(true);
+                setDragStartPos({ x: canvasX, y: canvasY });
+                setDragStartTransform({ ...templateTransform });
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                style={{ position: 'absolute', top: '2px', left: '2px' }}
+              >
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+            </div>
+
+            {/* Connection line from template to rotation handle */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '-40px',
+                width: '2px',
+                height: '40px',
+                backgroundColor: '#10b981',
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none',
               }}
             />
           </div>
