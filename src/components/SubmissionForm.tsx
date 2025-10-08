@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { firestore } from '@/lib/firebase';
+import { storage, firestore } from '@/lib/firebase';
+import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 
 interface SubmissionFormProps {
@@ -63,27 +64,16 @@ export default function SubmissionForm({ drawingData, user, onShowLogin, onSubmi
       const fileName = `creative-remix/${user!.uid}/${timestamp}-${randomString}.png`;
       console.log('Attempting to upload with fileName:', fileName);
 
-      // Upload the drawing via server-side API
-      console.log('Starting server-side upload...');
-      const uploadResponse = await fetch('/api/upload-drawing', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          drawingData,
-          userId: user!.uid,
-          fileName
-        }),
-      });
+      // Upload the drawing to Firebase Storage
+      const imageRef = storageRef(storage, fileName);
+      console.log('Starting Firebase Storage upload...');
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || 'Failed to upload image');
-      }
+      await uploadString(imageRef, drawingData, 'data_url');
+      console.log('Upload successful for fileName:', fileName);
 
-      const { publicUrl } = await uploadResponse.json();
-      console.log('Upload successful, public URL:', publicUrl);
+      // Get the public download URL
+      const publicUrl = await getDownloadURL(imageRef);
+      console.log('Generated public URL:', publicUrl);
 
       // Save submission data to Firestore
       const submissionsRef = collection(firestore, 'nfl-draw-logo');
