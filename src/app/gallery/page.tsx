@@ -334,7 +334,7 @@ export default function GalleryPage() {
             </div>
           ) : dailyChallenge?.freeDrawChallenge?.name ? (
             <h2 className="text-lg font-semibold text-gray-800 text-center">
-              {dailyChallenge.freeDrawChallenge.name}
+              {String(dailyChallenge.freeDrawChallenge.name)}
             </h2>
           ) : (
             <p className="text-sm text-gray-500 text-center italic">
