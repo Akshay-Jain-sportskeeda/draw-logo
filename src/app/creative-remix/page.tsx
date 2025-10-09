@@ -71,12 +71,10 @@ export default function CreativeRemixPage() {
   React.useEffect(() => {
     const fetchAvailablePuzzles = async () => {
       try {
-        const response = await fetch('/api/daily-challenge');
+        const response = await fetch('/api/daily-challenge?all=true');
         if (response.ok) {
           const data = await response.json();
-          if (data.availablePuzzles) {
-            setAvailablePuzzles(data.availablePuzzles);
-          }
+          setAvailablePuzzles(data);
         }
       } catch (error) {
         console.error('Error fetching available puzzles:', error);
