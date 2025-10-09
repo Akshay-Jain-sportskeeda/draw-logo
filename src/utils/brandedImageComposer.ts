@@ -74,62 +74,129 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
           const logoAspectRatio = logoImg.width / logoImg.height;
           const logoWidth = logoHeight * logoAspectRatio;
 
+          ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          const textMetrics = ctx.measureText(gameName);
+          const textWidth = textMetrics.width;
+
+          const containerPadding = 10;
+          const containerWidth = logoWidth + textPadding + textWidth + (containerPadding * 2);
+          const containerHeight = logoHeight + (containerPadding * 2);
+          const containerX = padding - containerPadding;
+          const containerY = padding - containerPadding;
+
           ctx.save();
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-          ctx.shadowBlur = 6;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+          ctx.shadowBlur = 8;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 2;
+          const borderRadius = 8;
+          ctx.beginPath();
+          ctx.moveTo(containerX + borderRadius, containerY);
+          ctx.lineTo(containerX + containerWidth - borderRadius, containerY);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY, containerX + containerWidth, containerY + borderRadius);
+          ctx.lineTo(containerX + containerWidth, containerY + containerHeight - borderRadius);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY + containerHeight, containerX + containerWidth - borderRadius, containerY + containerHeight);
+          ctx.lineTo(containerX + borderRadius, containerY + containerHeight);
+          ctx.quadraticCurveTo(containerX, containerY + containerHeight, containerX, containerY + containerHeight - borderRadius);
+          ctx.lineTo(containerX, containerY + borderRadius);
+          ctx.quadraticCurveTo(containerX, containerY, containerX + borderRadius, containerY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          ctx.save();
           ctx.drawImage(logoImg, padding, padding, logoWidth, logoHeight);
           ctx.restore();
 
           ctx.save();
           ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
           ctx.fillStyle = '#2c3e50';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
 
           const textX = padding + logoWidth + textPadding;
           const textY = padding + logoHeight / 2 + 7;
 
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.lineWidth = 3;
-          ctx.strokeText(gameName, textX, textY);
           ctx.fillText(gameName, textX, textY);
           ctx.restore();
         } else {
+          ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          const textMetrics = ctx.measureText(gameName);
+          const textWidth = textMetrics.width;
+
+          const containerPadding = 10;
+          const containerWidth = textWidth + (containerPadding * 2);
+          const containerHeight = 32 + (containerPadding * 2);
+          const containerX = padding - containerPadding;
+          const containerY = padding - containerPadding;
+
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2;
+          const borderRadius = 8;
+          ctx.beginPath();
+          ctx.moveTo(containerX + borderRadius, containerY);
+          ctx.lineTo(containerX + containerWidth - borderRadius, containerY);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY, containerX + containerWidth, containerY + borderRadius);
+          ctx.lineTo(containerX + containerWidth, containerY + containerHeight - borderRadius);
+          ctx.quadraticCurveTo(containerX + containerWidth, containerY + containerHeight, containerX + containerWidth - borderRadius, containerY + containerHeight);
+          ctx.lineTo(containerX + borderRadius, containerY + containerHeight);
+          ctx.quadraticCurveTo(containerX, containerY + containerHeight, containerX, containerY + containerHeight - borderRadius);
+          ctx.lineTo(containerX, containerY + borderRadius);
+          ctx.quadraticCurveTo(containerX, containerY, containerX + borderRadius, containerY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
           ctx.save();
           ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
           ctx.fillStyle = '#2c3e50';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
-          ctx.shadowBlur = 6;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.lineWidth = 3;
-          ctx.strokeText(gameName, padding, padding + 24);
           ctx.fillText(gameName, padding, padding + 24);
           ctx.restore();
         }
 
         ctx.save();
         ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        const usernameText = `by ${username}`;
+        const usernameMetrics = ctx.measureText(usernameText);
+        const usernameTextWidth = usernameMetrics.width;
+
+        const userContainerPadding = 8;
+        const userContainerWidth = usernameTextWidth + (userContainerPadding * 2);
+        const userContainerHeight = 24 + (userContainerPadding * 2);
+        const userContainerX = canvas.width - padding - usernameTextWidth - userContainerPadding;
+        const userContainerY = canvas.height - padding - 24 - userContainerPadding;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+        const userBorderRadius = 8;
+        ctx.beginPath();
+        ctx.moveTo(userContainerX + userBorderRadius, userContainerY);
+        ctx.lineTo(userContainerX + userContainerWidth - userBorderRadius, userContainerY);
+        ctx.quadraticCurveTo(userContainerX + userContainerWidth, userContainerY, userContainerX + userContainerWidth, userContainerY + userBorderRadius);
+        ctx.lineTo(userContainerX + userContainerWidth, userContainerY + userContainerHeight - userBorderRadius);
+        ctx.quadraticCurveTo(userContainerX + userContainerWidth, userContainerY + userContainerHeight, userContainerX + userContainerWidth - userBorderRadius, userContainerY + userContainerHeight);
+        ctx.lineTo(userContainerX + userBorderRadius, userContainerY + userContainerHeight);
+        ctx.quadraticCurveTo(userContainerX, userContainerY + userContainerHeight, userContainerX, userContainerY + userContainerHeight - userBorderRadius);
+        ctx.lineTo(userContainerX, userContainerY + userBorderRadius);
+        ctx.quadraticCurveTo(userContainerX, userContainerY, userContainerX + userBorderRadius, userContainerY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
         ctx.fillStyle = '#34495e';
         ctx.textAlign = 'right';
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
-        ctx.shadowBlur = 6;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
 
-        const usernameText = `by ${username}`;
         const usernameX = canvas.width - padding;
         const usernameY = canvas.height - padding;
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 3;
-        ctx.strokeText(usernameText, usernameX, usernameY);
         ctx.fillText(usernameText, usernameX, usernameY);
         ctx.restore();
 
