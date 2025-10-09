@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import GamesPageSidebar from '@/components/GamesPageSidebar'
 import PFSNFooter from '@/components/PFSNFooter'
+import PFSNHeader from '@/components/PFSNHeader'
 import TopBar from '@/components/TopBar'
 import { useAuth } from '@/lib/useAuth';
 import Auth from '@/components/Auth'; // Assuming Auth is your login modal component
@@ -140,6 +141,9 @@ function RootLayoutContent({
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col lg:ml-0">
+          {/* Mobile Header - shown only on mobile */}
+          <PFSNHeader currentGame="NFL Draw Logo" />
+
           {/* TopBar for both mobile and desktop */}
           <TopBar
             user={user}
