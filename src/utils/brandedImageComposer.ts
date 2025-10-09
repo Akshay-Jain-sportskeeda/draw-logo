@@ -79,10 +79,10 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
           const textWidth = textMetrics.width;
 
           const containerPadding = 10;
-          const containerWidth = logoWidth + textPadding + textWidth + (containerPadding * 2);
-          const containerHeight = logoHeight + (containerPadding * 2);
-          const containerX = padding - containerPadding;
-          const containerY = padding - containerPadding;
+          const containerWidth = textWidth + (containerPadding * 2);
+          const containerHeight = logoHeight;
+          const containerX = padding + logoWidth + textPadding - containerPadding;
+          const containerY = padding;
 
           ctx.save();
           ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
@@ -165,9 +165,9 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
 
         const userContainerPadding = 8;
         const userContainerWidth = usernameTextWidth + (userContainerPadding * 2);
-        const userContainerHeight = 24 + (userContainerPadding * 2);
+        const userContainerHeight = 28;
         const userContainerX = canvas.width - padding - usernameTextWidth - userContainerPadding;
-        const userContainerY = canvas.height - padding - 24 - userContainerPadding;
+        const userContainerY = canvas.height - padding - userContainerHeight;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
         ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
@@ -193,9 +193,10 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
         ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
         ctx.fillStyle = '#34495e';
         ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
 
         const usernameX = canvas.width - padding;
-        const usernameY = canvas.height - padding;
+        const usernameY = canvas.height - padding - userContainerHeight / 2;
 
         ctx.fillText(usernameText, usernameX, usernameY);
         ctx.restore();
