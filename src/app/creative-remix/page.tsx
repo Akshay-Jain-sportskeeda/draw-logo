@@ -6,7 +6,7 @@ import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { generateBrandedImage, preloadLogo } from '@/utils/brandedImageComposer';
+import { generateBrandedImage, preloadHeader } from '@/utils/brandedImageComposer';
 
 interface DailyChallenge {
   date: string;
@@ -60,7 +60,7 @@ export default function CreativeRemixPage() {
     };
 
     fetchDailyChallenge();
-    preloadLogo().catch(err => console.warn('Failed to preload logo:', err));
+    preloadHeader().catch(err => console.warn('Failed to preload header:', err));
   }, []);
 
   const defaultColors = [

@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { useVotes } from '@/lib/useVotes';
 import { getTodayDateString } from '@/utils/dateHelpers';
-import { generateBrandedImage, preloadLogo } from '@/utils/brandedImageComposer';
+import { generateBrandedImage, preloadHeader } from '@/utils/brandedImageComposer';
 
 interface Submission {
   id: string;
@@ -37,7 +37,7 @@ export default function GalleryPage() {
   const { toggleVote, getVoteCount, hasUserVoted, initializeVote } = useVotes(user, submissionIds);
 
   useEffect(() => {
-    preloadLogo().catch(err => console.warn('Failed to preload logo:', err));
+    preloadHeader().catch(err => console.warn('Failed to preload header:', err));
   }, []);
 
   useEffect(() => {
