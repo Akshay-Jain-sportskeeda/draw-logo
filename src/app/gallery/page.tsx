@@ -48,7 +48,7 @@ export default function GalleryPage() {
       const submissionsArray: Submission[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.gameMode === 'creative-remix') {
+        if (data.gameMode === 'creative-remix' && data.status === 'approved') {
           submissionsArray.push({
             id: doc.id,
             drawingUrl: data.drawingUrl || '',
