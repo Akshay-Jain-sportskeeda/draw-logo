@@ -195,111 +195,104 @@ export default function CreativeRemixPage() {
       const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}!`;
       const shareUrl = window.location.href;
 
-      let brandedImageData: string | null = null;
+      const compositeImageData = getComposite ? getComposite() : null;
 
-      if (getComposite) {
+      if (navigator.share) {
         try {
-          console.log('=== SHARE: Generating composite image ===');
-          const compositeImageData = getComposite();
+          if (compositeImageData && navigator.canShare) {
+            console.log('=== SHARE: Attempting native share with image ===');
+            const blob = await fetch(compositeImageData).then(r => r.blob());
+            const file = new File([blob], 'my-creative-remix.png', { type: 'image/png' });
 
-          console.log('=== SHARE: Generating branded image ===');
+            if (navigator.canShare({ files: [file] })) {
+              console.log('=== SHARE: Sharing with image file ===');
+              await navigator.share({
+                title: 'Creative Remix - NFL Logo Drawing Game',
+                text: shareText,
+                files: [file]
+              });
+
+              (async () => {
+                try {
+                  console.log('=== SHARE: Generating branded image in background ===');
+                  const username = user.displayName || 'Anonymous';
+                  await generateBrandedImage({
+                    imageDataUrl: compositeImageData,
+                    username: username,
+                    gameName: 'NFL Draw Logo'
+                  });
+                } catch (error) {
+                  console.error('Background branded image generation failed:', error);
+                }
+              })();
+
+              return;
+            }
+          }
+
+          console.log('=== SHARE: Sharing text + URL ===');
+          await navigator.share({
+            title: 'Creative Remix - NFL Logo Drawing Game',
+            text: shareText,
+            url: shareUrl
+          });
+          console.log('=== SHARE: Successfully shared via Web Share API ===');
+          return;
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            console.log('=== SHARE: User cancelled share ===');
+            return;
+          }
+
+          if ((error as Error).name === 'NotAllowedError') {
+            console.error('=== SHARE: Permission denied - trying clipboard fallback ===');
+          } else {
+            console.error('=== SHARE: Error sharing ===', error);
+          }
+        }
+      }
+
+      console.log('=== SHARE: Native share not available, using clipboard ===');
+
+      let brandedImageData: string | null = null;
+      if (compositeImageData) {
+        try {
+          console.log('=== SHARE: Generating branded image for clipboard ===');
           const username = user.displayName || 'Anonymous';
           brandedImageData = await generateBrandedImage({
             imageDataUrl: compositeImageData,
             username: username,
             gameName: 'NFL Draw Logo'
           });
-          console.log('=== SHARE: Branded image generated successfully ===');
         } catch (error) {
           console.error('=== SHARE: Error generating branded image ===', error);
         }
       }
 
-      const imageToShare = brandedImageData || (getComposite ? getComposite() : null);
+      const imageToShare = brandedImageData || compositeImageData;
 
-      const copyImageToClipboard = async () => {
-        if (imageToShare && navigator.clipboard && (navigator.clipboard as any).write) {
-          try {
-            console.log('=== SHARE: Copying branded image to clipboard ===');
-            showNotification('Copying...');
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const blob = await fetch(imageToShare).then(r => r.blob());
-            await (navigator.clipboard as any).write([
-              new (window as any).ClipboardItem({
-                'image/png': blob
-              })
-            ]);
-            showNotification('Copied to clipboard!');
-            return true;
-          } catch (error) {
-            console.error('=== SHARE: Error copying image to clipboard ===', error);
-            return false;
-          }
-        }
-        return false;
-      };
-
-      const imageCopied = await copyImageToClipboard();
-
-      if (navigator.share && imageToShare) {
+      if (imageToShare && navigator.clipboard && (navigator.clipboard as any).write) {
         try {
-          if (imageToShare && imageToShare.length > 100 && navigator.canShare) {
-            const blob = await fetch(imageToShare).then(r => r.blob());
-            const file = new File([blob], 'my-creative-remix.png', { type: 'image/png' });
-
-            if (navigator.canShare({ files: [file] })) {
-              console.log('=== SHARE: Sharing with branded image file ===');
-              await navigator.share({
-                title: 'Creative Remix - NFL Logo Drawing Game',
-                text: shareText,
-                files: [file]
-              });
-              console.log('=== SHARE: Successfully shared with image ===');
-              return;
-            }
-          }
-
-          console.log('=== SHARE: Sharing without image (not supported) ===');
-          await navigator.share({
-            title: 'Creative Remix - NFL Logo Drawing Game',
-            text: shareText,
-            url: shareUrl
-          });
-          console.log('=== SHARE: Successfully shared via Web Share API ===');
+          console.log('=== SHARE: Copying image to clipboard ===');
+          showNotification('Copying...');
+          await new Promise(resolve => setTimeout(resolve, 100));
+          const blob = await fetch(imageToShare).then(r => r.blob());
+          await (navigator.clipboard as any).write([
+            new (window as any).ClipboardItem({
+              'image/png': blob
+            })
+          ]);
+          showNotification('Image copied to clipboard!');
+          return;
         } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            console.log('=== SHARE: User cancelled share ===');
-          } else {
-            console.error('=== SHARE: Error sharing ===', error);
-            if (!imageCopied) {
-              await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-              showNotification('Link copied to clipboard!');
-            }
-          }
+          console.error('=== SHARE: Error copying image to clipboard ===', error);
         }
-      } else if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Creative Remix - NFL Logo Drawing Game',
-            text: shareText,
-            url: shareUrl
-          });
-          console.log('=== SHARE: Successfully shared via Web Share API ===');
-        } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            console.log('=== SHARE: User cancelled share ===');
-          } else {
-            console.error('=== SHARE: Error sharing ===', error);
-            if (!imageCopied) {
-              await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-              showNotification('Link copied to clipboard!');
-            }
-          }
-        }
-      } else if (!imageCopied && navigator.clipboard) {
-        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
         showNotification('Link copied to clipboard!');
-      } else if (!imageCopied) {
+      } else {
         showNotification('Sharing is not supported on this device');
       }
     } catch (error) {

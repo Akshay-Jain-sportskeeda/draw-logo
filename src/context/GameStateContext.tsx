@@ -604,7 +604,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
               'image/png': blob
             })
           ]);
-          showNotification('Copied to clipboard!');
+          showNotification('Image copied to clipboard!');
           return true;
         } catch (error) {
           console.error('Error copying image to clipboard:', error);
@@ -622,6 +622,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         if (navigator.share) {
           try {
             if (compositeImageData && navigator.canShare) {
+              console.log('=== Attempting native share ===');
               const blob = await fetch(compositeImageData).then(r => r.blob());
               const file = new File([blob], 'my-drawing.png', { type: 'image/png' });
 
@@ -657,7 +658,12 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
               console.log('=== Share cancelled by user ===');
               return;
             }
-            console.error('Share error:', error);
+
+            if ((error as Error).name === 'NotAllowedError') {
+              console.error('=== Permission denied - trying clipboard fallback ===');
+            } else {
+              console.error('=== Share error ===', error);
+            }
           }
         }
 
@@ -676,20 +682,28 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       }
     } else if (navigator.share) {
       try {
+        console.log('=== Attempting text-only native share ===');
         await navigator.share({
           title: 'NFL Logo Drawing Game',
           text: shareText,
           url: window.location.href
         });
       } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-          showNotification('Score copied to clipboard!');
+        if ((error as Error).name === 'AbortError') {
+          console.log('=== Share cancelled by user ===');
+          return;
         }
+
+        if ((error as Error).name === 'NotAllowedError') {
+          console.error('=== Permission denied - copying to clipboard ===');
+        }
+
+        navigator.clipboard.writeText(shareText + '\n' + window.location.href);
+        showNotification('Link copied to clipboard!');
       }
     } else {
       navigator.clipboard.writeText(shareText + '\n' + window.location.href);
-      showNotification('Score copied to clipboard!');
+      showNotification('Link copied to clipboard!');
     }
   }, [score, dailyChallenge, getCompositeImage]);
 

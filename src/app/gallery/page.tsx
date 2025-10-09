@@ -217,80 +217,95 @@ export default function GalleryPage() {
       const shareText = `Check out my drawing in the NFL Logo Gallery!`;
       const shareUrl = window.location.href;
 
-      let brandedImageData: string | null = null;
+      if (navigator.share) {
+        try {
+          console.log('=== GALLERY SHARE: Attempting native share ===');
+          const blob = await fetch(submission.drawingUrl).then(r => r.blob());
+          const file = new File([blob], 'my-nfl-logo-drawing.png', { type: 'image/png' });
 
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            console.log('=== GALLERY SHARE: Sharing with file ===');
+            await navigator.share({
+              title: 'My NFL Logo Drawing',
+              text: shareText,
+              files: [file]
+            });
+
+            (async () => {
+              try {
+                console.log('=== GALLERY SHARE: Generating branded image in background ===');
+                await generateBrandedImage({
+                  imageDataUrl: submission.drawingUrl,
+                  username: submission.userName,
+                  gameName: 'NFL Draw Logo'
+                });
+              } catch (error) {
+                console.error('Background branded image generation failed:', error);
+              }
+            })();
+
+            return;
+          }
+
+          console.log('=== GALLERY SHARE: Sharing without file (text + URL) ===');
+          await navigator.share({
+            title: 'My NFL Logo Drawing',
+            text: shareText,
+            url: shareUrl
+          });
+          return;
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            console.log('=== GALLERY SHARE: Share cancelled by user ===');
+            return;
+          }
+
+          if ((error as Error).name === 'NotAllowedError') {
+            console.error('=== GALLERY SHARE: Permission denied - trying clipboard fallback ===');
+          } else {
+            console.error('=== GALLERY SHARE: Share error ===', error);
+          }
+        }
+      }
+
+      console.log('=== GALLERY SHARE: Native share not available, using clipboard ===');
+
+      let brandedImageData: string | null = null;
       try {
-        console.log('=== GALLERY SHARE: Generating branded image ===');
+        console.log('=== GALLERY SHARE: Generating branded image for clipboard ===');
         brandedImageData = await generateBrandedImage({
           imageDataUrl: submission.drawingUrl,
           username: submission.userName,
           gameName: 'NFL Draw Logo'
         });
-        console.log('=== GALLERY SHARE: Branded image generated successfully ===');
       } catch (error) {
         console.error('=== GALLERY SHARE: Error generating branded image ===', error);
       }
 
       const imageToShare = brandedImageData || submission.drawingUrl;
 
-      const copyImageToClipboard = async () => {
-        if (navigator.clipboard && (navigator.clipboard as any).write) {
-          try {
-            console.log('=== GALLERY SHARE: Copying image to clipboard ===');
-            showNotification('Copying...');
-            await new Promise(resolve => setTimeout(resolve, 100));
-            const blob = await fetch(imageToShare).then(r => r.blob());
-            await (navigator.clipboard as any).write([
-              new (window as any).ClipboardItem({
-                'image/png': blob
-              })
-            ]);
-            showNotification('Copied to clipboard!');
-            return true;
-          } catch (error) {
-            console.error('Error copying image to clipboard:', error);
-            return false;
-          }
-        }
-        return false;
-      };
-
-      const imageCopied = await copyImageToClipboard();
-
-      if (navigator.share) {
+      if (navigator.clipboard && (navigator.clipboard as any).write) {
         try {
+          console.log('=== GALLERY SHARE: Copying image to clipboard ===');
+          showNotification('Copying...');
+          await new Promise(resolve => setTimeout(resolve, 100));
           const blob = await fetch(imageToShare).then(r => r.blob());
-          const file = new File([blob], 'my-nfl-logo-drawing.png', { type: 'image/png' });
-
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: 'My NFL Logo Drawing',
-              text: shareText,
-              files: [file]
-            });
-            return;
-          }
-
-          await navigator.share({
-            title: 'My NFL Logo Drawing',
-            text: shareText,
-            url: shareUrl
-          });
+          await (navigator.clipboard as any).write([
+            new (window as any).ClipboardItem({
+              'image/png': blob
+            })
+          ]);
+          showNotification('Image copied to clipboard!');
+          return;
         } catch (error) {
-          if ((error as Error).name === 'AbortError') {
-            return;
-          }
-          console.error('Share error:', error);
-          if (!imageCopied) {
-            await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-            showNotification('Link copied to clipboard!');
-          }
+          console.error('Error copying image to clipboard:', error);
         }
-      } else if (!imageCopied && navigator.clipboard) {
-        const textToShare = `${shareText}\n${shareUrl}`;
-        await navigator.clipboard.writeText(textToShare);
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
         showNotification('Link copied to clipboard!');
-      } else if (!imageCopied) {
+      } else {
         showNotification('Sharing is not supported on this device');
       }
     } catch (error) {
