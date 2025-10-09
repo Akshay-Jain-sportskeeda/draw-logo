@@ -93,60 +93,72 @@ const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Draw Logo' }) =>
           <div className={styles.menuSection}>
             <h4 className={styles.sectionTitle}>NFL GAMES</h4>
             <div className={styles.gamesList}>
-              {nflGames.map((game) => (
-                <a
-                  key={game.title}
-                  href={game.url}
-                  className={styles.gameLink}
-                >
-                  {game.title.toUpperCase()}
-                </a>
-              ))}
+              {nflGames.map((game) => {
+                const isCurrentGame = currentGame === game.title;
+                return (
+                  <a
+                    key={game.title}
+                    href={game.url}
+                    className={`${styles.gameLink} ${isCurrentGame ? styles.gameLinkActive : ''}`}
+                  >
+                    {game.title.toUpperCase()}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
           <div className={styles.menuSection}>
             <h4 className={styles.sectionTitle}>NBA GAMES</h4>
             <div className={styles.gamesList}>
-              {nbaGames.map((game) => (
-                <a
-                  key={game.title}
-                  href={game.url}
-                  className={styles.gameLink}
-                >
-                  {game.title.toUpperCase()}
-                </a>
-              ))}
+              {nbaGames.map((game) => {
+                const isCurrentGame = currentGame === game.title;
+                return (
+                  <a
+                    key={game.title}
+                    href={game.url}
+                    className={`${styles.gameLink} ${isCurrentGame ? styles.gameLinkActive : ''}`}
+                  >
+                    {game.title.toUpperCase()}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
           <div className={styles.menuSection}>
             <h4 className={styles.sectionTitle}>NHL GAMES</h4>
             <div className={styles.gamesList}>
-              {nhlGames.map((game) => (
-                <a
-                  key={game.title}
-                  href={game.url}
-                  className={styles.gameLink}
-                >
-                  {game.title.toUpperCase()}
-                </a>
-              ))}
+              {nhlGames.map((game) => {
+                const isCurrentGame = currentGame === game.title;
+                return (
+                  <a
+                    key={game.title}
+                    href={game.url}
+                    className={`${styles.gameLink} ${isCurrentGame ? styles.gameLinkActive : ''}`}
+                  >
+                    {game.title.toUpperCase()}
+                  </a>
+                );
+              })}
             </div>
           </div>
 
           <div className={styles.menuSection}>
             <h4 className={styles.sectionTitle}>OTHER GAMES</h4>
             <div className={styles.gamesList}>
-              {otherGames.map((game) => (
-                <a
-                  key={game.title}
-                  href={game.url}
-                  className={styles.gameLink}
-                >
-                  {game.title.toUpperCase()}
-                </a>
-              ))}
+              {otherGames.map((game) => {
+                const isCurrentGame = currentGame === game.title;
+                return (
+                  <a
+                    key={game.title}
+                    href={game.url}
+                    className={`${styles.gameLink} ${isCurrentGame ? styles.gameLinkActive : ''}`}
+                  >
+                    {game.title.toUpperCase()}
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>

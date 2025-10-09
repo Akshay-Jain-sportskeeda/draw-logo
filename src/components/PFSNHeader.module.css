@@ -166,6 +166,11 @@
   color: #ffffff;
 }
 
+.gameLinkActive {
+  color: #cc3333;
+  font-weight: 700;
+}
+
 /* Scrollbar styles */
 .slideMenu::-webkit-scrollbar,
 .menuMain::-webkit-scrollbar,
