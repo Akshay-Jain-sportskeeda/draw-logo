@@ -118,16 +118,20 @@ export default function DrawMemoryPage() {
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-              <Link href="/" className="inline-block text-blue-600 hover:text-blue-700 font-medium">
+            <div className="flex items-center justify-between mb-4">
+              <Link href="/" className="text-blue-600 hover:text-blue-700 font-medium">
                 ← Back
               </Link>
-              <h2 className="text-2xl font-semibold text-gray-800 text-center md:text-left md:flex-1 md:text-center">
-                Draw the {currentTeam} logo
-              </h2>
-              {/* Spacer for desktop to keep h2 centered */}
-              <div className="hidden md:block md:w-16"></div>
+              <button
+                onClick={handleArchive}
+                className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+              >
+                Archive →
+              </button>
             </div>
+            <h2 className="text-2xl font-semibold text-gray-800 text-center mb-2">
+              Draw the {currentTeam} logo
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 items-start">
