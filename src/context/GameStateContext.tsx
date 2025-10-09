@@ -135,7 +135,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   // Archive screen
   const [showArchiveScreen, setShowArchiveScreen] = useState(false);
   
-  const ACCURACY_THRESHOLD = 50;
+  const ACCURACY_THRESHOLD = 15;
 
   // Fetch daily challenge on mount
   useEffect(() => {
