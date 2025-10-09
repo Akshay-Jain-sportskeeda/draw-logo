@@ -192,6 +192,7 @@ export default function GalleryPage() {
       const copyImageToClipboard = async () => {
         if (navigator.clipboard && (navigator.clipboard as any).write) {
           try {
+            console.log('=== GALLERY SHARE: Copying image to clipboard ===');
             const blob = await fetch(imageToShare).then(r => r.blob());
             await (navigator.clipboard as any).write([
               new (window as any).ClipboardItem({
@@ -207,6 +208,8 @@ export default function GalleryPage() {
         }
         return false;
       };
+
+      const imageCopied = await copyImageToClipboard();
 
       if (navigator.share) {
         try {
@@ -231,21 +234,18 @@ export default function GalleryPage() {
           if ((error as Error).name === 'AbortError') {
             return;
           }
-          const imageCopied = await copyImageToClipboard();
+          console.error('Share error:', error);
           if (!imageCopied) {
             await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
             alert('Link copied to clipboard!');
           }
         }
-      } else {
-        const imageCopied = await copyImageToClipboard();
-        if (!imageCopied && navigator.clipboard) {
-          const textToShare = `${shareText}\n${shareUrl}`;
-          await navigator.clipboard.writeText(textToShare);
-          alert('Link copied to clipboard!');
-        } else if (!imageCopied) {
-          alert('Sharing is not supported on this device');
-        }
+      } else if (!imageCopied && navigator.clipboard) {
+        const textToShare = `${shareText}\n${shareUrl}`;
+        await navigator.clipboard.writeText(textToShare);
+        alert('Link copied to clipboard!');
+      } else if (!imageCopied) {
+        alert('Sharing is not supported on this device');
       }
     } catch (error) {
       console.error('Error sharing:', error);

@@ -173,7 +173,6 @@ export default function CreativeRemixPage() {
 
       const imageToShare = brandedImageData || (getComposite ? getComposite() : null);
 
-      // Helper function to copy image to clipboard
       const copyImageToClipboard = async () => {
         if (imageToShare && navigator.clipboard && (navigator.clipboard as any).write) {
           try {
@@ -193,6 +192,8 @@ export default function CreativeRemixPage() {
         }
         return false;
       };
+
+      const imageCopied = await copyImageToClipboard();
 
       if (navigator.share && imageToShare) {
         try {
@@ -224,7 +225,6 @@ export default function CreativeRemixPage() {
             console.log('=== SHARE: User cancelled share ===');
           } else {
             console.error('=== SHARE: Error sharing ===', error);
-            const imageCopied = await copyImageToClipboard();
             if (!imageCopied) {
               await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
               alert('Link copied to clipboard!');
@@ -244,19 +244,17 @@ export default function CreativeRemixPage() {
             console.log('=== SHARE: User cancelled share ===');
           } else {
             console.error('=== SHARE: Error sharing ===', error);
-            const imageCopied = await copyImageToClipboard();
             if (!imageCopied) {
               await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
               alert('Link copied to clipboard!');
             }
           }
         }
-      } else {
-        const imageCopied = await copyImageToClipboard();
-        if (!imageCopied) {
-          await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-          alert('Link copied to clipboard!');
-        }
+      } else if (!imageCopied && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+        alert('Link copied to clipboard!');
+      } else if (!imageCopied) {
+        alert('Sharing is not supported on this device');
       }
     } catch (error) {
       console.error('=== SHARE: Error ===', error);

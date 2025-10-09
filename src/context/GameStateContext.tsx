@@ -548,38 +548,74 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
     const shareText = `I just scored ${score}% drawing the ${dailyChallenge.memoryChallenge.name} logo! Can you beat my score?`;
 
-    if (navigator.share && getCompositeImage) {
+    const copyImageToClipboard = async (imageData: string) => {
+      if (navigator.clipboard && (navigator.clipboard as any).write) {
+        try {
+          console.log('=== Copying image to clipboard ===');
+          const blob = await fetch(imageData).then(r => r.blob());
+          await (navigator.clipboard as any).write([
+            new (window as any).ClipboardItem({
+              'image/png': blob
+            })
+          ]);
+          alert('Image copied to clipboard!');
+          return true;
+        } catch (error) {
+          console.error('Error copying image to clipboard:', error);
+          return false;
+        }
+      }
+      return false;
+    };
+
+    if (getCompositeImage) {
       try {
         console.log('=== Generating composite image for sharing ===');
         const compositeImageData = getCompositeImage();
 
-        if (compositeImageData && navigator.canShare) {
-          const blob = await fetch(compositeImageData).then(r => r.blob());
-          const file = new File([blob], 'my-drawing.png', { type: 'image/png' });
+        const imageCopied = await copyImageToClipboard(compositeImageData);
 
-          if (navigator.canShare({ files: [file] })) {
-            console.log('=== Sharing with image file ===');
+        if (navigator.share) {
+          try {
+            if (compositeImageData && navigator.canShare) {
+              const blob = await fetch(compositeImageData).then(r => r.blob());
+              const file = new File([blob], 'my-drawing.png', { type: 'image/png' });
+
+              if (navigator.canShare({ files: [file] })) {
+                console.log('=== Sharing with image file ===');
+                await navigator.share({
+                  title: 'NFL Logo Drawing Game',
+                  text: shareText,
+                  files: [file]
+                });
+                return;
+              }
+            }
+
+            console.log('=== Sharing without image (not supported) ===');
             await navigator.share({
               title: 'NFL Logo Drawing Game',
               text: shareText,
-              files: [file]
+              url: window.location.href
             });
-            return;
+          } catch (error) {
+            if ((error as Error).name !== 'AbortError') {
+              console.error('Share error:', error);
+              if (!imageCopied) {
+                await navigator.clipboard.writeText(shareText);
+                alert('Link copied to clipboard!');
+              }
+            }
           }
+        } else if (!imageCopied && navigator.clipboard) {
+          await navigator.clipboard.writeText(shareText);
+          alert('Link copied to clipboard!');
+        } else if (!imageCopied) {
+          alert('Sharing is not supported on this device');
         }
-
-        console.log('=== Sharing without image (not supported) ===');
-        await navigator.share({
-          title: 'NFL Logo Drawing Game',
-          text: shareText,
-          url: window.location.href
-        });
       } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Share error:', error);
-          navigator.clipboard.writeText(shareText);
-          alert('Score copied to clipboard!');
-        }
+        console.error('Error in share flow:', error);
+        alert('Failed to share. Please try again.');
       }
     } else if (navigator.share) {
       try {
