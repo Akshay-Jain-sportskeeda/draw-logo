@@ -32,7 +32,7 @@ const TopBar: React.FC<TopBarProps> = ({
           <div className={styles.headerLayout}>
             {/* Game Name - desktop only */}
             <div className={styles.pfsnLogoSection}>
-              <h1 className={styles.gameTitle}>NFL Octobox</h1>
+              <h1 className={styles.gameTitle}>NFL Draw Logo</h1>
             </div>
 
             {/* Tabs - centered on mobile, left-aligned on desktop */}
