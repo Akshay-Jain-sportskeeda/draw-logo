@@ -169,6 +169,50 @@ export default function GalleryPage() {
   };
 
   const handleShare = async (submission: Submission) => {
+    const showNotification = (message: string, duration: number = 2000) => {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1f2937;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        animation: slideDown 0.3s ease-out;
+      `;
+
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.animation = 'slideDown 0.3s ease-out reverse';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+          document.head.removeChild(style);
+        }, 300);
+      }, duration);
+    };
+
     try {
       const shareText = `Check out my drawing in the NFL Logo Gallery!`;
       const shareUrl = window.location.href;
@@ -193,13 +237,15 @@ export default function GalleryPage() {
         if (navigator.clipboard && (navigator.clipboard as any).write) {
           try {
             console.log('=== GALLERY SHARE: Copying image to clipboard ===');
+            showNotification('Copying...');
+            await new Promise(resolve => setTimeout(resolve, 100));
             const blob = await fetch(imageToShare).then(r => r.blob());
             await (navigator.clipboard as any).write([
               new (window as any).ClipboardItem({
                 'image/png': blob
               })
             ]);
-            alert('Image copied to clipboard!');
+            showNotification('Copied to clipboard!');
             return true;
           } catch (error) {
             console.error('Error copying image to clipboard:', error);
@@ -237,19 +283,19 @@ export default function GalleryPage() {
           console.error('Share error:', error);
           if (!imageCopied) {
             await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
-            alert('Link copied to clipboard!');
+            showNotification('Link copied to clipboard!');
           }
         }
       } else if (!imageCopied && navigator.clipboard) {
         const textToShare = `${shareText}\n${shareUrl}`;
         await navigator.clipboard.writeText(textToShare);
-        alert('Link copied to clipboard!');
+        showNotification('Link copied to clipboard!');
       } else if (!imageCopied) {
-        alert('Sharing is not supported on this device');
+        showNotification('Sharing is not supported on this device');
       }
     } catch (error) {
       console.error('Error sharing:', error);
-      alert('Failed to share. Please try again.');
+      showNotification('Failed to share. Please try again.');
     }
   };
 
