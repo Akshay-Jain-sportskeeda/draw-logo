@@ -48,7 +48,7 @@ export default function GalleryPage() {
       const submissionsArray: Submission[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.gameMode === 'creative-remix' && data.status === 'approved') {
+        if (data.gameMode === 'creative-remix') {
           submissionsArray.push({
             id: doc.id,
             drawingUrl: data.drawingUrl || '',
@@ -87,6 +87,8 @@ export default function GalleryPage() {
 
     if (showMySubmissions && user) {
       filtered = filtered.filter(submission => submission.userId === user.uid);
+    } else {
+      filtered = filtered.filter(submission => submission.status === 'approved');
     }
 
     setSubmissions(filtered);
@@ -152,6 +154,12 @@ export default function GalleryPage() {
     const nextDateStr = `${year}-${month}-${day}`;
     const today = getTodayDateString();
     return nextDateStr <= today;
+  };
+
+  const shouldShowStatusTag = (submission: Submission): boolean => {
+    if (!user) return false;
+    if (!showMySubmissions) return false;
+    return submission.userId === user.uid;
   };
 
   const handleShare = async (submission: Submission) => {
@@ -364,13 +372,15 @@ export default function GalleryPage() {
                     alt={`Artwork by ${submission.userName}`}
                     className="w-full h-full object-contain"
                   />
-                  <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                    submission.status === 'approved' ? 'bg-green-500 text-white' :
-                    submission.status === 'rejected' ? 'bg-red-500 text-white' :
-                    'bg-yellow-500 text-white'
-                  }`}>
-                    {submission.status}
-                  </div>
+                  {shouldShowStatusTag(submission) && (
+                    <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                      submission.status === 'approved' ? 'bg-green-500 text-white' :
+                      submission.status === 'rejected' ? 'bg-red-500 text-white' :
+                      'bg-yellow-500 text-white'
+                    }`}>
+                      {submission.status}
+                    </div>
+                  )}
                   {submission.rating && (
                     <div className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
                       {submission.rating}
