@@ -9,6 +9,7 @@ import { useAuthModal } from '@/context/AuthModalContext';
 import { useVotes } from '@/lib/useVotes';
 import { getTodayDateString } from '@/utils/dateHelpers';
 import { generateBrandedImage, preloadHeader } from '@/utils/brandedImageComposer';
+import { useGame } from '@/context/GameStateContext';
 
 interface Submission {
   id: string;
@@ -26,6 +27,7 @@ interface Submission {
 export default function GalleryPage() {
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
+  const { dailyChallenge, isLoadingChallenge, setDailyChallengeByDate } = useGame();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +41,10 @@ export default function GalleryPage() {
   useEffect(() => {
     preloadHeader().catch(err => console.warn('Failed to preload header:', err));
   }, []);
+
+  useEffect(() => {
+    setDailyChallengeByDate(selectedDate);
+  }, [selectedDate, setDailyChallengeByDate]);
 
   useEffect(() => {
     const submissionsRef = collection(firestore, 'nfl-draw-logo');
@@ -267,7 +273,7 @@ export default function GalleryPage() {
         </div>
 
         {/* Date Navigation */}
-        <div className="bg-white rounded-lg shadow-md p-3 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-3 mb-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <button
@@ -320,6 +326,22 @@ export default function GalleryPage() {
           </div>
         </div>
 
+        {/* Challenge Heading */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          {isLoadingChallenge ? (
+            <div className="flex items-center justify-center">
+              <div className="h-6 w-48 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ) : dailyChallenge?.freeDrawChallenge?.name ? (
+            <h2 className="text-lg font-semibold text-gray-800 text-center">
+              {dailyChallenge.freeDrawChallenge.name}
+            </h2>
+          ) : (
+            <p className="text-sm text-gray-500 text-center italic">
+              No challenge available for this date
+            </p>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="text-center py-12">
