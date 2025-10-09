@@ -13,7 +13,7 @@ export default function Home() {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           <Link href="/draw-memory">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-blue-400">
               <div className="flex flex-col items-center text-center">
@@ -39,11 +39,18 @@ export default function Home() {
               </div>
             </div>
           </Link>
-        </div>
 
-        <div className="text-center mt-12">
-          <Link href="/gallery" className="inline-block px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium">
-            View Gallery
+          <Link href="/gallery">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-purple-400">
+              <div className="flex flex-col items-center text-center">
+                <h2 className="text-xl font-bold text-gray-800 mb-2">
+                  View Gallery
+                </h2>
+                <p className="text-purple-700">
+                  Browse amazing artwork from our talented community!
+                </p>
+              </div>
+            </div>
           </Link>
         </div>
       </div>
