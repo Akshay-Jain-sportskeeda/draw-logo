@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { useVotes } from '@/lib/useVotes';
 import { getTodayDateString } from '@/utils/dateHelpers';
+import { generateBrandedImage, preloadLogo } from '@/utils/brandedImageComposer';
 
 interface Submission {
   id: string;
@@ -34,6 +35,10 @@ export default function GalleryPage() {
 
   const submissionIds = submissions.map(s => s.id);
   const { toggleVote, getVoteCount, hasUserVoted, initializeVote } = useVotes(user, submissionIds);
+
+  useEffect(() => {
+    preloadLogo().catch(err => console.warn('Failed to preload logo:', err));
+  }, []);
 
   useEffect(() => {
     const submissionsRef = collection(firestore, 'nfl-draw-logo');
@@ -154,10 +159,26 @@ export default function GalleryPage() {
       const shareText = `Check out my drawing in the NFL Logo Gallery!`;
       const shareUrl = window.location.href;
 
+      let brandedImageData: string | null = null;
+
+      try {
+        console.log('=== GALLERY SHARE: Generating branded image ===');
+        brandedImageData = await generateBrandedImage({
+          imageDataUrl: submission.drawingUrl,
+          username: submission.userName,
+          gameName: 'NFL Draw Logo'
+        });
+        console.log('=== GALLERY SHARE: Branded image generated successfully ===');
+      } catch (error) {
+        console.error('=== GALLERY SHARE: Error generating branded image ===', error);
+      }
+
+      const imageToShare = brandedImageData || submission.drawingUrl;
+
       const copyImageToClipboard = async () => {
         if (navigator.clipboard && (navigator.clipboard as any).write) {
           try {
-            const blob = await fetch(submission.drawingUrl).then(r => r.blob());
+            const blob = await fetch(imageToShare).then(r => r.blob());
             await (navigator.clipboard as any).write([
               new (window as any).ClipboardItem({
                 'image/png': blob
@@ -175,7 +196,7 @@ export default function GalleryPage() {
 
       if (navigator.share) {
         try {
-          const blob = await fetch(submission.drawingUrl).then(r => r.blob());
+          const blob = await fetch(imageToShare).then(r => r.blob());
           const file = new File([blob], 'my-nfl-logo-drawing.png', { type: 'image/png' });
 
           if (navigator.canShare && navigator.canShare({ files: [file] })) {

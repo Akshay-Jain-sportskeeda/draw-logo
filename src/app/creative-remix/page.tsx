@@ -6,6 +6,7 @@ import SubmissionForm from '@/components/SubmissionForm';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
+import { generateBrandedImage, preloadLogo } from '@/utils/brandedImageComposer';
 
 interface DailyChallenge {
   date: string;
@@ -31,7 +32,7 @@ export default function CreativeRemixPage() {
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
 
-  // Fetch daily challenge on component mount
+  // Fetch daily challenge and preload logo on component mount
   React.useEffect(() => {
     const fetchDailyChallenge = async () => {
       setIsLoadingChallenge(true);
@@ -59,6 +60,7 @@ export default function CreativeRemixPage() {
     };
 
     fetchDailyChallenge();
+    preloadLogo().catch(err => console.warn('Failed to preload logo:', err));
   }, []);
 
   const defaultColors = [
@@ -114,6 +116,12 @@ export default function CreativeRemixPage() {
       return;
     }
 
+    if (!user) {
+      alert('Please log in to share your artwork!');
+      setShowLoginModal(true);
+      return;
+    }
+
     setIsSharing(true);
 
     try {
@@ -122,13 +130,34 @@ export default function CreativeRemixPage() {
       const shareText = `Check out my creative remix of ${dailyChallenge.freeDrawChallenge.name}!`;
       const shareUrl = window.location.href;
 
+      let brandedImageData: string | null = null;
+
+      if (getComposite) {
+        try {
+          console.log('=== SHARE: Generating composite image ===');
+          const compositeImageData = getComposite();
+
+          console.log('=== SHARE: Generating branded image ===');
+          const username = user.displayName || 'Anonymous';
+          brandedImageData = await generateBrandedImage({
+            imageDataUrl: compositeImageData,
+            username: username,
+            gameName: 'NFL Draw Logo'
+          });
+          console.log('=== SHARE: Branded image generated successfully ===');
+        } catch (error) {
+          console.error('=== SHARE: Error generating branded image ===', error);
+        }
+      }
+
+      const imageToShare = brandedImageData || (getComposite ? getComposite() : null);
+
       // Helper function to copy image to clipboard
       const copyImageToClipboard = async () => {
-        if (getComposite && navigator.clipboard && (navigator.clipboard as any).write) {
+        if (imageToShare && navigator.clipboard && (navigator.clipboard as any).write) {
           try {
-            console.log('=== SHARE: Copying image to clipboard ===');
-            const compositeImageData = getComposite();
-            const blob = await fetch(compositeImageData).then(r => r.blob());
+            console.log('=== SHARE: Copying branded image to clipboard ===');
+            const blob = await fetch(imageToShare).then(r => r.blob());
             await (navigator.clipboard as any).write([
               new (window as any).ClipboardItem({
                 'image/png': blob
@@ -144,17 +173,14 @@ export default function CreativeRemixPage() {
         return false;
       };
 
-      if (navigator.share && getComposite) {
+      if (navigator.share && imageToShare) {
         try {
-          console.log('=== SHARE: Generating composite image ===');
-          const compositeImageData = getComposite();
-
-          if (compositeImageData && compositeImageData.length > 100 && navigator.canShare) {
-            const blob = await fetch(compositeImageData).then(r => r.blob());
+          if (imageToShare && imageToShare.length > 100 && navigator.canShare) {
+            const blob = await fetch(imageToShare).then(r => r.blob());
             const file = new File([blob], 'my-creative-remix.png', { type: 'image/png' });
 
             if (navigator.canShare({ files: [file] })) {
-              console.log('=== SHARE: Sharing with image file ===');
+              console.log('=== SHARE: Sharing with branded image file ===');
               await navigator.share({
                 title: 'Creative Remix - NFL Logo Drawing Game',
                 text: shareText,
@@ -205,7 +231,6 @@ export default function CreativeRemixPage() {
           }
         }
       } else {
-        // No Web Share API, try to copy image to clipboard first
         const imageCopied = await copyImageToClipboard();
         if (!imageCopied) {
           await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
