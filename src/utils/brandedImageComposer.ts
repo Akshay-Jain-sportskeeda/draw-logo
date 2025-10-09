@@ -44,6 +44,7 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
 
   return new Promise((resolve, reject) => {
     const sourceImg = new Image();
+    sourceImg.crossOrigin = 'anonymous';
 
     sourceImg.onload = async () => {
       try {
