@@ -163,8 +163,7 @@ const GamesPageSidebar: React.FC<GamesPageSidebarProps> = ({ currentGame, isMobi
               <li key={game.title}>
                 <a
                   href={game.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(game.url.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`${styles.navLink} ${isCurrentGame ? styles.navLinkActive : ''}`}
                 >
                   <span className={styles.navLinkText}>

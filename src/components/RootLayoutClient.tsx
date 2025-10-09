@@ -134,7 +134,7 @@ function RootLayoutContent({
         {/* Desktop Sidebar */}
         <div className="hidden lg:block lg:w-64 lg:flex-shrink-0">
           <div className="fixed top-0 left-0 w-64 h-full">
-            <GamesPageSidebar currentGame="NFL Logo Drawing Game" />
+            <GamesPageSidebar currentGame="NFL Draw Logo" />
           </div>
         </div>
         

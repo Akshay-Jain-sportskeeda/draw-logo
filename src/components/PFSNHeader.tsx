@@ -7,7 +7,7 @@ interface HeaderProps {
   currentGame?: string;
 }
 
-const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Logo Drawing Game' }) => {
+const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Draw Logo' }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Lock/unlock body scroll when mobile menu opens/closes
@@ -24,6 +24,7 @@ const PFSNHeader: React.FC<HeaderProps> = ({ currentGame = 'NFL Logo Drawing Gam
   }, [isExpanded]);
 
   const nflGames = [
+    { title: 'NFL Draw Logo', url: '/' },
     { title: 'NFL Player Guessing Game', url: 'https://www.profootballnetwork.com/nfl-player-guessing-game/' },
     { title: 'NFL Octobox', url: 'https://www.profootballnetwork.com/games/nfl-octobox/' },
     { title: 'NFL Duo', url: 'https://www.profootballnetwork.com/games/nfl-duo/' },
