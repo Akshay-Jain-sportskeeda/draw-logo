@@ -1135,18 +1135,19 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
         )}
         </div>
 
-        {/* Resize/Done button (only for permanent template) */}
-        {permanentTemplate && (
-          <div
-            className="absolute top-4 right-4"
-            style={{
-              zIndex: 10,
-              pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              WebkitTouchCallout: 'none'
-            }}
-          >
+        {/* Bottom-right controls (Resize/Done + Clear) */}
+        <div
+          className="absolute bottom-4 right-4 flex gap-2"
+          style={{
+            zIndex: 10,
+            pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none'
+          }}
+        >
+          {/* Resize/Done button (only for permanent template) */}
+          {permanentTemplate && (
             <button
               onClick={() => setIsResizeMode(!isResizeMode)}
               className={`px-3 py-1.5 rounded-lg transition-colors font-medium text-sm ${
@@ -1162,20 +1163,9 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
             >
               {isResizeMode ? 'Done' : 'Resize'}
             </button>
-          </div>
-        )}
+          )}
 
-        {/* Clear Canvas button */}
-        <div
-          className="absolute bottom-4 right-4"
-          style={{
-            zIndex: 10,
-            pointerEvents: (isDraggingTemplate || isResizingTemplate || isRotatingTemplate || isDrawing) ? 'none' : 'auto',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            WebkitTouchCallout: 'none'
-          }}
-        >
+          {/* Clear Canvas button */}
           <button
             onClick={() => {
               clearCanvas();
