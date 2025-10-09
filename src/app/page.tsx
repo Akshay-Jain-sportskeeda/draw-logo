@@ -7,16 +7,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-12">
       <div className="container mx-auto px-4 max-w-6xl">
-        <div className="text-center mb-12 lg:block hidden">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            NFL Logo Drawing Games
-          </h1>
-          <p className="text-xl text-gray-600">
-            Choose your challenge and unleash your creativity!
-          </p>
-        </div>
-
-        <div className="text-center mb-8 lg:hidden block">
+        <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">
             Choose Game Mode
           </h2>

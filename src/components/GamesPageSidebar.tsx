@@ -46,6 +46,7 @@ const GamesPageSidebar: React.FC<GamesPageSidebarProps> = ({ currentGame, isMobi
   ];
 
   const nflGames = [
+    { title: 'NFL Draw Logo', url: '/' },
     { title: 'NFL Player Guessing Game', url: 'https://www.profootballnetwork.com/nfl-player-guessing-game/' },
     { title: 'NFL Octobox', url: 'https://www.profootballnetwork.com/games/nfl-octobox/' },
     { title: 'NFL Duo', url: 'https://www.profootballnetwork.com/games/nfl-duo/' },
