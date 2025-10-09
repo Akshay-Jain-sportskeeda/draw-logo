@@ -75,44 +75,51 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
           const logoWidth = logoHeight * logoAspectRatio;
 
           ctx.save();
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-          ctx.shadowBlur = 4;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+          ctx.shadowBlur = 6;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 2;
           ctx.drawImage(logoImg, padding, padding, logoWidth, logoHeight);
           ctx.restore();
 
           ctx.save();
-          ctx.font = 'bold 18px Arial, sans-serif';
-          ctx.fillStyle = '#1a1a1a';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-          ctx.shadowBlur = 3;
+          ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          ctx.fillStyle = '#2c3e50';
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+          ctx.shadowBlur = 6;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
 
           const textX = padding + logoWidth + textPadding;
-          const textY = padding + logoHeight / 2 + 6;
+          const textY = padding + logoHeight / 2 + 7;
 
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 3;
+          ctx.strokeText(gameName, textX, textY);
           ctx.fillText(gameName, textX, textY);
           ctx.restore();
         } else {
           ctx.save();
-          ctx.font = 'bold 20px Arial, sans-serif';
-          ctx.fillStyle = '#1a1a1a';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-          ctx.shadowBlur = 3;
+          ctx.font = '600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+          ctx.fillStyle = '#2c3e50';
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+          ctx.shadowBlur = 6;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 3;
+          ctx.strokeText(gameName, padding, padding + 24);
           ctx.fillText(gameName, padding, padding + 24);
           ctx.restore();
         }
 
         ctx.save();
-        ctx.font = '14px Arial, sans-serif';
-        ctx.fillStyle = '#1a1a1a';
+        ctx.font = '500 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        ctx.fillStyle = '#34495e';
         ctx.textAlign = 'right';
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
+        ctx.shadowBlur = 6;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
@@ -120,6 +127,9 @@ export async function generateBrandedImage(options: BrandingOptions): Promise<st
         const usernameX = canvas.width - padding;
         const usernameY = canvas.height - padding;
 
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(usernameText, usernameX, usernameY);
         ctx.fillText(usernameText, usernameX, usernameY);
         ctx.restore();
 
