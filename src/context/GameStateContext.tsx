@@ -619,16 +619,23 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         console.log('=== Generating composite image for sharing ===');
         const compositeImageData = getCompositeImage();
 
-        const imageCopied = await copyImageToClipboard(compositeImageData);
-
         if (navigator.share) {
           try {
             if (compositeImageData && navigator.canShare) {
               const blob = await fetch(compositeImageData).then(r => r.blob());
               const file = new File([blob], 'my-drawing.png', { type: 'image/png' });
 
-              if (navigator.canShare({ files: [file] })) {
-                console.log('=== Sharing with image file ===');
+              if (navigator.canShare({ files: [file], text: shareText, url: window.location.href })) {
+                console.log('=== Sharing with image + text + URL ===');
+                await navigator.share({
+                  title: 'NFL Logo Drawing Game',
+                  text: shareText,
+                  url: window.location.href,
+                  files: [file]
+                });
+                return;
+              } else if (navigator.canShare({ files: [file] })) {
+                console.log('=== Sharing with image file only ===');
                 await navigator.share({
                   title: 'NFL Logo Drawing Game',
                   text: shareText,
@@ -638,23 +645,27 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
               }
             }
 
-            console.log('=== Sharing without image (not supported) ===');
+            console.log('=== Sharing without image (text + URL only) ===');
             await navigator.share({
               title: 'NFL Logo Drawing Game',
               text: shareText,
               url: window.location.href
             });
+            return;
           } catch (error) {
-            if ((error as Error).name !== 'AbortError') {
-              console.error('Share error:', error);
-              if (!imageCopied) {
-                await navigator.clipboard.writeText(shareText);
-                showNotification('Link copied to clipboard!');
-              }
+            if ((error as Error).name === 'AbortError') {
+              console.log('=== Share cancelled by user ===');
+              return;
             }
+            console.error('Share error:', error);
           }
-        } else if (!imageCopied && navigator.clipboard) {
-          await navigator.clipboard.writeText(shareText);
+        }
+
+        console.log('=== Native share not available, trying clipboard ===');
+        const imageCopied = await copyImageToClipboard(compositeImageData);
+
+        if (!imageCopied && navigator.clipboard) {
+          await navigator.clipboard.writeText(shareText + '\n' + window.location.href);
           showNotification('Link copied to clipboard!');
         } else if (!imageCopied) {
           showNotification('Sharing is not supported on this device');
@@ -672,12 +683,12 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         });
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          navigator.clipboard.writeText(shareText);
+          navigator.clipboard.writeText(shareText + '\n' + window.location.href);
           showNotification('Score copied to clipboard!');
         }
       }
     } else {
-      navigator.clipboard.writeText(shareText);
+      navigator.clipboard.writeText(shareText + '\n' + window.location.href);
       showNotification('Score copied to clipboard!');
     }
   }, [score, dailyChallenge, getCompositeImage]);
