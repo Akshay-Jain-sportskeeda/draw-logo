@@ -322,18 +322,20 @@ export default function CreativeRemixPage() {
               <Link href="/" className="text-green-600 hover:text-green-700 font-medium">
                 ← Back
               </Link>
-              <Link href="/gallery" className="text-green-600 hover:text-green-700 font-medium">
-                View Gallery →
-              </Link>
-            </div>
-            <div className="flex justify-center">
               <button
                 onClick={() => setShowArchive(true)}
+                className="text-green-600 hover:text-green-700 font-medium inline-flex items-center gap-1"
+              >
+                Archive →
+              </button>
+            </div>
+            <div className="flex justify-center">
+              <Link
+                href="/gallery"
                 className="px-6 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium border border-green-300 inline-flex items-center gap-2"
               >
-                <Archive className="w-4 h-4" />
-                Archive
-              </button>
+                View Gallery
+              </Link>
             </div>
           </div>
 
