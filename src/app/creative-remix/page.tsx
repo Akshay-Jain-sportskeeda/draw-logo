@@ -3,10 +3,12 @@
 import React, { useState, useCallback } from 'react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import SubmissionForm from '@/components/SubmissionForm';
+import ArchiveScreen from '@/components/ArchiveScreen';
 import Link from 'next/link';
 import { useAuth } from '@/lib/useAuth';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { generateBrandedImage, preloadHeader } from '@/utils/brandedImageComposer';
+import { Archive } from 'lucide-react';
 
 interface DailyChallenge {
   date: string;
@@ -28,6 +30,8 @@ export default function CreativeRemixPage() {
   const [challengeError, setChallengeError] = useState<string | null>(null);
   const [getComposite, setGetComposite] = useState<(() => string) | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
+  const [availablePuzzles, setAvailablePuzzles] = useState<{ date: string; name: string }[]>([]);
 
   const { user } = useAuth();
   const { setShowLoginModal } = useAuthModal();
@@ -61,6 +65,25 @@ export default function CreativeRemixPage() {
 
     fetchDailyChallenge();
     preloadHeader().catch(err => console.warn('Failed to preload header:', err));
+  }, []);
+
+  // Fetch available puzzles for archive
+  React.useEffect(() => {
+    const fetchAvailablePuzzles = async () => {
+      try {
+        const response = await fetch('/api/daily-challenge');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.availablePuzzles) {
+            setAvailablePuzzles(data.availablePuzzles);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching available puzzles:', error);
+      }
+    };
+
+    fetchAvailablePuzzles();
   }, []);
 
   const defaultColors = [
@@ -295,10 +318,22 @@ export default function CreativeRemixPage() {
       <div className="container mx-auto px-4 max-w-[576px]">
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-              <Link href="/" className="inline-block text-green-600 hover:text-green-700 font-medium mb-4 md:mb-0">
+            <div className="flex items-center justify-between mb-4">
+              <Link href="/" className="text-green-600 hover:text-green-700 font-medium">
                 ← Back
               </Link>
+              <Link href="/gallery" className="text-green-600 hover:text-green-700 font-medium">
+                View Gallery →
+              </Link>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowArchive(true)}
+                className="px-6 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium border border-green-300 inline-flex items-center gap-2"
+              >
+                <Archive className="w-4 h-4" />
+                Archive
+              </button>
             </div>
           </div>
 
@@ -363,6 +398,19 @@ export default function CreativeRemixPage() {
           </div>
         </div>
       </div>
+
+      {/* Archive Modal */}
+      {showArchive && (
+        <ArchiveScreen
+          onClose={() => setShowArchive(false)}
+          onSelectDate={(date) => {
+            window.location.href = `/creative-remix?date=${date}`;
+            setShowArchive(false);
+          }}
+          availablePuzzles={availablePuzzles}
+          userId={user?.uid}
+        />
+      )}
 
       {/* Success Modal */}
       {submitted && (
