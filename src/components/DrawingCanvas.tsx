@@ -755,6 +755,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
 
   const handleEraserSelect = () => {
     setIsErasing(true);
+    setLineThickness(15);
     setIsPaletteExpanded(false);
     setIsResizeMode(false);
   };
@@ -1054,7 +1055,7 @@ export default function DrawingCanvas({ onDrawingChange, availableColors = [], o
           {/* Color indicator */}
           <div
             className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-gray-600"
-            style={{ backgroundColor: internalSelectedColor }}
+            style={{ backgroundColor: isErasing ? '#FFFFFF' : internalSelectedColor }}
           />
         </button>
 
