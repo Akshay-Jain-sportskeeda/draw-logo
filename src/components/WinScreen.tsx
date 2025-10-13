@@ -28,6 +28,8 @@ const WinScreen: React.FC<WinScreenProps> = ({
   user,
   onLoginClick
 }) => {
+  const timeBonus = Math.round(timeScore);
+
   // Lock/unlock body scroll when modal opens/closes
   React.useEffect(() => {
     if (show) {
@@ -89,7 +91,7 @@ const WinScreen: React.FC<WinScreenProps> = ({
               <span className={styles.statValue}>{score}%</span>
             </div>
             <div className={styles.timeBreakdown}>
-              <div className={styles.calculationText}>75% accuracy + 25% time</div>
+              <div className={styles.calculationText}>75% accuracy + {timeBonus}% time bonus</div>
             </div>
           </div>
         </div>

@@ -265,7 +265,7 @@ export default function DrawMemoryPage() {
                     <span className="text-xl font-bold text-green-600">{score}%</span>
                   </div>
                   <div className="text-center text-sm text-gray-600">
-                    <div>75% accuracy + 25% time</div>
+                    <div>75% accuracy + {Math.round(scoreBreakdown.timeScore)}% time bonus</div>
                   </div>
                 </div>
               </div>
