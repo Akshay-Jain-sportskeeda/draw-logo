@@ -256,11 +256,8 @@ export default function DrawMemoryPage() {
                   <span className="text-xl font-bold text-blue-600">{Math.round(scoreBreakdown.accuracyScore)}%</span>
                 </div>
                 <div className="flex justify-between items-center p-4 rounded-lg border border-gray-200 bg-yellow-50">
-                  <div className="text-gray-700 font-medium">Time Score</div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-orange-600">{Math.round(scoreBreakdown.timeScore)}%</div>
-                    <div className="text-xs text-gray-600">Time: {formatTime(timeTaken)}</div>
-                  </div>
+                  <div className="text-gray-700 font-medium">Time</div>
+                  <span className="text-xl font-bold text-orange-600">{formatTime(timeTaken)}</span>
                 </div>
                 <div className="flex flex-col p-4 rounded-lg border border-gray-200 bg-green-50">
                   <div className="flex justify-between items-center mb-2">

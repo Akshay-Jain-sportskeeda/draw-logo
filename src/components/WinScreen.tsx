@@ -80,13 +80,8 @@ const WinScreen: React.FC<WinScreenProps> = ({
             <span className={styles.statValue}>{Math.round(accuracyScore)}%</span>
           </div>
           <div className={styles.statItem}>
-            <div className={styles.statLabel}>Time Score</div>
-            <div style={{ textAlign: 'right' }}>
-              <div className={styles.statValue}>{Math.round(timeScore)}%</div>
-              <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
-                Time: {displayTime}
-              </div>
-            </div>
+            <div className={styles.statLabel}>Time</div>
+            <span className={styles.statValue}>{displayTime}</span>
           </div>
           <div className={styles.statItem}>
             <div className={styles.statRow}>
